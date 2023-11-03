@@ -1,4 +1,4 @@
-    .include "keypad_debounce.inc"
+    .include "keypad_symbols.inc"
 
     .ref EnqueueEvent
 

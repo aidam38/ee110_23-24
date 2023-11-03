@@ -1,0 +1,185 @@
+******************************************************************************
+                  TI ARM Linker PC v20.2.7                     
+******************************************************************************
+>> Linked Fri Nov  3 02:30:47 2023
+
+OUTPUT FILE NAME:   <ee110a_hw2.out>
+ENTRY POINT SYMBOL: "ResetISR"  address: 00000037
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  FLASH                 00000000   00058000  000002c4  00057d3c  R  X
+  GPRAM                 11000000   00002000  00000000  00002000  RW X
+  SRAM                  20000000   00014000  00000680  00013980  RW X
+
+
+SEGMENT ALLOCATION MAP
+
+run origin  load origin   length   init length attrs members
+----------  ----------- ---------- ----------- ----- -------
+00000000    00000000    000002a0   000002a0    r-x
+  00000000    00000000    000002a0   000002a0    r-x .text
+000002a0    000002a0    00000008   00000008    rw-
+  000002a0    000002a0    00000008   00000008    rw- .args
+000002a8    000002a8    0000001c   0000001c    r--
+  000002a8    000002a8    0000001c   0000001c    r-- .cinit
+20000000    20000000    00000580   00000000    rw-
+  20000000    20000000    00000580   00000000    rw- .data
+20013f00    20013f00    00000100   00000000    rw-
+  20013f00    20013f00    00000100   00000000    rw- .stack
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.text      0    00000000    000002a0     
+                  00000000    000000f6     main.obj (.text)
+                  000000f6    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
+                  00000192    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  000001fa    0000004e     prcm_init.obj (.text)
+                  00000248    00000036     move_vec_table.obj (.text)
+                  0000027e    00000014     stack_init.obj (.text)
+                  00000292    0000000e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+
+.binit     0    00000000    00000000     
+
+.cinit     0    000002a8    0000001c     
+                  000002a8    00000009     (.cinit..data.load) [load image, compression = lzss]
+                  000002b1    00000003     --HOLE-- [fill = 0]
+                  000002b4    00000008     (__TI_handler_table)
+                  000002bc    00000008     (__TI_cinit_table)
+
+.init_array 
+*          0    00000000    00000000     UNINITIALIZED
+
+.data      0    20000000    00000580     UNINITIALIZED
+                  20000000    00000400     move_vec_table.obj (.data)
+                  20000400    00000180     stack_init.obj (.data)
+
+.stack     0    20013f00    00000100     UNINITIALIZED
+                  20013f00    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
+                  20013f04    000000fc     --HOLE--
+
+__llvm_prf_cnts 
+*          0    20000000    00000000     UNINITIALIZED
+
+.args      0    000002a0    00000008     
+                  000002a0    00000008     --HOLE-- [fill = 0]
+
+MODULE SUMMARY
+
+       Module                       code   ro data   rw data
+       ------                       ----   -------   -------
+    .\
+       main.obj                     246    0         0      
+    +--+----------------------------+------+---------+---------+
+       Total:                       246    0         0      
+                                                            
+    .\cc26x2r\
+       move_vec_table.obj           54     0         1024   
+       stack_init.obj               20     0         384    
+       prcm_init.obj                78     0         0      
+    +--+----------------------------+------+---------+---------+
+       Total:                       152    0         1408   
+                                                            
+    C:\ti\ccs1250\ccs\tools\compiler\ti-cgt-arm_20.2.7.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
+       memcpy_t2.asm.obj            156    0         0      
+       copy_decompress_lzss.c.obj   104    0         0      
+       copy_decompress_none.c.obj   14     0         0      
+    +--+----------------------------+------+---------+---------+
+       Total:                       274    0         0      
+                                                            
+       Stack:                       0      0         256    
+       Linker Generated:            0      25        0      
+    +--+----------------------------+------+---------+---------+
+       Grand Total:                 672    25        1664   
+
+
+LINKER GENERATED COPY TABLES
+
+__TI_cinit_table @ 000002bc records: 1, size/record: 8, table size: 8
+	.data: load addr=000002a8, load size=00000009 bytes, run addr=20000000, run size=00000580 bytes, compression=lzss
+
+
+LINKER GENERATED HANDLER TABLE
+
+__TI_handler_table @ 000002b4 records: 2, size/record: 4, table size: 8
+	index: 0, handler: __TI_decompress_lzss
+	index: 1, handler: __TI_decompress_none
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address   name                    
+-------   ----                    
+00000215  GPIOClockInit           
+0000022d  GPTClockInit            
+00000249  MoveVecTable            
+000001fb  PDInit                  
+00000037  ResetISR                
+0000027f  StackInit               
+20014000  __STACK_END             
+00000100  __STACK_SIZE            
+20014000  __STACK_TOP             
+000002bc  __TI_CINIT_Base         
+000002c4  __TI_CINIT_Limit        
+000002b4  __TI_Handler_Table_Base 
+000002bc  __TI_Handler_Table_Limit
+00000193  __TI_decompress_lzss    
+00000293  __TI_decompress_none    
+ffffffff  __TI_pprof_out_hndl     
+ffffffff  __TI_prof_data_size     
+ffffffff  __TI_prof_data_start    
+00000000  __TI_static_base__      
+000000f7  __aeabi_memcpy          
+000000f7  __aeabi_memcpy4         
+000000f7  __aeabi_memcpy8         
+ffffffff  __binit__               
+000002a0  __c_args__              
+20013f00  __stack                 
+20000000  __start___llvm_prf_cnts 
+20000000  __stop___llvm_prf_cnts  
+ffffffff  binit                   
+000000f7  memcpy                  
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address   name                    
+-------   ----                    
+00000000  __TI_static_base__      
+00000037  ResetISR                
+000000f7  __aeabi_memcpy          
+000000f7  __aeabi_memcpy4         
+000000f7  __aeabi_memcpy8         
+000000f7  memcpy                  
+00000100  __STACK_SIZE            
+00000193  __TI_decompress_lzss    
+000001fb  PDInit                  
+00000215  GPIOClockInit           
+0000022d  GPTClockInit            
+00000249  MoveVecTable            
+0000027f  StackInit               
+00000293  __TI_decompress_none    
+000002a0  __c_args__              
+000002b4  __TI_Handler_Table_Base 
+000002bc  __TI_CINIT_Base         
+000002bc  __TI_Handler_Table_Limit
+000002c4  __TI_CINIT_Limit        
+20000000  __start___llvm_prf_cnts 
+20000000  __stop___llvm_prf_cnts  
+20013f00  __stack                 
+20014000  __STACK_END             
+20014000  __STACK_TOP             
+ffffffff  __TI_pprof_out_hndl     
+ffffffff  __TI_prof_data_size     
+ffffffff  __TI_prof_data_start    
+ffffffff  __binit__               
+ffffffff  binit                   
+
+[29 symbols]

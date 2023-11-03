@@ -9,5 +9,5 @@ StoreEventHandlerInit .MACRO
 StoreEventHandler .MACRO event_handler, except_num
 	MOVW	R0, event_handler
 	MOVT	R0, event_handler
-	STR		R0, [R1, #(4 * except_num)]
+	STR		R0, [R1, #(BYTES_PER_WORD * except_num)]
   .ENDM

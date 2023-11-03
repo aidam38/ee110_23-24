@@ -34,26 +34,37 @@
 	.ref MoveVecTable
 	.ref GPTClockInit
 
+	.ref KeypadInit
+	.ref KeypadScanAndDebounce
+
 ; Exposing the program entry-point
 	.global ResetISR
 
-	.UWORD EventHandler
+	.def EnqueueEvent
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MAIN CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.data
+	.align 8
+
+QueueBuffer: .SPACE	QUEUE_SIZE
+
+QueuePointer: .uword QueueBuffer
+
 	.text
 
+EnqueueEvent:
+	MOVA 	R1, QueuePointer
+	LDR		R2, [R1]
+	STR		R0, [R2]
+	ADD		R2, #1
+	STR		R2, [R1]
+	BX 		LR
+
 EventHandler:
-	SUBS	R4, #1
-	;BNE		EventHandlerDone
+	BL		EnqueueEvent
 
-	MOV32	R4, 0x1
-
-	MOV32	R1, GPIO_BASE_ADDR
-	STREG	0x1 << LED_PIN, R1, DOUTTGL_OFFSET
-
-EventHandlerDone:
 	MOV32	R1, GPT0_BASE_ADDR
 	STREG	GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
 
@@ -70,15 +81,10 @@ main:
 	IOCInit
 	IOCFG 	LED_PIN, LED_CFG
 
-	MOV32	R0, GPIO_BASE_ADDR			;put GPIO registers base addresss to R0
-	MOV32	R1, 0x1 << LED_PIN			;put DOE value for enabling output for
-										;for DIO6 and DIO6 to R1
-	STR		R1, [R0, #DOE_OFFSET]		;write R1 to DOE
+	MOV32	R0, GPIO_BASE_ADDR
+	STREG	0x1 << LED_PIN, R1, DOE_OFFSET
 
-	MOV32	R1, 0x1 << LED_PIN
-	STR		R1, [R0, #DOUTTGL_OFFSET]
-
-; configure timers (hello)
+; configure timers
 	BL		GPTClockInit
 
 	MOV32	R1, GPT0_BASE_ADDR
@@ -90,13 +96,13 @@ main:
 	STREG	GPT_CTL, R1, GPT_CTL_OFFSET
 
 	StoreEventHandlerInit
-	StoreEventHandler	EventHandler, 31
-
+	StoreEventHandler	EventHandler, GPT0A_EXCEPTION_NUMBER
 
 	MOV32	R1, CPU_SCS_BASE_ADDR
 	STREG	(0x1 << GPT0A_IRQ_NUMBER), R1, CPU_SCS_NVIC_ISER0
 
-	MOV32	R4, 0x1
+; initialize keypad
+	BL		KeypadInit
 
 Loop:
 	NOP

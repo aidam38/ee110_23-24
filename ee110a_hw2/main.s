@@ -78,7 +78,7 @@ main:
 	MOV32	R1, 0x1 << LED_PIN
 	STR		R1, [R0, #DOUTTGL_OFFSET]
 
-; configure timers
+; configure timers (hello)
 	BL		GPTClockInit
 
 	MOV32	R1, GPT0_BASE_ADDR

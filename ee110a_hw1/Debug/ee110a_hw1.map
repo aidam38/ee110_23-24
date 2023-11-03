@@ -1,0 +1,109 @@
+******************************************************************************
+                  TI ARM Linker PC v20.2.7                     
+******************************************************************************
+>> Linked Fri Nov  3 16:28:40 2023
+
+OUTPUT FILE NAME:   <ee110a_hw1.out>
+ENTRY POINT SYMBOL: "ResetISR"  address: 00000001
+
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  FLASH                 00000000   00058000  00000074  00057f8c  R  X
+  GPRAM                 11000000   00002000  00000000  00002000  RW X
+  SRAM                  20000000   00014000  00000100  00013f00  RW X
+
+
+SEGMENT ALLOCATION MAP
+
+run origin  load origin   length   init length attrs members
+----------  ----------- ---------- ----------- ----- -------
+00000000    00000000    0000006c   0000006c    r-x
+  00000000    00000000    0000006c   0000006c    r-x .text
+0000006c    0000006c    00000008   00000008    rw-
+  0000006c    0000006c    00000008   00000008    rw- .args
+20013f00    20013f00    00000100   00000000    rw-
+  20013f00    20013f00    00000100   00000000    rw- .stack
+
+
+SECTION ALLOCATION MAP
+
+ output                                  attributes/
+section   page    origin      length       input sections
+--------  ----  ----------  ----------   ----------------
+.text      0    00000000    0000006c     
+                  00000000    0000006c     main.obj (.text)
+
+.binit     0    00000000    00000000     
+
+.cinit     0    00000000    00000000     UNINITIALIZED
+
+.init_array 
+*          0    00000000    00000000     UNINITIALIZED
+
+.stack     0    20013f00    00000100     UNINITIALIZED
+                  20013f00    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
+                  20013f04    000000fc     --HOLE--
+
+__llvm_prf_cnts 
+*          0    20000000    00000000     UNINITIALIZED
+
+.args      0    0000006c    00000008     
+                  0000006c    00000008     --HOLE-- [fill = 0]
+
+MODULE SUMMARY
+
+       Module         code   ro data   rw data
+       ------         ----   -------   -------
+    .\
+       main.obj       108    0         0      
+    +--+--------------+------+---------+---------+
+       Total:         108    0         0      
+                                              
+       Stack:         0      0         256    
+    +--+--------------+------+---------+---------+
+       Grand Total:   108    0         256    
+
+
+GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
+
+address   name                   
+-------   ----                   
+00000001  ResetISR               
+20014000  __STACK_END            
+00000100  __STACK_SIZE           
+20014000  __STACK_TOP            
+ffffffff  __TI_pprof_out_hndl    
+ffffffff  __TI_prof_data_size    
+ffffffff  __TI_prof_data_start   
+00000000  __TI_static_base__     
+ffffffff  __binit__              
+0000006c  __c_args__             
+20013f00  __stack                
+20000000  __start___llvm_prf_cnts
+20000000  __stop___llvm_prf_cnts 
+ffffffff  binit                  
+
+
+GLOBAL SYMBOLS: SORTED BY Symbol Address 
+
+address   name                   
+-------   ----                   
+00000000  __TI_static_base__     
+00000001  ResetISR               
+0000006c  __c_args__             
+00000100  __STACK_SIZE           
+20000000  __start___llvm_prf_cnts
+20000000  __stop___llvm_prf_cnts 
+20013f00  __stack                
+20014000  __STACK_END            
+20014000  __STACK_TOP            
+ffffffff  __TI_pprof_out_hndl    
+ffffffff  __TI_prof_data_size    
+ffffffff  __TI_prof_data_start   
+ffffffff  __binit__              
+ffffffff  binit                  
+
+[14 symbols]

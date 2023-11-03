@@ -120,21 +120,21 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-ee110__hw1.out \
+ee110a_hw1.out \
 
 EXE_OUTPUTS__QUOTED += \
-"ee110__hw1.out" \
+"ee110a_hw1.out" \
 
 
 # All Target
 all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
-	@$(MAKE) --no-print-directory -Onone "ee110__hw1.out"
+	@$(MAKE) --no-print-directory -Onone "ee110a_hw1.out"
 
 # Tool invocations
-ee110__hw1.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+ee110a_hw1.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 -me -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"ee110__hw1.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="ee110__hw1_linkInfo.xml" --rom_model -o "ee110__hw1.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 -me -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"ee110a_hw1.map" --heap_size=0 --stack_size=256 -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="ee110a_hw1_linkInfo.xml" --rom_model -o "ee110a_hw1.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 

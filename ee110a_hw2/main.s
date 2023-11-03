@@ -34,8 +34,8 @@
 	.ref MoveVecTable
 	.ref GPTClockInit
 
-	.ref KeypadInit
-	.ref KeypadScanAndDebounce
+	;.ref KeypadInit
+	;.ref KeypadScanAndDebounce
 
 ; Exposing the program entry-point
 	.global ResetISR
@@ -55,19 +55,22 @@ QueuePointer: .uword QueueBuffer
 	.text
 
 EnqueueEvent:
-	MOVA 	R1, QueuePointer
-	LDR		R2, [R1]
-	STR		R0, [R2]
-	ADD		R2, #1
-	STR		R2, [R1]
+	MOVA 	R1, QueueBuffer ; R1 is base
+	MOVA 	R2, QueuePointer
+	LDR		R3, [R2] ; R3 is offset
+	STR		R0, [R1, R3]
+	ADD		R3, #BYTES_PER_WORD
+	STR		R3, [R2]
 	BX 		LR
 
 EventHandler:
+	PUSH	{LR}
 	BL		EnqueueEvent
 
 	MOV32	R1, GPT0_BASE_ADDR
 	STREG	GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
 
+	POP		{LR}
 	BX		LR
 
 ResetISR:
@@ -81,7 +84,7 @@ main:
 	IOCInit
 	IOCFG 	LED_PIN, LED_CFG
 
-	MOV32	R0, GPIO_BASE_ADDR
+	MOV32	R1, GPIO_BASE_ADDR
 	STREG	0x1 << LED_PIN, R1, DOE_OFFSET
 
 ; configure timers
@@ -102,9 +105,9 @@ main:
 	STREG	(0x1 << GPT0A_IRQ_NUMBER), R1, CPU_SCS_NVIC_ISER0
 
 ; initialize keypad
-	BL		KeypadInit
+	;BL		KeypadInit
 
 Loop:
-	NOP
+	ADD		R0, #1
 	B		Loop
 

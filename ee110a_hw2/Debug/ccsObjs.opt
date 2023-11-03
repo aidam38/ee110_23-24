@@ -1,6 +1,4 @@
 "./main.obj"
-"./cc26x2r/gpt_init.obj"
-"./cc26x2r/ioc_init.obj"
 "./cc26x2r/move_vec_table.obj"
 "./cc26x2r/prcm_init.obj"
 "./cc26x2r/stack_init.obj"

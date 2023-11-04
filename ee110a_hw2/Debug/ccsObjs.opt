@@ -1,3 +1,5 @@
+"./event_queue.obj"
+"./keypad_interface.obj"
 "./main.obj"
 "./cc26x2r/move_vec_table.obj"
 "./cc26x2r/prcm_init.obj"

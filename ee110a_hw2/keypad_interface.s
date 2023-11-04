@@ -1,4 +1,6 @@
     .include "cc26x2r/gpio_reg.inc"
+    .include "macros.inc"
+    .include "symbols.inc"
 
     .def SelectRow
     .def ReadRow

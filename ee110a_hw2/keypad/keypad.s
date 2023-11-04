@@ -1,4 +1,6 @@
     .include "keypad_symbols.inc"
+    .include "../keypad_config.inc"
+    .include "../macros.inc"
 
     .ref EnqueueEvent
     .ref SelectRow
@@ -9,10 +11,11 @@
 
 ; Global variables
     .data
+    .align 8
 
 CurrentRow: .byte 0
 
-DebounceBuffer: .SPACE NUM_COLS * DEBOUNCE_COUNTER_SIZE_BYTES
+DebounceBuffer: .SPACE (4 * DEBOUNCE_COUNTER_SIZE_BYTES)
 
 ; Code
     .text
@@ -49,7 +52,7 @@ Loop:
 
 ColumnIsDown:
     SUBS    R4, #1
-    BNE
+    BNE		CounterNotZero
 
 CounterZero:
     MOV     R0, #0x69
@@ -58,7 +61,7 @@ CounterZero:
 
 CounterNotZero:
     CMP     R4, #0
-    BGEQ     CounterEnd
+    BGE     CounterEnd
 
 CounterLessThanZero:
     MOV     R4, #0
@@ -74,7 +77,7 @@ EndLoop:
 
     ADD     R1, #1
     CMP     R1, #NUM_COLS
-    BLE
+    BLE		Loop
 
     BL      EnqueueEvent
     POP     {LR}

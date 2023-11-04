@@ -1,6 +1,9 @@
-    #include "cc26x2r/cpu_scs_reg.inc"
+    .include "cc26x2r/cpu_scs_reg.inc"
+    .include "macros.inc"
 
     .def EnqueueEvent
+
+QUEUE_SIZE .EQU     256
 
 	.data
 	.align 8

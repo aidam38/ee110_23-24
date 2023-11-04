@@ -2,14 +2,6 @@
     .include "cc26x2r/ioc_reg.inc"
     .include "cc26x2r/gpt_reg.inc"
 
-NUM_ROWS .EQU   4
-NUM_COLS .EQU   4
-NUM_ROWS_LOG .EQU 2
-
-    .def NUM_ROWS
-    .def NUM_COLS
-    .def NUM_ROWS_LOG
-
 LED_PIN .EQU    6
 LED_CFG .EQU    IO_NOPUPD
 
@@ -38,5 +30,3 @@ GPT_TAPR .EQU   0x0
 
 GPT0A_IRQ_NUMBER .EQU   15
 GPT0A_EXCEPTION_NUMBER .EQU 31
-
-QUEUE_SIZE .EQU     256

@@ -2,8 +2,28 @@
     .include "cc26x2r/ioc_reg.inc"
     .include "cc26x2r/gpt_reg.inc"
 
+NUM_ROWS .EQU   4
+NUM_COLS .EQU   4
+NUM_ROWS_LOG .EQU 2
+
+    .def NUM_ROWS
+    .def NUM_COLS
+    .def NUM_ROWS_LOG
+
 LED_PIN .EQU    6
 LED_CFG .EQU    IO_NOPUPD
+
+ROWSEL_A_PIN .EQU   8
+ROWSEL_B_PIN .EQU   9
+
+ROWSEL_PIN_CFG .EQU   0x0
+
+COLUMN_0_PIN .EQU     11
+COLUMN_1_PIN .EQU     12
+COLUMN_2_PIN .EQU     13
+COLUMN_3_PIN .EQU     14
+
+COLUMN_PIN_CFG .EQU IO_INPUT | IO_PU
 
 GPT_CFG .EQU    GPT_CFG_32BIT
 GPT_CTL .EQU    GPT_CTL_TAEN_ENABLED

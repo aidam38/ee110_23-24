@@ -9,7 +9,11 @@
 SelectRow:
     PUSH {LR}
 
+    AND    R0, #11b
+    LSL    R0, #ROWSEL_A_PIN ; prepare row
 
+    MOV32   R1, GPIO_BASE_ADDR
+    STR     R0, [R1, #DOUT_OFFSET] ;set pins
 
     POP {LR}
     BX LR

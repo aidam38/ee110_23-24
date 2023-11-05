@@ -1,3 +1,10 @@
+; R4 = *CurrentRow
+; R5 = *DebounceCounter
+; R6 = *PrevState
+; R7 = [CurrentRow]
+; R8 = [DebounceCounter]
+; (except in KeypadInit)
+
     .include "keypad_symbols.inc"
     .include "../keypad_config.inc"
     .include "../macros.inc"
@@ -39,71 +46,68 @@ KeypadInit:
 	BX	LR
 
 KeypadScanAndDebounce:
-    PUSH    {LR}
+    PUSH    {LR, R4, R5, R6, R7, R8}
 
-    MOVA	R0, DebounceCounter
-    LDRB	R1, [R0]
+    MOVA	R5, DebounceCounter
+    LDRB	R8, [R5] ;dereference DebounceCounter
 
-    CMP		R1, #DEBOUNCE_TIME
-    BNE		Debouncing
-    ;B		Scanning
+    CMP		R8, #DEBOUNCE_TIME ; 
+    BNE		Debouncing		; if(DebounceCounter != DEBOUNCE_TIME)
+    ;B		Scanning 		; if(DebounceCounter == DEBOUNCE_TIME)
 
 Scanning:
     ;increment CurrentRow
-    MOVA    R0, CurrentRow
-    LDRB	R2, [R0]
-    ADD     R2, #1 ; we don't care about the higher bytes
-    AND		R2, #11b
-    STRB	R2, [R0]
+    MOVA    R4, CurrentRow
+    LDRB	R7, [R4] ;dereference CurrentRow
+    ADD     R7, #1 ; increment CurrentRow
+    AND		R7, #11b; take just lower two bytes
+    STRB	R7, [R4] ;update CurrentRow
+	MOV		R0, R7 ;prepare as argument
     
     ;output CurrentRow
     BL      SelectRow
 
 Debouncing:
-    BL      ReadRow ;R0 is CurState
+    BL      ReadRow ;returns CurState in R0
 
-	MOVA	R2, PrevState
-	LDRB	R3, [R2]
+	MOVA	R6, PrevState
+	LDRB	R1, [R6] ;dereference PrevState
 
-	CMP		R0, R3
-	BNE		NotDebouncing
-	CMP		R0, #1111b
+	CMP		R0, R1
+	BNE		NotDebouncing ; if (PrevState != CurState)	
+	CMP		R0, #1111b ; or if (CurState == 1111)
 	BEQ		NotDebouncing
 
+; Note DebounceCounter is in R8
 ActuallyDebouncing:
-	MOVA	R2, DebounceCounter
-    LDRB	R1, [R2]
-	SUBS	R1, #1
-	BMI		CounterNegative
-	BNE		ActuallyDebouncingEnd
-	;B		CounterZero
+	SUBS	R8, #1 ; decrement DebounceCounter
+	BMI		CounterNegative ; if (DebounceCounter < 0)
+	BNE		ActuallyDebouncingEnd ; if (DebounceCounter != 0)
+	;B		CounterZero ; if (DebounceCounter == 0)
 
+; Note CurrentRow is in R7
+; CurState is still in R0
 CounterZero:
-	MOVA	R1, CurrentRow
-	LDR		R1, [R1]
-	EOR		R0, #1111b
-	LSL		R0, R1
+	EOR		R0, #1111b ;negate because buttons go to ground
+	LSL		R0, #4 ;push by 4 to the left
+	OR		R0, R7 ;merge with current row
 	PUSH	{R0, R1, R2, R3}
 	BL		EnqueueEvent
 	POP		{R0, R1, R2, R3}
-	MOV		R1, #0
 	B		ActuallyDebouncingEnd
 CounterNegative:
-	MOV		R1, #0
+	MOV		R8, #0 ;reset counter to zero so we don't overflow in the negatives
 
 ActuallyDebouncingEnd:
-	STRB	R1, [R2] ;store new DebounceCounter
-
+	STRB	R8, [R5] ;store new DebounceCounter
 
 	B		End
 NotDebouncing:
-	MOVA 	R2, PrevState
-	STRB	R0, [R2] ; update PrevState
+	STRB	R0, [R6] ; update PrevState
 
-	MOVA	R0, DebounceCounter
-	MOV		R1, #DEBOUNCE_TIME
-	STRB	R1, [R0]
+	MOV		R8, #DEBOUNCE_TIME
+	STRB	R8, [R5]
 
 End:
-    POP     {LR}
+    POP     {LR, R4, R5, R6, R7, R8}
     BX 	    LR

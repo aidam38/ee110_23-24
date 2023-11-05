@@ -80,6 +80,10 @@ main:
 	IOCFG	COLUMN_2_PIN, COLUMN_PIN_CFG
 	IOCFG	COLUMN_3_PIN, COLUMN_PIN_CFG
 
+	;enable output for pins 8,9
+	MOV32	R1, GPIO_BASE_ADDR
+	STREG	11b << ROWSEL_A_PIN, R1, DOE_OFFSET
+
 ; configure timers
 	BL		GPTClockInit
 

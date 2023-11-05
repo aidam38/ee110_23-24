@@ -90,7 +90,7 @@ ActuallyDebouncing:
 CounterZero:
 	EOR		R0, #1111b ;negate because buttons go to ground
 	LSL		R0, #4 ;push by 4 to the left
-	OR		R0, R7 ;merge with current row
+	ORR		R0, R7 ;merge with current row
 	PUSH	{R0, R1, R2, R3}
 	BL		EnqueueEvent
 	POP		{R0, R1, R2, R3}

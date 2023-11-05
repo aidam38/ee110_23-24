@@ -14,71 +14,96 @@
     .align 8
 
 CurrentRow: .byte 0
-
-DebounceBuffer: .SPACE (4 * DEBOUNCE_COUNTER_SIZE_BYTES)
+DebounceCounter: .byte 0
+PrevState: .byte 0
 
 ; Code
     .text
 
 KeypadInit:
+	PUSH	{LR}
+
+	MOVA	R0, CurrentRow
+	MOV		R1, #0
+	STRB	R1, [R0]
+
+	MOVA	R0, DebounceCounter
+	MOV		R1, #DEBOUNCE_TIME
+	STRB	R1, [R0]
+
+	MOVA	R0, PrevState
+	MOV		R1, #1111b
+	STRB	R1, [R0]
+
+	POP 	{LR}
 	BX	LR
 
 KeypadScanAndDebounce:
     PUSH    {LR}
 
+    MOVA	R0, DebounceCounter
+    LDRB	R1, [R0]
+
+    CMP		R1, #DEBOUNCE_TIME
+    BNE		Debouncing
+    ;B		Scanning
+
+Scanning:
     ;increment CurrentRow
     MOVA    R0, CurrentRow
-    ADD     R0, #1 ; we don't care about the higher bytes
+    LDRB	R2, [R0]
+    ADD     R2, #1 ; we don't care about the higher bytes
+    AND		R2, #11b
+    STRB	R2, [R0]
     
     ;output CurrentRow
     BL      SelectRow
-    BL      ReadRow
 
-    ;for loop
-    MOV     R1, #0
+Debouncing:
+    BL      ReadRow ;R0 is CurState
 
-Loop:
-    MOV     R2, R0
-    LSL     R2, R1
-    AND     R2, #1
-    CMP     R2, #1
+	MOVA	R2, PrevState
+	LDRB	R3, [R2]
 
-    ; init DebounceBuffer
-    MOVA    R3, DebounceBuffer
-    LDR     R4, [R3, R1, LSL #DEBOUNCE_COUNTER_SIZE_BYTES]
+	CMP		R0, R3
+	BNE		NotDebouncing
+	CMP		R0, #1111b
+	BEQ		NotDebouncing
 
-    BNE     ColumnIsUp
-    ;B      ColumnIsDown
-
-ColumnIsDown:
-    SUBS    R4, #1
-    BNE		CounterNotZero
+ActuallyDebouncing:
+	MOVA	R2, DebounceCounter
+    LDRB	R1, [R2]
+	SUBS	R1, #1
+	BMI		CounterNegative
+	BNE		ActuallyDebouncingEnd
+	;B		CounterZero
 
 CounterZero:
-    MOV     R0, #0x69
-    BL      EnqueueEvent
-    B       CounterEnd
+	MOVA	R1, CurrentRow
+	LDR		R1, [R1]
+	EOR		R0, #1111b
+	LSL		R0, R1
+	PUSH	{R0, R1, R2, R3}
+	BL		EnqueueEvent
+	POP		{R0, R1, R2, R3}
+	MOV		R1, #0
+	B		ActuallyDebouncingEnd
+CounterNegative:
+	MOV		R1, #0
 
-CounterNotZero:
-    CMP     R4, #0
-    BGE     CounterEnd
+ActuallyDebouncingEnd:
+	STRB	R1, [R2] ;store new DebounceCounter
 
-CounterLessThanZero:
-    MOV     R4, #0
 
-CounterEnd:
-    B       EndLoop
+	B		End
+NotDebouncing:
+	MOVA 	R2, PrevState
+	STRB	R0, [R2] ; update PrevState
 
-ColumnIsUp:
-    MOV     R4, #DEBOUNCE_COUNTER_INIT_VAL
+	MOVA	R0, DebounceCounter
+	MOV		R1, #DEBOUNCE_TIME
+	STRB	R1, [R0]
 
-EndLoop:
-    STR     R4, [R3, R1, LSL #DEBOUNCE_COUNTER_SIZE_BYTES]
-
-    ADD     R1, #1
-    CMP     R1, #NUM_COLS
-    BLE		Loop
-
-    BL      EnqueueEvent
+End:
     POP     {LR}
     BX 	    LR

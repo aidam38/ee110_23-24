@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v20.2.7                     
 ******************************************************************************
->> Linked Fri Nov  3 18:14:28 2023
+>> Linked Sat Nov  4 02:10:10 2023
 
 OUTPUT FILE NAME:   <ee110a_hw2.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 0000001f
@@ -11,23 +11,23 @@ MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00058000  00000392  00057c6e  R  X
+  FLASH                 00000000   00058000  000003f0  00057c10  R  X
   GPRAM                 11000000   00002000  00000000  00002000  RW X
-  SRAM                  20000000   00014000  00000791  0001386f  RW X
+  SRAM                  20000000   00014000  0000078b  00013875  RW X
 
 
 SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    0000036e   0000036e    r-x
-  00000000    00000000    0000036e   0000036e    r-x .text
-00000370    00000370    00000008   00000008    rw-
-  00000370    00000370    00000008   00000008    rw- .args
-00000378    00000378    0000001c   0000001c    r--
-  00000378    00000378    0000001c   0000001c    r-- .cinit
-20000000    20000000    00000691   00000000    rw-
-  20000000    20000000    00000691   00000000    rw- .data
+00000000    00000000    000003cc   000003cc    r-x
+  00000000    00000000    000003cc   000003cc    r-x .text
+000003cc    000003cc    00000008   00000008    rw-
+  000003cc    000003cc    00000008   00000008    rw- .args
+000003d8    000003d8    0000001c   0000001c    r--
+  000003d8    000003d8    0000001c   0000001c    r-- .cinit
+20000000    20000000    0000068b   00000000    rw-
+  20000000    20000000    0000068b   00000000    rw- .data
 20013f00    20013f00    00000100   00000000    rw-
   20013f00    20013f00    00000100   00000000    rw- .stack
 
@@ -37,35 +37,35 @@ SECTION ALLOCATION MAP
  output                                  attributes/
 section   page    origin      length       input sections
 --------  ----  ----------  ----------   ----------------
-.text      0    00000000    0000036e     
+.text      0    00000000    000003cc     
                   00000000    00000120     main.obj (.text)
-                  00000120    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
-                  000001bc    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
-                  00000224    00000068     keypad.obj (.text)
-                  0000028c    0000004e     prcm_init.obj (.text)
-                  000002da    00000036     move_vec_table.obj (.text)
-                  00000310    00000020     keypad_interface.obj (.text)
-                  00000330    0000001c     event_queue.obj (.text)
-                  0000034c    00000014     stack_init.obj (.text)
-                  00000360    0000000e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  00000120    000000c6     keypad.obj (.text)
+                  000001e6    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
+                  00000282    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  000002ea    0000004e     prcm_init.obj (.text)
+                  00000338    00000036     move_vec_table.obj (.text)
+                  0000036e    00000020     keypad_interface.obj (.text)
+                  0000038e    0000001c     event_queue.obj (.text)
+                  000003aa    00000014     stack_init.obj (.text)
+                  000003be    0000000e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
 
 .binit     0    00000000    00000000     
 
-.cinit     0    00000378    0000001c     
-                  00000378    00000009     (.cinit..data.load) [load image, compression = lzss]
-                  00000381    00000003     --HOLE-- [fill = 0]
-                  00000384    00000008     (__TI_handler_table)
-                  0000038c    00000008     (__TI_cinit_table)
+.cinit     0    000003d8    0000001c     
+                  000003d8    00000009     (.cinit..data.load) [load image, compression = lzss]
+                  000003e1    00000003     --HOLE-- [fill = 0]
+                  000003e4    00000008     (__TI_handler_table)
+                  000003ec    00000008     (__TI_cinit_table)
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
 
-.data      0    20000000    00000691     UNINITIALIZED
+.data      0    20000000    0000068b     UNINITIALIZED
                   20000000    00000400     move_vec_table.obj (.data)
                   20000400    00000180     stack_init.obj (.data)
                   20000580    00000104     event_queue.obj (.data)
                   20000684    00000004     --HOLE--
-                  20000688    00000009     keypad.obj (.data)
+                  20000688    00000003     keypad.obj (.data)
 
 .stack     0    20013f00    00000100     UNINITIALIZED
                   20013f00    00000004     rtsv7M4_T_le_v4SPD16_eabi.lib : boot_cortex_m.c.obj (.stack)
@@ -74,8 +74,8 @@ section   page    origin      length       input sections
 __llvm_prf_cnts 
 *          0    20000000    00000000     UNINITIALIZED
 
-.args      0    00000370    00000008     
-                  00000370    00000008     --HOLE-- [fill = 0]
+.args      0    000003cc    00000008     
+                  000003cc    00000008     --HOLE-- [fill = 0]
 
 MODULE SUMMARY
 
@@ -96,9 +96,9 @@ MODULE SUMMARY
        Total:                       152    0         1408   
                                                             
     .\keypad\
-       keypad.obj                   104    0         9      
+       keypad.obj                   198    0         3      
     +--+----------------------------+------+---------+---------+
-       Total:                       104    0         9      
+       Total:                       198    0         3      
                                                             
     C:\ti\ccs1250\ccs\tools\compiler\ti-cgt-arm_20.2.7.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
        memcpy_t2.asm.obj            156    0         0      
@@ -110,18 +110,18 @@ MODULE SUMMARY
        Stack:                       0      0         256    
        Linker Generated:            0      25        0      
     +--+----------------------------+------+---------+---------+
-       Grand Total:                 878    25        1933   
+       Grand Total:                 972    25        1927   
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 0000038c records: 1, size/record: 8, table size: 8
-	.data: load addr=00000378, load size=00000009 bytes, run addr=20000000, run size=00000691 bytes, compression=lzss
+__TI_cinit_table @ 000003ec records: 1, size/record: 8, table size: 8
+	.data: load addr=000003d8, load size=00000009 bytes, run addr=20000000, run size=0000068b bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 00000384 records: 2, size/record: 4, table size: 8
+__TI_handler_table @ 000003e4 records: 2, size/record: 4, table size: 8
 	index: 0, handler: __TI_decompress_lzss
 	index: 1, handler: __TI_decompress_none
 
@@ -130,43 +130,43 @@ GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name
 
 address   name                    
 -------   ----                    
-00000331  EnqueueEvent            
-000002a7  GPIOClockInit           
-000002bf  GPTClockInit            
-00000225  KeypadInit              
-00000227  KeypadScanAndDebounce   
-000002db  MoveVecTable            
+0000038f  EnqueueEvent            
+00000305  GPIOClockInit           
+0000031d  GPTClockInit            
+00000121  KeypadInit              
+00000153  KeypadScanAndDebounce   
+00000339  MoveVecTable            
 00000004  NUM_COLS                
 00000004  NUM_ROWS                
 00000002  NUM_ROWS_LOG            
-0000028d  PDInit                  
-00000319  ReadRow                 
+000002eb  PDInit                  
+00000377  ReadRow                 
 0000001f  ResetISR                
-00000311  SelectRow               
-0000034d  StackInit               
+0000036f  SelectRow               
+000003ab  StackInit               
 20014000  __STACK_END             
 00000100  __STACK_SIZE            
 20014000  __STACK_TOP             
-0000038c  __TI_CINIT_Base         
-00000394  __TI_CINIT_Limit        
-00000384  __TI_Handler_Table_Base 
-0000038c  __TI_Handler_Table_Limit
-000001bd  __TI_decompress_lzss    
-00000361  __TI_decompress_none    
+000003ec  __TI_CINIT_Base         
+000003f4  __TI_CINIT_Limit        
+000003e4  __TI_Handler_Table_Base 
+000003ec  __TI_Handler_Table_Limit
+00000283  __TI_decompress_lzss    
+000003bf  __TI_decompress_none    
 ffffffff  __TI_pprof_out_hndl     
 ffffffff  __TI_prof_data_size     
 ffffffff  __TI_prof_data_start    
 00000000  __TI_static_base__      
-00000121  __aeabi_memcpy          
-00000121  __aeabi_memcpy4         
-00000121  __aeabi_memcpy8         
+000001e7  __aeabi_memcpy          
+000001e7  __aeabi_memcpy4         
+000001e7  __aeabi_memcpy8         
 ffffffff  __binit__               
-00000370  __c_args__              
+000003cc  __c_args__              
 20013f00  __stack                 
 20000000  __start___llvm_prf_cnts 
 20000000  __stop___llvm_prf_cnts  
 ffffffff  binit                   
-00000121  memcpy                  
+000001e7  memcpy                  
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -179,27 +179,27 @@ address   name
 00000004  NUM_ROWS                
 0000001f  ResetISR                
 00000100  __STACK_SIZE            
-00000121  __aeabi_memcpy          
-00000121  __aeabi_memcpy4         
-00000121  __aeabi_memcpy8         
-00000121  memcpy                  
-000001bd  __TI_decompress_lzss    
-00000225  KeypadInit              
-00000227  KeypadScanAndDebounce   
-0000028d  PDInit                  
-000002a7  GPIOClockInit           
-000002bf  GPTClockInit            
-000002db  MoveVecTable            
-00000311  SelectRow               
-00000319  ReadRow                 
-00000331  EnqueueEvent            
-0000034d  StackInit               
-00000361  __TI_decompress_none    
-00000370  __c_args__              
-00000384  __TI_Handler_Table_Base 
-0000038c  __TI_CINIT_Base         
-0000038c  __TI_Handler_Table_Limit
-00000394  __TI_CINIT_Limit        
+00000121  KeypadInit              
+00000153  KeypadScanAndDebounce   
+000001e7  __aeabi_memcpy          
+000001e7  __aeabi_memcpy4         
+000001e7  __aeabi_memcpy8         
+000001e7  memcpy                  
+00000283  __TI_decompress_lzss    
+000002eb  PDInit                  
+00000305  GPIOClockInit           
+0000031d  GPTClockInit            
+00000339  MoveVecTable            
+0000036f  SelectRow               
+00000377  ReadRow                 
+0000038f  EnqueueEvent            
+000003ab  StackInit               
+000003bf  __TI_decompress_none    
+000003cc  __c_args__              
+000003e4  __TI_Handler_Table_Base 
+000003ec  __TI_CINIT_Base         
+000003ec  __TI_Handler_Table_Limit
+000003f4  __TI_CINIT_Limit        
 20000000  __start___llvm_prf_cnts 
 20000000  __stop___llvm_prf_cnts  
 20013f00  __stack                 

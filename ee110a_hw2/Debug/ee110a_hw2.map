@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker PC v20.2.7                     
 ******************************************************************************
->> Linked Sat Nov  4 19:41:51 2023
+>> Linked Sat Nov  4 19:57:06 2023
 
 OUTPUT FILE NAME:   <ee110a_hw2.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 0000001f
@@ -11,7 +11,7 @@ MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00058000  00000402  00057bfe  R  X
+  FLASH                 00000000   00058000  00000408  00057bf8  R  X
   GPRAM                 11000000   00002000  00000000  00002000  RW X
   SRAM                  20000000   00014000  0000078b  00013875  RW X
 
@@ -20,12 +20,12 @@ SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    000003de   000003de    r-x
-  00000000    00000000    000003de   000003de    r-x .text
-000003e0    000003e0    00000008   00000008    rw-
-  000003e0    000003e0    00000008   00000008    rw- .args
-000003e8    000003e8    0000001c   0000001c    r--
-  000003e8    000003e8    0000001c   0000001c    r-- .cinit
+00000000    00000000    000003e4   000003e4    r-x
+  00000000    00000000    000003e4   000003e4    r-x .text
+000003e4    000003e4    00000008   00000008    rw-
+  000003e4    000003e4    00000008   00000008    rw- .args
+000003f0    000003f0    0000001c   0000001c    r--
+  000003f0    000003f0    0000001c   0000001c    r-- .cinit
 20000000    20000000    0000068b   00000000    rw-
   20000000    20000000    0000068b   00000000    rw- .data
 20013f00    20013f00    00000100   00000000    rw-
@@ -37,25 +37,25 @@ SECTION ALLOCATION MAP
  output                                  attributes/
 section   page    origin      length       input sections
 --------  ----  ----------  ----------   ----------------
-.text      0    00000000    000003de     
+.text      0    00000000    000003e4     
                   00000000    00000134     main.obj (.text)
-                  00000134    000000b0     keypad.obj (.text)
-                  000001e4    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
-                  00000280    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
-                  000002e8    0000004e     prcm_init.obj (.text)
-                  00000336    00000036     move_vec_table.obj (.text)
-                  0000036c    00000034     keypad_interface.obj (.text)
-                  000003a0    0000001c     event_queue.obj (.text)
-                  000003bc    00000014     stack_init.obj (.text)
-                  000003d0    0000000e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  00000134    000000b6     keypad.obj (.text)
+                  000001ea    0000009c     rtsv7M4_T_le_v4SPD16_eabi.lib : memcpy_t2.asm.obj (.text)
+                  00000286    00000068                                   : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  000002ee    0000004e     prcm_init.obj (.text)
+                  0000033c    00000036     move_vec_table.obj (.text)
+                  00000372    00000034     keypad_interface.obj (.text)
+                  000003a6    0000001c     event_queue.obj (.text)
+                  000003c2    00000014     stack_init.obj (.text)
+                  000003d6    0000000e     rtsv7M4_T_le_v4SPD16_eabi.lib : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
 
 .binit     0    00000000    00000000     
 
-.cinit     0    000003e8    0000001c     
-                  000003e8    00000009     (.cinit..data.load) [load image, compression = lzss]
-                  000003f1    00000003     --HOLE-- [fill = 0]
-                  000003f4    00000008     (__TI_handler_table)
-                  000003fc    00000008     (__TI_cinit_table)
+.cinit     0    000003f0    0000001c     
+                  000003f0    00000009     (.cinit..data.load) [load image, compression = lzss]
+                  000003f9    00000003     --HOLE-- [fill = 0]
+                  000003fc    00000008     (__TI_handler_table)
+                  00000404    00000008     (__TI_cinit_table)
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
@@ -74,8 +74,8 @@ section   page    origin      length       input sections
 __llvm_prf_cnts 
 *          0    20000000    00000000     UNINITIALIZED
 
-.args      0    000003e0    00000008     
-                  000003e0    00000008     --HOLE-- [fill = 0]
+.args      0    000003e4    00000008     
+                  000003e4    00000008     --HOLE-- [fill = 0]
 
 MODULE SUMMARY
 
@@ -96,9 +96,9 @@ MODULE SUMMARY
        Total:                       152    0         1408   
                                                             
     .\keypad\
-       keypad.obj                   176    0         3      
+       keypad.obj                   182    0         3      
     +--+----------------------------+------+---------+---------+
-       Total:                       176    0         3      
+       Total:                       182    0         3      
                                                             
     C:\ti\ccs1250\ccs\tools\compiler\ti-cgt-arm_20.2.7.LTS\lib\rtsv7M4_T_le_v4SPD16_eabi.lib
        memcpy_t2.asm.obj            156    0         0      
@@ -110,18 +110,18 @@ MODULE SUMMARY
        Stack:                       0      0         256    
        Linker Generated:            0      25        0      
     +--+----------------------------+------+---------+---------+
-       Grand Total:                 990    25        1927   
+       Grand Total:                 996    25        1927   
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 000003fc records: 1, size/record: 8, table size: 8
-	.data: load addr=000003e8, load size=00000009 bytes, run addr=20000000, run size=0000068b bytes, compression=lzss
+__TI_cinit_table @ 00000404 records: 1, size/record: 8, table size: 8
+	.data: load addr=000003f0, load size=00000009 bytes, run addr=20000000, run size=0000068b bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 000003f4 records: 2, size/record: 4, table size: 8
+__TI_handler_table @ 000003fc records: 2, size/record: 4, table size: 8
 	index: 0, handler: __TI_decompress_lzss
 	index: 1, handler: __TI_decompress_none
 
@@ -130,40 +130,40 @@ GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name
 
 address   name                    
 -------   ----                    
-000003a1  EnqueueEvent            
-00000303  GPIOClockInit           
-0000031b  GPTClockInit            
+000003a7  EnqueueEvent            
+00000309  GPIOClockInit           
+00000321  GPTClockInit            
 00000135  KeypadInit              
 00000167  KeypadScanAndDebounce   
-00000337  MoveVecTable            
-000002e9  PDInit                  
-00000389  ReadRow                 
+0000033d  MoveVecTable            
+000002ef  PDInit                  
+0000038f  ReadRow                 
 0000001f  ResetISR                
-0000036d  SelectRow               
-000003bd  StackInit               
+00000373  SelectRow               
+000003c3  StackInit               
 20014000  __STACK_END             
 00000100  __STACK_SIZE            
 20014000  __STACK_TOP             
-000003fc  __TI_CINIT_Base         
-00000404  __TI_CINIT_Limit        
-000003f4  __TI_Handler_Table_Base 
-000003fc  __TI_Handler_Table_Limit
-00000281  __TI_decompress_lzss    
-000003d1  __TI_decompress_none    
+00000404  __TI_CINIT_Base         
+0000040c  __TI_CINIT_Limit        
+000003fc  __TI_Handler_Table_Base 
+00000404  __TI_Handler_Table_Limit
+00000287  __TI_decompress_lzss    
+000003d7  __TI_decompress_none    
 ffffffff  __TI_pprof_out_hndl     
 ffffffff  __TI_prof_data_size     
 ffffffff  __TI_prof_data_start    
 00000000  __TI_static_base__      
-000001e5  __aeabi_memcpy          
-000001e5  __aeabi_memcpy4         
-000001e5  __aeabi_memcpy8         
+000001eb  __aeabi_memcpy          
+000001eb  __aeabi_memcpy4         
+000001eb  __aeabi_memcpy8         
 ffffffff  __binit__               
-000003e0  __c_args__              
+000003e4  __c_args__              
 20013f00  __stack                 
 20000000  __start___llvm_prf_cnts 
 20000000  __stop___llvm_prf_cnts  
 ffffffff  binit                   
-000001e5  memcpy                  
+000001eb  memcpy                  
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -175,25 +175,25 @@ address   name
 00000100  __STACK_SIZE            
 00000135  KeypadInit              
 00000167  KeypadScanAndDebounce   
-000001e5  __aeabi_memcpy          
-000001e5  __aeabi_memcpy4         
-000001e5  __aeabi_memcpy8         
-000001e5  memcpy                  
-00000281  __TI_decompress_lzss    
-000002e9  PDInit                  
-00000303  GPIOClockInit           
-0000031b  GPTClockInit            
-00000337  MoveVecTable            
-0000036d  SelectRow               
-00000389  ReadRow                 
-000003a1  EnqueueEvent            
-000003bd  StackInit               
-000003d1  __TI_decompress_none    
-000003e0  __c_args__              
-000003f4  __TI_Handler_Table_Base 
-000003fc  __TI_CINIT_Base         
-000003fc  __TI_Handler_Table_Limit
-00000404  __TI_CINIT_Limit        
+000001eb  __aeabi_memcpy          
+000001eb  __aeabi_memcpy4         
+000001eb  __aeabi_memcpy8         
+000001eb  memcpy                  
+00000287  __TI_decompress_lzss    
+000002ef  PDInit                  
+00000309  GPIOClockInit           
+00000321  GPTClockInit            
+0000033d  MoveVecTable            
+00000373  SelectRow               
+0000038f  ReadRow                 
+000003a7  EnqueueEvent            
+000003c3  StackInit               
+000003d7  __TI_decompress_none    
+000003e4  __c_args__              
+000003fc  __TI_Handler_Table_Base 
+00000404  __TI_CINIT_Base         
+00000404  __TI_Handler_Table_Limit
+0000040c  __TI_CINIT_Limit        
 20000000  __start___llvm_prf_cnts 
 20000000  __stop___llvm_prf_cnts  
 20013f00  __stack                 

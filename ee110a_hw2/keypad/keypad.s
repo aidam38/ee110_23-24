@@ -51,14 +51,16 @@ KeypadScanAndDebounce:
     MOVA	R5, DebounceCounter
     LDRB	R8, [R5] ;dereference DebounceCounter
 
+    ;load current row
+    MOVA    R4, CurrentRow
+    LDRB	R7, [R4] ;dereference CurrentRow
+
     CMP		R8, #DEBOUNCE_TIME ; 
     BNE		Debouncing		; if(DebounceCounter != DEBOUNCE_TIME)
     ;B		Scanning 		; if(DebounceCounter == DEBOUNCE_TIME)
 
 Scanning:
     ;increment CurrentRow
-    MOVA    R4, CurrentRow
-    LDRB	R7, [R4] ;dereference CurrentRow
     ADD     R7, #1 ; increment CurrentRow
     AND		R7, #11b; take just lower two bytes
     STRB	R7, [R4] ;update CurrentRow
@@ -74,7 +76,7 @@ Debouncing:
 	LDRB	R1, [R6] ;dereference PrevState
 
 	CMP		R0, R1
-	BNE		NotDebouncing ; if (PrevState != CurState)	
+	BNE		StartDebouncing ; if (PrevState != CurState)
 	CMP		R0, #1111b ; or if (CurState == 1111)
 	BEQ		NotDebouncing
 
@@ -102,11 +104,15 @@ ActuallyDebouncingEnd:
 	STRB	R8, [R5] ;store new DebounceCounter
 
 	B		End
-NotDebouncing:
-	STRB	R0, [R6] ; update PrevState
 
+StartDebouncing:
+	MOV		R8, #DEBOUNCE_TIME-1
+	B		NotDebouncingEnd
+NotDebouncing:
 	MOV		R8, #DEBOUNCE_TIME
+NotDebouncingEnd:
 	STRB	R8, [R5]
+	STRB	R0, [R6] ; update PrevState
 
 End:
     POP     {LR, R4, R5, R6, R7, R8}

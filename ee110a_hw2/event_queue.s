@@ -1,5 +1,6 @@
     .include "cc26x2r/cpu_scs_reg.inc"
     .include "macros.inc"
+    .include "symbols.inc"
 
     .def EnqueueEvent
 
@@ -38,11 +39,11 @@ EnqueueEvent:
 	;B		EnqueueEventSuccess
 
 EnqueueEventSuccess:
-	MOV32	R0, #FUNCTION_CALL_SUCCESS
+	MOV32	R0, FUNCTION_CALL_SUCCESS
 	B		EnqueueEventDone
 
 EnqueueEventFail:
-	MOV32	R0, #FUNCTION_CALL_FAIL
+	MOV32	R0, FUNCTION_CALL_FAIL
 	;B		EnqueueEventDone
 
 EnqueueEventDone:

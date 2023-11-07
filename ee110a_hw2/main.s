@@ -105,6 +105,6 @@ main:
 	BL		KeypadInit
 
 Loop:
-	ADD		R0, #1
+	NOP
 	B		Loop
 

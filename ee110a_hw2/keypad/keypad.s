@@ -143,11 +143,11 @@ COLUMN_3_PRESSED:
 
 JumpTableEnd:
 	
-	LSL		R0, #EVENT_INFO_SEGMENT_BITS
+	LSL		R7, #EVENT_INFO_SEGMENT_BITS ;we don't need R7 after this
 	ORR		R0, R7 ;merge with current row
 
 	LSL		R0, #EVENT_INFO_SEGMENT_BITS	
-	ORR		R0 #EVENT_KEYDOWN
+	ORR		R0, #EVENT_KEYDOWN
 
 	;no need to save R0, R1, R2, R3, because we're not using them in the rest of the function
 	BL		EnqueueEvent

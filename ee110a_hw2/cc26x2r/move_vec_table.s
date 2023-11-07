@@ -70,4 +70,4 @@ MoveVecTableDone: ;done moving the vector table
 	.align 512
 
 VecTable:
-	.SPACE VEC_TABLE_SIZE * BYTES_PER_WORD
+	.space VEC_TABLE_SIZE * BYTES_PER_WORD

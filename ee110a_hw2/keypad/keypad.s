@@ -6,7 +6,6 @@
 ; (except in KeypadInit)
 
     .include "keypad_symbols.inc"
-    .include "../keypad_config.inc"
     .include "../macros.inc"
 
     .ref EnqueueEvent
@@ -48,72 +47,139 @@ KeypadInit:
 KeypadScanAndDebounce:
     PUSH    {LR, R4, R5, R6, R7, R8}
 
-    MOVA	R5, DebounceCounter
-    LDRB	R8, [R5] ;dereference DebounceCounter
-
-    ;load current row
+KeypadScanAndDebounceInit:
+	;load current row
     MOVA    R4, CurrentRow
     LDRB	R7, [R4] ;dereference CurrentRow
 
-    CMP		R8, #DEBOUNCE_TIME ; 
-    BNE		Debouncing		; if(DebounceCounter != DEBOUNCE_TIME)
-    ;B		Scanning 		; if(DebounceCounter == DEBOUNCE_TIME)
+	;load DebounceCounter
+    MOVA	R5, DebounceCounter
+    LDRB	R8, [R5] ;dereference DebounceCounter
 
-Scanning:
+    CMP		R8, #DEBOUNCE_TIME ; 
+    BNE		Read		; if(DebounceCounter != DEBOUNCE_TIME)
+    ;B		Scan 		; if(DebounceCounter == DEBOUNCE_TIME)
+
+Scan:
     ;increment CurrentRow
     ADD     R7, #1 ; increment CurrentRow
-    AND		R7, #11b; take just lower two bytes
+    AND		R7, #CURRENT_ROW_MASK; take just lower two bytes
     STRB	R7, [R4] ;update CurrentRow
-	MOV		R0, R7 ;prepare as argument
     
-    ;output CurrentRow
-    BL      SelectRow
+    ; call SelectRow(CurrentRow)
+	MOV		R0, R7 ;prepare as argument
+    BL      SelectRow ;SelectRow(CurrentRow)
 
-Debouncing:
+Read:
     BL      ReadRow ;returns CurState in R0
+	;B		Compare
 
+Compare:
+	;load PrevState
 	MOVA	R6, PrevState
 	LDRB	R1, [R6] ;dereference PrevState
 
+	; if PrevState != CurState, reset debounce state
 	CMP		R0, R1
-	BNE		StartDebouncing ; if (PrevState != CurState)
-	CMP		R0, #1111b ; or if (CurState == 1111)
-	BEQ		NotDebouncing
+	BNE		ResetDebounce
+
+	;if PrevState == CurState AND CurState == 1111, nothing is happening
+	;no need to reset, just end the function
+	CMP		R0, #COLUMN_ALL_KEYS_UP
+	BEQ		KeypadScanAndDebounceEnd
+
+	; if PrevState == CurState AND CurState != 1111 (meaning key is continuously
+	; pressed), debounce
+	;B		Debounce
 
 ; Note DebounceCounter is in R8
-ActuallyDebouncing:
+Debounce:
 	SUBS	R8, #1 ; decrement DebounceCounter
-	BMI		CounterNegative ; if (DebounceCounter < 0)
-	BNE		ActuallyDebouncingEnd ; if (DebounceCounter != 0)
-	;B		CounterZero ; if (DebounceCounter == 0)
+
+	; if DebounceCounter < 0
+	BMI		DebounceCounterNegative 
+
+	; if DebounceCounter > 0
+	BNE		DebounceEnd 
+
+	; if DebounceCounter == 0
+	;B		DebounceCounterZero 
 
 ; Note CurrentRow is in R7
 ; CurState is still in R0
-CounterZero:
-	EOR		R0, #1111b ;negate because buttons go to ground
-	LSL		R0, #4 ;push by 4 to the left
+DebounceCounterZero:
+	;prepare event vector
+	;convert one-hot encoding to binary, look up table is easiest
+	;keep in mind order of columns is by default reversed
+
+JumpTable:
+	CMP		R0, #COLUMN_0_PRESSED
+	BEQ		COLUMN_0_PRESSED
+
+	CMP		R0, #COLUMN_1_PRESSED
+	BEQ		COLUMN_1_PRESSED
+
+	CMP		R0, #COLUMN_2_PRESSED
+	BEQ		COLUMN_2_PRESSED
+
+	CMP		R0, #COLUMN_3_PRESSED
+	BEQ		COLUMN_3_PRESSED
+
+COLUMN_0_PRESSED:
+	MOV		R0, #COLUMN_0_PRESSED_BINARY
+	B		JumpTableEnd
+
+COLUMN_1_PRESSED:
+	MOV		R0, #COLUMN_1_PRESSED_BINARY
+	B		JumpTableEnd
+
+COLUMN_2_PRESSED:
+	MOV		R0, #COLUMN_2_PRESSED_BINARY
+	B		JumpTableEnd
+
+COLUMN_3_PRESSED:
+	MOV		R0, #COLUMN_3_PRESSED_BINARY
+	B		JumpTableEnd
+
+JumpTableEnd:
+	
+	LSL		R0, #EVENT_INFO_SEGMENT_BITS
 	ORR		R0, R7 ;merge with current row
-	PUSH	{R0, R1, R2, R3}
+
+	LSL		R0, #EVENT_INFO_SEGMENT_BITS	
+	ORR		R0 #EVENT_KEYDOWN
+
+	;no need to save R0, R1, R2, R3, because we're not using them in the rest of the function
 	BL		EnqueueEvent
-	POP		{R0, R1, R2, R3}
-	B		ActuallyDebouncingEnd
-CounterNegative:
+	B		DebounceEnd
+
+DebounceCounterNegative:
 	MOV		R8, #0 ;reset counter to zero so we don't overflow in the negatives
+	;B		DebounceEnd
 
-ActuallyDebouncingEnd:
+DebounceEnd:
 	STRB	R8, [R5] ;store new DebounceCounter
+	B		KeypadScanAndDebounceEnd
 
-	B		End
-
-StartDebouncing:
-	MOV		R8, #DEBOUNCE_TIME-1
-	B		NotDebouncingEnd
-NotDebouncing:
-	MOV		R8, #DEBOUNCE_TIME
-NotDebouncingEnd:
-	STRB	R8, [R5]
+ResetDebounce:
 	STRB	R0, [R6] ; update PrevState
 
-End:
+	;reset Debounce Counter
+	MOV		R8, #DEBOUNCE_TIME
+
+	;if a key is pressed, decrement the debounce counter to start 
+	; debouncing in the next call
+	CMP		R0, #COLUMN_ALL_KEYS_UP ; or if (CurState == 1111)
+	BEQ		ResetDebounceEnd
+	;B		KeyPressed
+
+KeyPressed:
+	SUB		R8, #1
+
+ResetDebounceEnd:
+	STRB	R8, [R5] ;store new DebounceCounter
+	;B		KeypadScanAndDebounceEnd
+
+KeypadScanAndDebounceEnd:
     POP     {LR, R4, R5, R6, R7, R8}
     BX 	    LR

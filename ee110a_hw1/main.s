@@ -50,10 +50,10 @@
 
 ; Project-specific constants
 
-LED_CFG .EQU	(IO_NOPUPD) 		; LED IO pin configuration
+LED_CFG .equ	(IO_NOPUPD) 		; LED IO pin configuration
 									; (identical for DIO6 and DIO7)
 									; No pull-up/pull-down, output (by default)
-BTN_CFG .EQU	(IO_PU | IO_INPUT)	; BUTTON IO pin configuartion
+BTN_CFG .equ	(IO_PU | IO_INPUT)	; BUTTON IO pin configuartion
 									; (identical for DIO13 and DIO14)
 									; Pull-up resistor, input enabled, no
 									; hysteresis, normal slew rate

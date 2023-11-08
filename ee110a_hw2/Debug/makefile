@@ -11,8 +11,8 @@ GEN_CMDS__FLAG :=
 
 ORDERED_OBJS += \
 "./event_queue.obj" \
+"./keypad_demo.obj" \
 "./keypad_interface.obj" \
-"./main.obj" \
 "./cc26x2r/move_vec_table.obj" \
 "./cc26x2r/prcm_init.obj" \
 "./cc26x2r/stack_init.obj" \
@@ -151,8 +151,8 @@ ee110a_hw2.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "event_queue.obj" "keypad_interface.obj" "main.obj" "cc26x2r\move_vec_table.obj" "cc26x2r\prcm_init.obj" "cc26x2r\stack_init.obj" "keypad\keypad.obj" 
-	-$(RM) "event_queue.d" "keypad_interface.d" "main.d" "cc26x2r\move_vec_table.d" "cc26x2r\prcm_init.d" "cc26x2r\stack_init.d" "keypad\keypad.d" 
+	-$(RM) "event_queue.obj" "keypad_demo.obj" "keypad_interface.obj" "cc26x2r\move_vec_table.obj" "cc26x2r\prcm_init.obj" "cc26x2r\stack_init.obj" "keypad\keypad.obj" 
+	-$(RM) "event_queue.d" "keypad_demo.d" "keypad_interface.d" "cc26x2r\move_vec_table.d" "cc26x2r\prcm_init.d" "cc26x2r\stack_init.d" "keypad\keypad.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

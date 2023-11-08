@@ -10,32 +10,32 @@ CMD_SRCS += \
 
 S_SRCS += \
 ../event_queue.s \
-../keypad_interface.s \
-../main.s 
+../keypad_demo.s \
+../keypad_interface.s 
 
 S_DEPS += \
 ./event_queue.d \
-./keypad_interface.d \
-./main.d 
+./keypad_demo.d \
+./keypad_interface.d 
 
 OBJS += \
 ./event_queue.obj \
-./keypad_interface.obj \
-./main.obj 
+./keypad_demo.obj \
+./keypad_interface.obj 
 
 OBJS__QUOTED += \
 "event_queue.obj" \
-"keypad_interface.obj" \
-"main.obj" 
+"keypad_demo.obj" \
+"keypad_interface.obj" 
 
 S_DEPS__QUOTED += \
 "event_queue.d" \
-"keypad_interface.d" \
-"main.d" 
+"keypad_demo.d" \
+"keypad_interface.d" 
 
 S_SRCS__QUOTED += \
 "../event_queue.s" \
-"../keypad_interface.s" \
-"../main.s" 
+"../keypad_demo.s" \
+"../keypad_interface.s" 
 
 

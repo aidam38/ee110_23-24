@@ -63,7 +63,7 @@ MoveVecTable:
 
 MoveVecTableInit:                       ;setup to move the vector table
         MOV32   R1, SCS_BASE_ADDR       ;get base for CPU SCS registers
-        LDR     R0, [R1, #VTOR_OFF]     ;get current vector table address
+        LDR     R0, [R1, #SCS_VTOR_OFFSET];get current vector table address
 
         MOVA    R2, VecTable            ;load address of new location
         MOV     R3, #VEC_TABLE_SIZE     ;get the number of words to copy
@@ -82,7 +82,7 @@ MoveVecCopyLoop:                        ;loop copying the vector table
 
 MoveVecCopyDone:                        ;done copying data, change VTOR
         MOVA    R2, VecTable            ;load address of new vector table
-        STR     R2, [R1, #VTOR_OFF]     ;and store it in VTOR
+        STR     R2, [R1, #SCS_VTOR_OFFSET];and store it in VTOR
         ;B      MoveVecTableDone        ;and all done
 
 

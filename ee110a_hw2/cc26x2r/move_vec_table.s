@@ -30,44 +30,62 @@
 ;
 ; Revision History: 11/03/21 Glen George initial revision
 
-	.include "cpu_scs_reg.inc"
 
-	.def MoveVecTable
 
+; local include files
+    .include "cpu_scs_reg.inc"
+    .include "../macros.inc"
+    .include "../constants.inc"
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; DATA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    .data
+
+    ; interrupt vector table in SRAM
+    .align VEC_TABLE_ALIGN
+VecTable:     .space VEC_TABLE_SIZE * BYTES_PER_WORD
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; CODE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    .text
+    .def MoveVecTable
 MoveVecTable:
-	PUSH {R4} ;store necessary changed registers
-	;B MoveVecTableInit ;start doing the copy\
-	
-MoveVecTableInit: ;setup to move the vector table
-	MOVW R1, #(CPU_SCS_BASE_ADDR & 0xffff) ;get base for CPU SCS registers
-	MOVT R1, #((CPU_SCS_BASE_ADDR >> 16) & 0xffff)
-	LDR R0, [R1, #VTOR_OFFSET] ;get current vector table address
-	MOVW R2, VecTable ;load address of new location
-	MOVT R2, VecTable
-	MOV R3, #VEC_TABLE_SIZE ;get the number of words to copy
-	;B MoveVecCopyLoop ;now loop copying the table\
-	
-MoveVecCopyLoop: ;loop copying the vector table
-	LDR R4, [R0], #BYTES_PER_WORD ;get value from original table
-	STR R4, [R2], #BYTES_PER_WORD ;copy it to new table
-	SUBS R3, #1 ;update copy count
-	BNE MoveVecCopyLoop ;if not done, keep copying
-	;B MoveVecCopyDone ;otherwise done copying
-	
-MoveVecCopyDone: ;done copying data, change VTOR
-	MOVW R2, VecTable ;load address of new vector table
-	MOVT R2, VecTable
-	STR R2, [R1, #VTOR_OFFSET] ;and store it in VTOR
-	;B MoveVecTableDone ;and all done
-	
-MoveVecTableDone: ;done moving the vector table
-	POP {R4} ;restore registers and return
-	BX LR
 
-	.data
+        PUSH    {R4}                    ;store necessary changed registers
+        ;B      MoveVecTableInit        ;start doing the copy
 
-;the vector table in SRAM
-	.align 512
 
-VecTable:
-	.space VEC_TABLE_SIZE * BYTES_PER_WORD
+MoveVecTableInit:                       ;setup to move the vector table
+        MOV32   R1, SCS_BASE_ADDR       ;get base for CPU SCS registers
+        LDR     R0, [R1, #VTOR_OFF]     ;get current vector table address
+
+        MOVA    R2, VecTable            ;load address of new location
+        MOV     R3, #VEC_TABLE_SIZE     ;get the number of words to copy
+        ;B      MoveVecCopyLoop         ;now loop copying the table
+
+
+MoveVecCopyLoop:                        ;loop copying the vector table
+        LDR     R4, [R0], #BYTES_PER_WORD   ;get value from original table
+        STR     R4, [R2], #BYTES_PER_WORD   ;copy it to new table
+
+        SUBS    R3, #1                  ;update copy count
+
+        BNE     MoveVecCopyLoop         ;if not done, keep copying
+        ;B      MoveVecCopyDone         ;otherwise done copying
+
+
+MoveVecCopyDone:                        ;done copying data, change VTOR
+        MOVA    R2, VecTable            ;load address of new vector table
+        STR     R2, [R1, #VTOR_OFF]     ;and store it in VTOR
+        ;B      MoveVecTableDone        ;and all done
+
+
+MoveVecTableDone:                       ;done moving the vector table
+        POP     {R4}                    ;restore registers and return
+        BX      LR

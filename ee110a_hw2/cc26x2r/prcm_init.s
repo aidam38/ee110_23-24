@@ -1,71 +1,157 @@
-	.include "prcm_reg.inc"
-	.include "../macros.inc"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                                prcm_init.s                                 ;
+;                        PRCM Initialization Procedures                      ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	.def PDInit
-	.def GPIOClockInit
-	.def GPTClockInit
-
-; Initialize periphreal power domain
+; This file contains the initializion procedures for the Power Domain and 
+; clocks of the TI CC2652 microcontroller:
+;    PeriphPowerInit - initializes the Power Domain for the peripherals
+;    GPIOClockInit - initializes the clock for the GPIO peripheral
+;    GPTClockInit - initializes the clock for the GPT peripheral
 ;
-
-; Write to PDCTL0
-PDInit:
-	MOV32 	R0, PCRM_BASE_ADDR			;put PCRM registers base address to R0
-	MOV		R1, #PDCTL0_PERIPH_ON		;put PDCTL0 register value for turning
-										;peripheral power on to R1
-	STR 	R1, [R0, #PDCTL0_OFFSET]	;write R1 to PDCTL0
-	;B		PDLoop
-
-; Wait for PDSTAT0
-PDLoop:
-	LDR 	R1, [R0, #PDSTAT0_OFFSET]	;read PDCTL0 to R1
-	CMP		R1, #PDSTAT0_PERIPH_ON		;check if R1 contains status value for
-										;peripheral power on
-	BNE		PDLoop						;^if not, loop/try again
-	BX		LR
+; Revision History:
+;     11/7/23  Adam Krivka      initial revision
 
 
-; Write to GPIOCLKGR and CLKLOADCTL (still in PCRM register group/domain)
+; local include files
+    .include "prcm_reg.inc"
+    .include "../macros.inc"
+
+; exporting functions defined in this file
+    .def PeriphPowerInit
+    .def GPIOClockInit
+    .def GPTClockInit
+
+; ----------------------------------------------------------------------------
+
+; PeriphPowerInit
+; 
+; Description:        Initializes the Power Domain for the peripherals.
+;
+; Operation:        Sets PDCTL0 to turn on peripheral power, then waits for
+;                    PDSTAT0 to indicate that the power is on.
+;
+; Arguments:        None
+; Returns:            None
+;
+; Local Variables:    None
+; Global Variables:    None
+; 
+; Error Handling:    None
+;
+; Algorithms:        None
+; Data Structures:    None
+;
+; Registers Changed:    R0, R1
+; Stack Depth:        0
+;
+; Revision History:    11/7/23  Adam Krivka  initial revision
+
+PeriphPowerInit:
+    MOV32     R0, PRCM_BASE_ADDR            ; prepare PRCM register base address
+    MOV        R1, #PDCTL0_PERIPH_ON        ; prepare PDCTL0 value for turning 
+                                        ; on peripheral power
+    STR     R1, [R0, #PDCTL0_OFFSET]    ; write PDCTL0 to turn on peripheral power
+    ;B        PeriphPowerLoop
+
+; Wait for PDSTAT0 to signal peripheral power on
+PeriphPowerLoop:
+    ; check if PDSTAT0 has PERIPH_ON bit set active
+    LDR     R1, [R0, #PDSTAT0_OFFSET]
+    CMP        R1, #PDSTAT0_PERIPH_ON
+
+    BNE        PeriphPowerLoop        ; if not, loop/try again
+    BX        LR                    ; if yes, return
+
+
+
+; GPIOClockInit
+;
+; Description:        Initializes the clock for the GPIO peripheral.
+;
+; Operation:        Sets GPIOCLKGR to turn on the clock, then waits for
+;                    CLKLOADCTL to indicate that the clock is on.
+;
+; Arguments:        None
+; Returns:            None
+;
+; Local Variables:    None
+; Global Variables:    None
+;
+; Error Handling:    None
+;
+; Algorithms:        None
+; Data Structures:    None
+;
+; Registers Changed:    R0, R1
+; Stack Depth:        0
+;
+; Revision History:    11/7/23  Adam Krivka  initial revision
+
 GPIOClockInit:
-	MOV32 	R0, PCRM_BASE_ADDR			;put PCRM registers base address to R0
+    MOV32     R0, PRCM_BASE_ADDR            ; prepare PRCM register base address
 
-	MOV		R1, #GPIOCLKGR_CLK_EN		;put CLK_EN (clock enable) value to R1
-	STR		R1, [R0, #GPIOCLKGR_OFFSET]	;write R1 to GPIOCLKGR register
-	;MOV	R1, #CLKLOADCTL_LOAD 		;put LOAD value to R1
-										;(commented because same value as
-										; GPIOCLKGR_CLK_EN)
-	STR		R1, [R0, #CLKLOADCTL_OFFSET];write R1 to CLKLOADCTL
-	;GPIOClockLoop
+    MOV        R1, #GPIOCLKGR_CLK_EN        ; prepare CLK_EN (clock enable) value
+                                        ; for GPIOCLKGR
+    STR        R1, [R0, #GPIOCLKGR_OFFSET]    ; write to GPIOCLKGR register to turn
+                                        ; on the clock
 
-; Wait for CLKLOADCTL
+    MOV        R1, #CLKLOADCTL_LOAD        ; prepare LOAD value for CLKLOADCTL
+    STR        R1, [R0, #CLKLOADCTL_OFFSET]; write to CLKLOADCTL to load the clock
+    ;GPIOClockLoop
+
+; Wait for CLKLOADCTL to signal clock done loading
 GPIOClockLoop:
-	LDR		R1, [R0, #CLKLOADCTL_OFFSET];read CLKLOADCTL to R1
-	CMP		R1, #CLKLOADCTL_LOAD_DONE	;check if R1 has LOAD_DONE bit set
-										;active
-	BNE		GPIOClockLoop				;^if not, loop/try again
-	BX		LR
+    ; check if CLKLOADCTL has LOAD_DONE bit set active
+    LDR        R1, [R0, #CLKLOADCTL_OFFSET]
+    CMP        R1, #CLKLOADCTL_LOAD_DONE    
 
-	; Write to GPIOCLKGR and CLKLOADCTL (still in PCRM register group/domain)
+    BNE        GPIOClockLoop            ; if not, loop/try again
+    BX        LR                        ; if yes, return
+
+
+
+; GPTClockInit
+;
+; Description:        Initializes the clock for the GPT peripheral.
+;
+; Operation:        Sets GPTCLKGR to turn on the clock, then waits for
+;                    CLKLOADCTL to indicate that the clock is on.
+;
+; Arguments:        None
+; Returns:            None
+;
+; Local Variables:    None
+; Global Variables:    None
+;
+; Error Handling:    None
+;
+; Algorithms:        None
+; Data Structures:    None
+;
+; Registers Changed:    R0, R1
+; Stack Depth:        0
+;
+; Revision History:    11/7/23  Adam Krivka  initial revision
+
 GPTClockInit:
-	MOV32 	R0, PCRM_BASE_ADDR			;put PCRM registers base address to R0
+    MOV32     R0, PRCM_BASE_ADDR            ; prepare PRCM register base address
+    MOV        R1, #GPTCLKGR_GPT0_ENABLE   ; prepare CLK_EN (clock enable) value
+                                        ; for GPTCLKGR
+    STR        R1, [R0, #GPTCLKGR_OFFSET]    ; write to GPTCLKGR register to turn
+                                        ; on the clock
 
-	MOV		R1, #GPTCLKGR_GPT0_ENABLE   ;put CLK_EN (clock enable) value to R1
-	STR		R1, [R0, #GPTCLKGR_OFFSET]	;write R1 to GPIOCLKGR register
+    MOV        R1, #CLKLOADCTL_LOAD        ; prepare LOAD value for CLKLOADCTL
+    STR        R1, [R0, #CLKLOADCTL_OFFSET]; write to CLKLOADCTL to load the clock
+    ;GPTClockLoop
 
-	;MOV		R1, #GPTCLKGS_GPT0_ENABLE   ;put CLK_EN (clock enable) value to R1
-	;STR		R1, [R0, #GPTCLKGS_OFFSET]	;write R1 to GPIOCLKGR register
-
-	;MOV		R1, #GPTCLKGDS_GPT0_ENABLE   ;put CLK_EN (clock enable) value to R1
-	;STR		R1, [R0, #GPTCLKGDS_OFFSET]	;write R1 to GPIOCLKGR register
-
-	MOV	R1, #CLKLOADCTL_LOAD 		;put LOAD value to R1
-	STR		R1, [R0, #CLKLOADCTL_OFFSET];write R1 to CLKLOADCTL
-	;GPIOClockLoop
-
-; Wait for CLKLOADCTL
+; Wait for CLKLOADCTL to signal clock done loading
 GPTClockLoop:
-	LDR		R1, [R0, #CLKLOADCTL_OFFSET];read CLKLOADCTL to R1
-	CMP		R1, #CLKLOADCTL_LOAD_DONE	;check if R1 has LOAD_DONE bit set
-										;active
-	BNE		GPTClockLoop				;^if not, loop/try again
-	BX		LR
+    ; check if CLKLOADCTL has LOAD_DONE bit set active
+    LDR        R1, [R0, #CLKLOADCTL_OFFSET]
+    CMP        R1, #CLKLOADCTL_LOAD_DONE    
+
+    BNE        GPTClockLoop            ; if not, loop/try again
+    BX        LR                        ; if yes, return

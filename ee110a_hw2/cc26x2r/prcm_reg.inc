@@ -1,49 +1,53 @@
-;Power Control Registers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                                 prcm_reg.inc                               ;
+;                            PRCM Register Constants                         ;
+;                                 Include File                               ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PCRM_BASE_ADDR .equ         0x40082000
+; This file contains the constants for the Power, Register, and Clock 
+; Managment domain of the TI CC2652 microcontroller.
+;
+; Revision History:
+;     11/7/23  Adam Krivka      initial revision
 
-PDCTL0_OFFSET .equ          0x012c
 
-PDCTL0_RFC_ON .equ          1b
-PDCTL0_SERIAL_ON .equ       10b
-PDCTL0_PERIPH_ON .equ       100b
+; base address
 
-PDSTAT0_OFFSET .equ         0x140
+PRCM_BASE_ADDR .equ         0x40082000  ; PRCM base address
 
-PDSTAT0_RFC_ON .equ         1b
-PDSTAT0_SERIAL_ON .equ      10b
-PDSTAT0_PERIPH_ON .equ      100b
 
-GPIOCLKGR_OFFSET .equ       0x48
+; register offsets
 
-GPIOCLKGR_CLK_EN .equ       1b
+PDCTL0_OFFSET .equ          0x12c       ; Power Domain Control 0
+PDSTAT0_OFFSET .equ         0x140       ; Power Domain Status 0
+GPIOCLKGR_OFFSET .equ       0x48        ; GPIO Clock Gating Register
+CLKLOADCTL_OFFSET .equ      0x28        ; Clock Load Control Register
+GPTCLKGR_OFFSET .equ        0x54        ; GPT Clock Gating Register
+GPTCLKGS_OFFSET .equ        0x58        ; GPT Clock Gating Register in sleep mode
+GPTCLKGDS_OFFSET .equ       0x5C        ; GPT Clock Gating Register in deep sleep mode
 
-CLKLOADCTL_OFFSET .equ      0x28
+; register values
 
-CLKLOADCTL_LOAD .equ        1b
-CLKLOADCTL_LOAD_DONE .equ   10b
+; power domain
+PDCTL0_RFC_ON .equ          1b          ; Enable RFC Power Domain
+PDCTL0_SERIAL_ON .equ       10b         ; Enable Serial Power Domain
+PDCTL0_PERIPH_ON .equ       100b        ; Enable Peripheral Power Domain
 
-GPTCLKGR_OFFSET .equ       0x54
-GPTCLKGR_GPT0_ENABLE .equ  0x1
-GPTCLKGR_GPT1_ENABLE .equ  0x2
-GPTCLKGR_GPT2_ENABLE .equ  0x4
-GPTCLKGR_GPT3_ENABLE .equ  0x8
+PDSTAT0_RFC_ON .equ         1b          ; RFC Power Domain On
+PDSTAT0_SERIAL_ON .equ      10b         ; Serial Power Domain On
+PDSTAT0_PERIPH_ON .equ      100b        ; Peripheral Power Domain On
 
-GPTCLKGS_OFFSET .equ       0x58
-GPTCLKGS_GPT0_ENABLE .equ  0x1
-GPTCLKGS_GPT1_ENABLE .equ  0x2
-GPTCLKGS_GPT2_ENABLE .equ  0x4
-GPTCLKGS_GPT3_ENABLE .equ  0x8
+; clock load
+CLKLOADCTL_LOAD .equ        1b          ; Load Clock Control Registers
+CLKLOADCTL_LOAD_DONE .equ   10b         ; Clock Control Registers Loaded
 
-GPTCLKGS_OFFSET .equ       0x58
-GPTCLKGS_GPT0_ENABLE .equ  0x1
-GPTCLKGS_GPT1_ENABLE .equ  0x2
-GPTCLKGS_GPT2_ENABLE .equ  0x4
-GPTCLKGS_GPT3_ENABLE .equ  0x8
+; GPIO clock
+GPIOCLKGR_CLK_EN .equ       1b          ; Enable GPIO Clock
 
-GPTCLKGDS_OFFSET .equ       0x5C
-GPTCLKGDS_GPT0_ENABLE .equ  0x1
-GPTCLKGDS_GPT1_ENABLE .equ  0x2
-GPTCLKGDS_GPT2_ENABLE .equ  0x4
-GPTCLKGDS_GPT3_ENABLE .equ  0x8
-
+; GPT clock
+GPTCLKGR_GPT0_ENABLE .equ  0x1          ; Enable GPT0 Clock
+GPTCLKGR_GPT1_ENABLE .equ  0x2          ; Enable GPT1 Clock
+GPTCLKGR_GPT2_ENABLE .equ  0x4          ; Enable GPT2 Clock
+GPTCLKGR_GPT3_ENABLE .equ  0x8          ; Enable GPT3 Clock

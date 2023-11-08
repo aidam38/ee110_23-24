@@ -7,7 +7,7 @@
 
 ;Power Control Registers
 
-PCRM_BASE_ADDR .equ 		0x40082000
+PRCM_BASE_ADDR .equ 		0x40082000
 
 PDCTL0_OFFSET .equ 			0x012c
 
@@ -47,9 +47,9 @@ IO_INPUT .equ				0x1 << 29
 ;GPIO Registers
 GPIO_BASE_ADDR .equ			0x40022000
 
-DOUT_OFFSET	.equ			0x80
-DIN_OFFSET .equ				0xC0
-DOE_OFFSET .equ				0xD0
+GPIO_DOUT_OFFSET	.equ			0x80
+GPIO_DIN_OFFSET .equ				0xC0
+GPIO_DOE_OFFSET .equ				0xD0
 
 DOE_ENABLE_6_7 .equ			(11b << 6)
 D_HIGH_6_7 .equ				(11b << 6)

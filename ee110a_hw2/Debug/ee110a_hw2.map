@@ -116,14 +116,14 @@ MODULE SUMMARY
 LINKER GENERATED COPY TABLES
 
 __TI_cinit_table @ 00000444 records: 1, size/record: 8, table size: 8
-	.data: load addr=00000430, load size=00000009 bytes, run addr=20000000, run size=0000068b bytes, compression=lzss
+    .data: load addr=00000430, load size=00000009 bytes, run addr=20000000, run size=0000068b bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
 
 __TI_handler_table @ 0000043c records: 2, size/record: 4, table size: 8
-	index: 0, handler: __TI_decompress_lzss
-	index: 1, handler: __TI_decompress_none
+    index: 0, handler: __TI_decompress_lzss
+    index: 1, handler: __TI_decompress_none
 
 
 GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name 
@@ -136,7 +136,7 @@ address   name
 00000133  KeypadInit              
 00000165  KeypadScanAndDebounce   
 0000039b  MoveVecTable            
-00000317  PDInit                  
+00000317  PeriphPowerInit                  
 000003ed  ReadRow                 
 0000001f  ResetISR                
 000003d1  SelectRow               
@@ -180,7 +180,7 @@ address   name
 00000213  __aeabi_memcpy8         
 00000213  memcpy                  
 000002af  __TI_decompress_lzss    
-00000317  PDInit                  
+00000317  PeriphPowerInit                  
 00000331  GPIOClockInit           
 00000349  GPTClockInit            
 00000365  EnqueueEvent            

@@ -71,19 +71,19 @@ main:
 ;
 
 ; Write to PDCTL0
-PDInit:
-	MOV32 	R0, PCRM_BASE_ADDR			;put PCRM registers base address to R0
+PeriphPowerInit:
+	MOV32 	R0, PRCM_BASE_ADDR			;put PCRM registers base address to R0
 	MOV		R1, #PDCTL0_PERIPH_ON		;put PDCTL0 register value for turning
 										;peripheral power on to R1
 	STR 	R1, [R0, #PDCTL0_OFFSET]	;write R1 to PDCTL0
-	;B		PDLoop
+	;B		PeriphPowerLoop
 
 ; Wait for PDSTAT0
-PDLoop:
+PeriphPowerLoop:
 	LDR 	R1, [R0, #PDSTAT0_OFFSET]	;read PDCTL0 to R1
 	CMP		R1, #PDSTAT0_PERIPH_ON		;check if R1 contains status value for
 										;peripheral power on
-	BNE		PDLoop						;^if not, loop/try again
+	BNE		PeriphPowerLoop						;^if not, loop/try again
 	;B 		GPIOClockInit				;if yes, we have successfuly turned
 										;turned peripheral power on, continue
 
@@ -137,7 +137,7 @@ GPIOInit:
 	MOV32	R0, GPIO_BASE_ADDR			;put GPIO registers base addresss to R0
 	MOV32	R1, DOE_ENABLE_6_7			;put DOE value for enabling output for
 										;for DIO6 and DIO6 to R1
-	STR		R1, [R0, #DOE_OFFSET]		;write R1 to DOE
+	STR		R1, [R0, #GPIO_DOE_OFFSET]		;write R1 to DOE
 	;B 		MainLoop
 
 ;
@@ -148,7 +148,7 @@ GPIOInit:
 MainLoop:
 	;DIN and DOUT are in the same register group as DOE, so R0 is still a valid
 	;base address
-	LDR		R1, [R0, #DIN_OFFSET] 		;read DIN to R1 to get button input
+	LDR		R1, [R0, #GPIO_DIN_OFFSET] 		;read DIN to R1 to get button input
 
 	LSR		R1, #BTN_TO_LED_BIT_DISTANCE;right-shift R1 to move/map bits 14,13
 										;to bits 7,6
@@ -157,5 +157,5 @@ MainLoop:
 	EOR		R1, #D_HIGH_6_7				;negate R1 because button pins go
 										;inactive when button pressed
 
-	STR		R1, [R0, #DOUT_OFFSET]		;write R1 to DOUT to output to LEDs
+	STR		R1, [R0, #GPIO_DOUT_OFFSET]		;write R1 to DOUT to output to LEDs
 	B		MainLoop					;loop

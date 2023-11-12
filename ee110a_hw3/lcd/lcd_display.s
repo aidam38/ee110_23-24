@@ -49,8 +49,8 @@ Display:
     PUSH    {LR}        ; save return address
 
     ; set DD RAM command
-    MOV32   R0, #SET_DDRAM_ADDR
-    MOV32   R1, #0      ; RS = 0
+    MOV32   R0, SET_DDRAM_ADDR
+    MOV32   R1, 0      ; RS = 0
     BL      LCDWrite
 
 DisplayLoop:
@@ -64,7 +64,7 @@ DisplayLoop:
     BL      LCDWaitForBusy  ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD
-    MOV32   R0, #1      ; RS = 1
+    MOV32   R0, 1      ; RS = 1
     ; character is already in R1, LCDWaitForBusy should mangle it 
     BL      LCDWrite        ; write data to LCD
 
@@ -75,7 +75,7 @@ DisplayDone:
     ; TODO
 
     ; otherwise return FUNCTION_SUCCESS
-    MOV     R0, FUNCTION_SUCCESS
+    MOV     R0, #FUNCTION_SUCCESS
     POP     {LR}        ; save return address
     BX      LR          ; return
 
@@ -108,12 +108,12 @@ DisplayChar:
     PUSH    {LR}        ; save return address
 
     ; set DD RAM command
-    MOV32   R0, #SET_DDRAM_ADDR
-    MOV32   R1, #0      ; RS = 0
+    MOV32   R0, SET_DDRAM_ADDR
+    MOV32   R1, 0      ; RS = 0
     BL      LCDWrite
 
     ; write character to LCD
-    MOV32   R0, #1      ; RS = 1
+    MOV32   R0, 1      ; RS = 1
     MOV     R1, R2      ; character is originally in R2
     BL      LCDWrite
 
@@ -121,7 +121,7 @@ DisplayChar:
     ; TODO
 
     ; otherwise return FUNCTION_SUCCESS
-    MOV     R0, FUNCTION_SUCCESS
+    MOV     R0, #FUNCTION_SUCCESS
     POP     {LR}        ; save return address
     BX      LR          ; return
 

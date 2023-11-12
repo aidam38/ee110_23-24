@@ -46,14 +46,14 @@
     .align 4
 LCDInitTab:
            ;Command         Delay Count
-    .word   0b00111000,     15000 * INITTIMER_COUNT_PER_US   ; wait for 150ms
-    .word   0b00111000,     4100 * INITTIMER_COUNT_PER_US    ; wait for 4.1ms
-    .word   0b00111000,     100 * INITTIMER_COUNT_PER_US     ; wait for 100us
-    .word   0b00111000,     -1      ; function set
-    .word   0b00001000,     -1      ; display off
-    .word   0b00000001,     -1      ; clear display
-    .word   0b00000110,     -1      ; entry mode set (increment cursor, no shift)
-    .word   0b00001111,     -1      ; display/cursor on
+    .word   00111000b,     15000 * INITTIMER_COUNT_PER_US   ; wait for 150ms
+    .word   00111000b,     4100 * INITTIMER_COUNT_PER_US    ; wait for 4.1ms
+    .word   00111000b,     100 * INITTIMER_COUNT_PER_US     ; wait for 100us
+    .word   00111000b,     -1      ; function set
+    .word   00001000b,     -1      ; display off
+    .word   00000001b,     -1      ; clear display
+    .word   00000110b,     -1      ; entry mode set (increment cursor, no shift)
+    .word   00001111b,     -1      ; display/cursor on
 
 EndLCDInitTab:
 
@@ -95,12 +95,13 @@ LCDInitWaitTimeOut:
     ;B      LCDInitLoopWrite
 
 LCDInitLoopWrite:
-    MOV32   R0, #0          ; want to write to register 0 during init
+    MOV32   R0, 0          ; want to write to register 0 during init
     ; R1 is already set up with DATA
     BL      LCDWriteNoTimer ; write to LCD
         
     ; if address is equal to EndLCDInitTab, break init loop
-    CMP     R3, #EndLCDInitTab
+    ADR		R2, EndLCDInitTab
+    CMP     R3, R2
     BNE     LCDInitLoop
     ;B      LCDInitEnd
 

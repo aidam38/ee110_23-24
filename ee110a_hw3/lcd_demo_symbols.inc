@@ -37,3 +37,5 @@ RW_PIN .equ             1   ; read/write
 E_PIN .equ              2   ; enable
 
 RS_PIN_CFG .equ         0x0 ; just output
+RW_PIN_CFG .equ         0x0 ; just output
+E_PIN_CFG .equ         0x0 ; just output

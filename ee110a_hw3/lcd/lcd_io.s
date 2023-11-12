@@ -90,7 +90,7 @@ LCDWriteWaitNoTimer:
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
     ; start command timer
-    STREG   TIMER_ENABLE, R5, #GPT_CTL_OFFSET
+    STREG   TIMER_ENABLE, R5, GPT_CTL_OFFSET
 
     ; wait for 450ns by checking the match interrupt
 LCDWriteWaitMatch:

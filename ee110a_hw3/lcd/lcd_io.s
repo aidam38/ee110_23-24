@@ -11,8 +11,12 @@
 ;   LCDRead
 ;   LCDWaitForBusy
 ; 
+
+	.include "../cc26x2r/gpio_reg.inc"
+	.include "../cc26x2r/gpt_reg.inc"
+	.include "lcd_demo_symbols.inc"
     .include "lcd_symbols.inc"
-    .include "../macros.inc
+    .include "../macros.inc"
 
     .def LCDWrite
     .def LCDWriteNoTimer
@@ -66,9 +70,9 @@ LCDWriteWaitTimeOut:
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
-    ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
+    ORR     R2, R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
-    ORN     R2, #1, LSL #RW_PIN         ; merge R/W = 0 into DOUT while
+    ORN     R2, R2, #1, LSL #RW_PIN         ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -152,6 +156,7 @@ LCDWriteNoTimer:
     ; wait for 140ns (round_up(140 / 40ns) = 3.5 ~ 4)
     MOV     R3, #4
 LCDWriteNoTimerWait1:
+
     SUBS    R3, #1      ; decrement counter
     BNE     LCDWriteNoTimerWait1
 
@@ -225,9 +230,9 @@ LCDReadWaitTimeOut:
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
-    ORR     R2, R1, LSL #RS_PIN         ; merge RS into DOUT while
+    ORR     R2, R2, R1, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
-    ORN     R2, #1, LSL #RW_PIN         ; merge R/W = 0 into DOUT while
+    ORN     R2, R2, #1, LSL #RW_PIN         ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -239,12 +244,12 @@ LCDReadWaitNoTimer:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #1, LSL #E_PIN          ; merge E = 1 into DOUT while
+    ORN     R2, R2, #1, LSL #E_PIN          ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
     ; start command timer
-    STREG   TIMER_ENABLE, R5, #GPT_CTL_OFFSET
+    STREG   TIMER_ENABLE, R5, GPT_CTL_OFFSET
 
     ; wait for 450ns by checking the match interrupt
 LCDReadWaitMatch:
@@ -254,7 +259,7 @@ LCDReadWaitMatch:
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R0, #1, LSL #E_PIN          ; merge E = 0 into DOUT while
+    ORN     R0, R0, #1, LSL #E_PIN          ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R0, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -296,7 +301,7 @@ LCDWaitForBusyLoop:
     BL      LCDRead
 
     ; test if busy flag is set
-    TST     R0, BUSY_FLAG_MASK
+    TST     R0, #BUSY_FLAG_MASK
     BEQ     LCDWaitForBusyLoop
 
     ; busy flag not set, so return

@@ -12,7 +12,7 @@
 
     .include "../constants.inc"
     .include "../macros.inc"
-    .include "lcd_display.inc"
+    .include "lcd_symbols.inc"
 
     .ref LCDWrite
     .ref LCDWaitForBusy

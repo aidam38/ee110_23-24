@@ -1,4 +1,5 @@
     .include "cc26x2r/gpt_reg.inc"
+    .include "../lcd_demo_symbols.inc"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; INSTRUCTIONS
@@ -20,7 +21,7 @@ TIMER_ENABLE .equ          GPT_CTL_TAEN_ENABLED
 ; (interrupts disabled by default)
 
 ; timer for executing commands
-CMDTIMER_CFG .equ       GPT_CFG_16BIT
+CMDTIMER_CFG .equ       GPT_CFG_2_16BIT
 CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
 
 ; 48 Mhz / 48 = 1 Mhz (1 us)
@@ -30,7 +31,7 @@ CMDTIMER_TAMATCHR .equ 22
 CMDTIMER_TAPR .equ     0
 
 ; timer for initializion
-INITTIMER_CFG .equ      GPT_CFG_16BIT
+INITTIMER_CFG .equ      GPT_CFG_2_16BIT
 INITTIMER_TAMR .equ     GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
 
 ; 3 * 2^4 = 48

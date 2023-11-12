@@ -14,7 +14,7 @@
 
 ; local include files
     .include "cc26x2r/gpio_reg.inc"
-    .include "keypad_demo_symbols.inc"
+    .include "lcd_demo_symbols.inc"
     .include "macros.inc"
 
 ; export interface functions defined in this file

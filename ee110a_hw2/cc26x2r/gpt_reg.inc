@@ -184,6 +184,21 @@ GPT_IMR_TBMIM_ENABLED .equ       0x1 << 11  ; match interrupt enabled
 GPT_IMR_DMABIM_DISABLED .equ     0x0 << 13  ; DMA interrupt disabled
 GPT_IMR_DMABIM_ENABLED .equ      0x1 << 13  ; DMA interrupt enabled
 
+; RIS - raw interrupt status register
+; timer A
+GPT_RIS_TATORIS .equ             0x1        ; time-out raw interrupt status
+GPT_RIS_CAMRIS .equ              0x1 << 1   ; capture mode raw interrupt status
+GPT_RIS_CAERIS .equ              0x1 << 2   ; capture mode event raw interrupt status
+GPT_RIS_TAMRIS .equ              0x1 << 4   ; match raw interrupt status
+GPT_RIS_DMAARIS .equ             0x1 << 5   ; DMA raw interrupt status
+
+; timer B
+GPT_RIS_TBTORIS .equ             0x1 << 8   ; time-out raw interrupt status
+GPT_RIS_CBMRIS .equ              0x1 << 9   ; capture mode raw interrupt status
+GPT_RIS_CBERIS .equ              0x1 << 10  ; capture mode event raw interrupt status
+GPT_RIS_TBMRIS .equ              0x1 << 11  ; match raw interrupt status
+
+
 ; ICLR - interrupt clear register
 
 ; timer A

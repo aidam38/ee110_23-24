@@ -72,7 +72,7 @@ LCDWriteWaitTimeOut:
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
-    ORN     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
+    BIC     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -84,7 +84,7 @@ LCDWriteWaitNoTimer:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #(1 << E_PIN)          ; merge E = 1 into DOUT while
+    BIC     R2, #(1 << E_PIN)          ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
@@ -100,7 +100,7 @@ LCDWriteWaitMatch:
 
     ; write E low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #(1 << E_PIN)           ; merge E = 0 into DOUT while
+    BIC     R2, #(1 << E_PIN)           ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -149,7 +149,7 @@ LCDWriteNoTimer:
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
-    ORN     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
+    BIC     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -162,7 +162,7 @@ LCDWriteNoTimerWait1:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #(1 << E_PIN)          ; merge E into DOUT while
+    BIC     R2, #(1 << E_PIN)          ; merge E into DOUT while
                                         ; shifting to the E bit position
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
@@ -175,7 +175,7 @@ LCDWriteNoTimerWait2:
 
     ; write E low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #(1 << E_PIN)           ; merge E = 0 into DOUT while
+    BIC     R2, #(1 << E_PIN)           ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -232,7 +232,7 @@ LCDReadWaitTimeOut:
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     ORR     R2, R1, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
-    ORN     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
+    BIC     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -244,7 +244,7 @@ LCDReadWaitNoTimer:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
+    BIC     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -259,7 +259,7 @@ LCDReadWaitMatch:
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORN     R0, #(1 << E_PIN)           ; merge E = 0 into DOUT while
+    BIC     R0, #(1 << E_PIN)           ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R0, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 

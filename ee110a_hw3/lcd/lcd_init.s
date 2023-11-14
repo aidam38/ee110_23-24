@@ -101,8 +101,12 @@ LCDInitLoopWaitTimer:
     ; wait until time out
 LCDInitWaitTimeOut:
     LDR     R3, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
-    TST     R3, #GPT_RIS_TBTORIS     ; check if timer A timed out
+    TST     R3, #GPT_RIS_TBTORIS     ; check if timer B timed out
     BEQ     LCDInitWaitTimeOut       ; if not, wait
+
+    ; clear interrupt
+    BIC     R3, #GPT_RIS_TBTORIS      ; clear timer B time out interrupt
+    STR     R3, [R4, #GPT_ICRL_OFFSET]; write to interrupt clear register
 
     ;B      LCDInitLoopWrite
 

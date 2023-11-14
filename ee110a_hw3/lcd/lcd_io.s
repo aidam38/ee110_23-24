@@ -68,6 +68,10 @@ LCDWriteWaitTimeOut:
     TST     R2, #GPT_RIS_TATORIS     ; check if timer A timed out
     BNE     LCDWriteWaitTimeOut              ; if not, wait
 
+    ; clear interrupt
+    BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
+    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
@@ -97,6 +101,10 @@ LCDWriteWaitMatch:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TAMRIS      ; check if timer A reached match
     BNE     LCDWriteWaitMatch                ; if not, wait
+
+    ; clear interrupt
+    BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
+    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
 
     ; write E low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
@@ -228,6 +236,10 @@ LCDReadWaitTimeOut:
     TST     R2, #GPT_RIS_TATORIS     ; check if timer A timed out
     BEQ     LCDReadWaitTimeOut              ; if not, wait
 
+    ; clear interrupt
+    BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
+    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     ORR     R2, R1, LSL #RS_PIN         ; merge RS into DOUT while
@@ -256,6 +268,10 @@ LCDReadWaitMatch:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TAMRIS      ; check if timer A reached match
     BEQ     LCDReadWaitMatch                ; if not, wait
+
+    ; clear interrupt
+    BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
+    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register

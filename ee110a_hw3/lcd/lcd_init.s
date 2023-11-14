@@ -90,7 +90,7 @@ LCDInitLoopWaitTimer:
 LCDInitWaitTimeOut:
     LDR     R5, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R5, #GPT_RIS_TATORIS     ; check if timer A timed out
-    BNE     LCDInitWaitTimeOut       ; if not, wait
+    BEQ     LCDInitWaitTimeOut       ; if not, wait
 
     ;B      LCDInitLoopWrite
 

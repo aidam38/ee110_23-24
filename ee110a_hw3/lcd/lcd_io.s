@@ -139,7 +139,7 @@ LCDWriteWaitMatch:
 ; R4 = GPIO_BASE_ADDR
 ; R2-R3 = scratch
 LCDWriteNoTimer:
-    PUSH    {LR, R5, R6}                ; save LR, R4, R5
+    PUSH    {LR, R4}                ; save LR, R4
 
     ; load base addresses of 
     ;  - GPIO (R4)
@@ -179,7 +179,7 @@ LCDWriteNoTimerWait2:
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
-    POP     {LR, R4, R5}                ; restore LR, R4, R5
+    POP     {LR, R4}              ; restore LR, R4
     BX      LR                          ; return
 
 

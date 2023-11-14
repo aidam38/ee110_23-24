@@ -51,3 +51,9 @@ GPTCLKGR_GPT0_ENABLE .equ  0x1          ; Enable GPT0 Clock
 GPTCLKGR_GPT1_ENABLE .equ  0x2          ; Enable GPT1 Clock
 GPTCLKGR_GPT2_ENABLE .equ  0x4          ; Enable GPT2 Clock
 GPTCLKGR_GPT3_ENABLE .equ  0x8          ; Enable GPT3 Clock
+
+GPTCLKGR_GPT_ENABLE_ALL .equ GPTCLKGR_GPT0_ENABLE | 
+                             GPTCLKGR_GPT1_ENABLE | 
+                             GPTCLKGR_GPT2_ENABLE | 
+                             GPTCLKGR_GPT3_ENABLE
+                                        ; Enable all clocks

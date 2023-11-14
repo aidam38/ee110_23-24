@@ -138,13 +138,13 @@ GPIOClockLoop:
 
 GPTClockInit:
     MOV32     R0, PRCM_BASE_ADDR            ; prepare PRCM register base address
-    MOV        R1, #GPTCLKGR_GPT0_ENABLE   ; prepare CLK_EN (clock enable) value
-                                        ; for GPTCLKGR
-    STR        R1, [R0, #GPTCLKGR_OFFSET]    ; write to GPTCLKGR register to turn
-                                        ; on the clock
+    MOV        R1, #GPTCLKGR_GPT_ENABLE_ALL ; prepare CLK_EN (clock enable) value
+                                            ; for GPTCLKGR
+    STR        R1, [R0, #GPTCLKGR_OFFSET]   ; write to GPTCLKGR register to turn
+                                            ; on the clock
 
-    MOV        R1, #CLKLOADCTL_LOAD        ; prepare LOAD value for CLKLOADCTL
-    STR        R1, [R0, #CLKLOADCTL_OFFSET]; write to CLKLOADCTL to load the clock
+    MOV        R1, #CLKLOADCTL_LOAD         ; prepare LOAD value for CLKLOADCTL
+    STR        R1, [R0, #CLKLOADCTL_OFFSET] ; write to CLKLOADCTL to load the clock
     ;GPTClockLoop
 
 ; Wait for CLKLOADCTL to signal clock done loading
@@ -153,5 +153,5 @@ GPTClockLoop:
     LDR        R1, [R0, #CLKLOADCTL_OFFSET]
     CMP        R1, #CLKLOADCTL_LOAD_DONE    
 
-    BNE        GPTClockLoop            ; if not, loop/try again
-    BX        LR                        ; if yes, return
+    BNE        GPTClockLoop                ; if not, loop/try again
+    BX         LR                          ; if yes, return

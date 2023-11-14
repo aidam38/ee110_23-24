@@ -71,6 +71,9 @@ LCDInit:
     STREG   CMDTIMER_TAMATCHR, R4, GPT_TAMATCHR_OFFSET
     STREG   CMDTIMER_TAPR, R4, GPT_TAPR_OFFSET
 
+    ; start it so that it's timed out for first read
+    STREG   CMDTIMER_ENABLE, R4, GPT_CTL_OFFSET
+
     ; set up initialization timer - timer B
     STREG   INITTIMER_TBMR, R4, GPT_TBMR_OFFSET
     STREG   INITTIMER_TBPR, R4, GPT_TBPR_OFFSET
@@ -93,7 +96,7 @@ LCDInitLoopWaitBusy:
 
 LCDInitLoopWaitTimer:
     STR     R2, [R4, #GPT_TBILR_OFFSET]        ; set timer A interval load register
-    STREG   INITTIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
+    STREG   INITTIMER_ENABLE | CMDTIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
 
     ; wait until time out
 LCDInitWaitTimeOut:

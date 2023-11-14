@@ -1,4 +1,4 @@
-    .include "cc26x2r/gpt_reg.inc"
+    .include "../cc26x2r/gpt_reg.inc"
     .include "../lcd_demo_symbols.inc"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,7 +21,7 @@ TIMER_CFG .equ          GPT_CFG_2_16BIT
 ; timer for executing commands - timer A
 CMDTIMER_ENABLE .equ    GPT_CTL_TAEN_ENABLED
 ; one-shot, count up, match interrupt enabled
-CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | CMD_TXMR_TXMIE_ENABLED
+CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXMIE_ENABLED
 
 ; 48 Mhz / 48 = 1 Mhz (1 us)
 CMDTIMER_TAILR .equ    48

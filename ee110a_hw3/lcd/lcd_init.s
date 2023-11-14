@@ -61,11 +61,19 @@ EndLCDInitTab:
 ; R5 = tab pointer
 LCDInit:
     PUSH    {LR, R4}        ; save return address and R4
-    ; set up timer for initialization
+    ; set up general timer
     MOV32   R4, TIMER_BASE_ADDR
-    STREG   INITTIMER_CFG, R4, GPT_CFG_OFFSET
-    STREG   INITTIMER_TAMR, R4, GPT_TAMR_OFFSET
-    STREG   INITTIMER_TAPR, R4, GPT_TAPR_OFFSET
+    STREG   TIMER_CFG, R4, GPT_CFG_OFFSET
+
+    ; set up command timer - timer A
+    STREG   CMDTIMER_TAMR, R4, GPT_TAMR_OFFSET
+    STREG   CMDTIMER_TAILR, R4, GPT_TAILR_OFFSET
+    STREG   CMDTIMER_TAMATCHR, R4, GPT_TAMATCHR_OFFSET
+    STREG   CMDTIMER_TAPR, R4, GPT_TAPR_OFFSET
+
+    ; set up initialization timer - timer B
+    STREG   INITTIMER_TBMR, R4, GPT_TBMR_OFFSET
+    STREG   INITTIMER_TBPR, R4, GPT_TBPR_OFFSET
 
     ; get address of initialization table
     ADR     R5, LCDInitTab
@@ -84,13 +92,13 @@ LCDInitLoopWaitBusy:
     B       LCDInitLoopWrite
 
 LCDInitLoopWaitTimer:
-    STR     R2, [R4, #GPT_TAILR_OFFSET]        ; set timer A interval load register
-    STREG   TIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
+    STR     R2, [R4, #GPT_TBILR_OFFSET]        ; set timer A interval load register
+    STREG   INITTIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
 
     ; wait until time out
 LCDInitWaitTimeOut:
     LDR     R3, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
-    TST     R3, #GPT_RIS_TATORIS     ; check if timer A timed out
+    TST     R3, #GPT_RIS_TBTORIS     ; check if timer A timed out
     BEQ     LCDInitWaitTimeOut       ; if not, wait
 
     ;B      LCDInitLoopWrite
@@ -107,12 +115,5 @@ LCDInitLoopWrite:
     ;B      LCDInitEnd
 
 LCDInitEnd:
-    ; prepare timer for IO
-    STREG   CMDTIMER_CFG, R4, GPT_CFG_OFFSET
-    STREG   CMDTIMER_TAMR, R4, GPT_TAMR_OFFSET
-    STREG   CMDTIMER_TAILR, R4, GPT_TAILR_OFFSET
-    STREG   CMDTIMER_TAMATCHR, R4, GPT_TAMATCHR_OFFSET
-    STREG   CMDTIMER_TAPR, R4, GPT_TAPR_OFFSET
-
     POP     {LR, R4, R5}        ; restore return address and R4
     BX      LR              ; return

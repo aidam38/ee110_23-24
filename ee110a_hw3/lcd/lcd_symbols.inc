@@ -16,13 +16,12 @@ SET_DDRAM_ADDR .equ 0x1 << 7    ; set DDRAM address instruction
 TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR
 
 ; general settings
-TIMER_ENABLE .equ          GPT_CTL_TAEN_ENABLED
+TIMER_CFG .equ          GPT_CFG_2_16BIT
 
-; (interrupts disabled by default)
-
-; timer for executing commands
-CMDTIMER_CFG .equ       GPT_CFG_2_16BIT
-CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
+; timer for executing commands - timer A
+CMDTIMER_ENABLE .equ    GPT_CTL_TAEN_ENABLED
+; one-shot, count up, match interrupt enabled
+CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | CMD_TXMR_TXMIE_ENABLED
 
 ; 48 Mhz / 48 = 1 Mhz (1 us)
 CMDTIMER_TAILR .equ    48
@@ -30,10 +29,10 @@ CMDTIMER_TAILR .equ    48
 CMDTIMER_TAMATCHR .equ 22
 CMDTIMER_TAPR .equ     0
 
-; timer for initializion
-INITTIMER_CFG .equ      GPT_CFG_2_16BIT
-INITTIMER_TAMR .equ     GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
+; timer for initializion - timer B
+INITTIMER_ENABLE .equ   GPT_CTL_TBEN_ENABLED
+INITTIMER_TBMR .equ     GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
 
 ; 3 * 2^4 = 48
 INITTIMER_COUNT_PER_US .equ     3
-INITTIMER_TAPR .equ             4
+INITTIMER_TBPR .equ             4

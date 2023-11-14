@@ -84,7 +84,7 @@ LCDInitLoopWaitBusy:
     B       LCDInitLoopWrite
 
 LCDInitLoopWaitTimer:
-    STREG   R2, R4, GPT_TAILR_OFFSET        ; set timer A interval load register
+    STR     R2, [R4, #GPT_TAILR_OFFSET]        ; set timer A interval load register
     STREG   TIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
 
     ; wait until time out

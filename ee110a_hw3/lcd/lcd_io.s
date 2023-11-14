@@ -226,7 +226,7 @@ LCDRead:
 LCDReadWaitTimeOut:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TATORIS     ; check if timer A timed out
-    BNE     LCDReadWaitTimeOut              ; if not, wait
+    BEQ     LCDReadWaitTimeOut              ; if not, wait
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
@@ -255,7 +255,7 @@ LCDReadWaitNoTimer:
 LCDReadWaitMatch:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TAMRIS      ; check if timer A reached match
-    BNE     LCDReadWaitMatch                ; if not, wait
+    BEQ     LCDReadWaitMatch                ; if not, wait
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register

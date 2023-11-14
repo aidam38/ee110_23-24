@@ -58,6 +58,7 @@ LCDInitTab:
 EndLCDInitTab:
 
 ; R4 = TIMER_BASE_ADDR
+; R5 = tab pointer
 LCDInit:
     PUSH    {LR, R4}        ; save return address and R4
     ; set up timer for initialization
@@ -67,11 +68,11 @@ LCDInit:
     STREG   INITTIMER_TAPR, R4, GPT_TAPR_OFFSET
 
     ; get address of initialization table
-    ADR     R3, LCDInitTab
+    ADR     R5, LCDInitTab
 
 LCDInitLoop:
-    LDR     R1, [R3], #4    ; load command (DATA)
-    LDR     R2, [R3], #4    ; load delay count
+    LDR     R1, [R5], #4    ; load command (DATA)
+    LDR     R2, [R5], #4    ; load delay count
 
     ; check if delay count is -1
     CMP     R2, #-1
@@ -83,13 +84,13 @@ LCDInitLoopWaitBusy:
     B       LCDInitLoopWrite
 
 LCDInitLoopWaitTimer:
-    ; start timer
-    STREG   TIMER_ENABLE, R4, GPT_CTL_OFFSET
+    STREG   R2, R4, GPT_TAILR_OFFSET        ; set timer A interval load register
+    STREG   TIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
 
     ; wait until time out
 LCDInitWaitTimeOut:
-    LDR     R5, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
-    TST     R5, #GPT_RIS_TATORIS     ; check if timer A timed out
+    LDR     R3, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
+    TST     R3, #GPT_RIS_TATORIS     ; check if timer A timed out
     BEQ     LCDInitWaitTimeOut       ; if not, wait
 
     ;B      LCDInitLoopWrite
@@ -100,8 +101,8 @@ LCDInitLoopWrite:
     BL      LCDWriteNoTimer ; write to LCD
         
     ; if address is equal to EndLCDInitTab, break init loop
-    ADR		R2, EndLCDInitTab
-    CMP     R3, R2
+    ADR		R3, EndLCDInitTab
+    CMP     R5, R3
     BNE     LCDInitLoop
     ;B      LCDInitEnd
 
@@ -113,5 +114,5 @@ LCDInitEnd:
     STREG   CMDTIMER_TAMATCHR, R4, GPT_TAMATCHR_OFFSET
     STREG   CMDTIMER_TAPR, R4, GPT_TAPR_OFFSET
 
-    POP     {LR, R4}        ; restore return address and R4
+    POP     {LR, R4, R5}        ; restore return address and R4
     BX      LR              ; return

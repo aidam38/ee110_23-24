@@ -106,7 +106,7 @@ LCDInitWaitTimeOut:
 
     ; clear interrupt
     BIC     R3, #GPT_RIS_TBTORIS      ; clear timer B time out interrupt
-    STR     R3, [R4, #GPT_ICRL_OFFSET]; write to interrupt clear register
+    STR     R3, [R4, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ;B      LCDInitLoopWrite
 

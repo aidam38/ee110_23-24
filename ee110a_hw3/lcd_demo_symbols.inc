@@ -32,9 +32,9 @@ DATA_7_PIN .equ         22
 DATA_PIN_CFG .equ       IO_INPUT ; both an output and input pin
 
 ; pins for controlling the lcd
-RS_PIN .equ             0   ; register select
-RW_PIN .equ             1   ; read/write
-E_PIN .equ              2   ; enable
+RS_PIN .equ             6   ; register select
+RW_PIN .equ             5  ; read/write
+E_PIN .equ              7   ; enable
 
 RS_PIN_CFG .equ         0x0 ; just output
 RW_PIN_CFG .equ         0x0 ; just output

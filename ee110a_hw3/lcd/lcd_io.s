@@ -70,7 +70,7 @@ LCDWriteWaitTimeOut:
 
     ; clear interrupt
     BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
-    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
@@ -88,7 +88,7 @@ LCDWriteWaitNoTimer:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    BIC     R2, #(1 << E_PIN)          ; merge E = 1 into DOUT while
+    ORR     R2, #(1 << E_PIN)          ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
@@ -104,7 +104,7 @@ LCDWriteWaitMatch:
 
     ; clear interrupt
     BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
-    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write E low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
@@ -170,7 +170,7 @@ LCDWriteNoTimerWait1:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    BIC     R2, #(1 << E_PIN)          ; merge E into DOUT while
+    ORR     R2, #(1 << E_PIN)          ; merge E into DOUT while
                                         ; shifting to the E bit position
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
@@ -238,7 +238,7 @@ LCDReadWaitTimeOut:
 
     ; clear interrupt
     BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
-    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
@@ -256,7 +256,7 @@ LCDReadWaitNoTimer:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    BIC     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
+    ORR     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -271,7 +271,7 @@ LCDReadWaitMatch:
 
     ; clear interrupt
     BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
-    STR     R2, [R5, #GPT_ICRL_OFFSET]; write to interrupt clear register
+    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register

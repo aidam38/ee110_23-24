@@ -69,8 +69,7 @@ LCDWriteWaitTimeOut:
     BNE     LCDWriteWaitTimeOut              ; if not, wait
 
     ; clear interrupt
-    BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
-    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
+    STREG   GPT_ICLR_TATOCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
@@ -103,8 +102,7 @@ LCDWriteWaitMatch:
     BNE     LCDWriteWaitMatch                ; if not, wait
 
     ; clear interrupt
-    BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
-    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
+    STREG   GPT_ICLR_TAMCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write E low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
@@ -237,8 +235,7 @@ LCDReadWaitTimeOut:
     BEQ     LCDReadWaitTimeOut              ; if not, wait
 
     ; clear interrupt
-    BIC     R2, #GPT_RIS_TATORIS      ; clear timer A time out interrupt
-    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
+    STREG   GPT_ICLR_TATOCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
@@ -270,8 +267,7 @@ LCDReadWaitMatch:
     BEQ     LCDReadWaitMatch                ; if not, wait
 
     ; clear interrupt
-    BIC     R2, #GPT_RIS_TAMRIS       ; clear timer A match interrupt
-    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
+    STREG   GPT_ICLR_TAMCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write E low
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register

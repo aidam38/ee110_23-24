@@ -18,8 +18,8 @@ TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR
 ; general settings
 TIMER_CFG .equ          GPT_CFG_2_16BIT
 
-; timer for executing commands - timer A
-CMDTIMER_ENABLE .equ    GPT_CTL_TAEN_ENABLED
+; timer for executing commands - timer B
+CMDTIMER_ENABLE .equ    GPT_CTL_TAEN_ENABLED | GPT_CTL_TASTALL_FREEZE
 ; one-shot, count up, match interrupt enabled
 CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXMIE_ENABLED
 
@@ -29,10 +29,7 @@ CMDTIMER_TAILR .equ    48
 CMDTIMER_TAMATCHR .equ 22
 CMDTIMER_TAPR .equ     0
 
-; timer for initializion - timer B
-INITTIMER_ENABLE .equ   GPT_CTL_TBEN_ENABLED
-INITTIMER_TBMR .equ     GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP
+; instructions
+; (48 Mhz / 2)
+INITTIMER_COUNT_PER_US .equ     24
 
-; 3 * 2^4 = 48
-INITTIMER_COUNT_PER_US .equ     3
-INITTIMER_TBPR .equ             4

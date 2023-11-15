@@ -15,7 +15,7 @@
     .include "lcd_symbols.inc"
 
     .ref LCDWrite
-    .ref LCDWaitForBusy
+    .ref LCDWaitForNotBusy
 
     .def    Display
     .def    DisplayChar
@@ -46,7 +46,10 @@
 ;     
 
 Display:
-    PUSH    {LR}        ; save return address
+    PUSH    {LR, R4, R5}        ; save return address
+
+    ; save string pointer
+    MOV		R4, R2
 
     ; set DD RAM command
     MOV32   R0, SET_DDRAM_ADDR
@@ -55,17 +58,17 @@ Display:
 
 DisplayLoop:
     ; load character from str (post-increment address)
-    LDRB    R1, [R2], #1
+    LDRB    R5, [R4], #1
 
     ; check if character is null terminator
-    CMP     R1, #0
+    CMP     R5, #0
     BEQ     DisplayDone ; if yes, we're done
 
-    BL      LCDWaitForBusy  ; wait for LCD to be ready
+    BL      LCDWaitForNotBusy  ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD
     MOV32   R0, 1      ; RS = 1
-    ; character is already in R1, LCDWaitForBusy should mangle it 
+    MOV		R1, R5	   ; copy character
     BL      LCDWrite        ; write data to LCD
 
     B       DisplayLoop ; loop
@@ -76,7 +79,7 @@ DisplayDone:
 
     ; otherwise return FUNCTION_SUCCESS
     MOV     R0, #FUNCTION_SUCCESS
-    POP     {LR}        ; save return address
+    POP     {LR, R4, R5}        ; save return address
     BX      LR          ; return
 
 

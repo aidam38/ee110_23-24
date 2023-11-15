@@ -36,8 +36,9 @@
 
     .include "lcd_symbols.inc"
     .include "../macros.inc"
+    .include "../cc26x2r/gpio_reg.inc"
 
-    .ref   LCDWaitForBusy
+    .ref   LCDWaitForNotBusy
     .ref   LCDWriteNoTimer
 
     .def   LCDInit
@@ -60,7 +61,7 @@ EndLCDInitTab:
 ; R4 = TIMER_BASE_ADDR
 ; R5 = tab pointer
 LCDInit:
-    PUSH    {LR, R4}        ; save return address and R4
+    PUSH    {LR, R4, R5, R6}        ; save return address and R4
     ; set up general timer
     MOV32   R4, TIMER_BASE_ADDR
     STREG   TIMER_CFG, R4, GPT_CFG_OFFSET
@@ -74,12 +75,9 @@ LCDInit:
     ; start it so that it's timed out for first read
     STREG   CMDTIMER_ENABLE, R4, GPT_CTL_OFFSET
 
-    ; set up initialization timer - timer B
-    STREG   INITTIMER_TBMR, R4, GPT_TBMR_OFFSET
-    STREG   INITTIMER_TBPR, R4, GPT_TBPR_OFFSET
-
     ; get address of initialization table
     ADR     R5, LCDInitTab
+    ADR		R6, EndLCDInitTab
 
 LCDInitLoop:
     LDR     R1, [R5], #4    ; load command (DATA)
@@ -91,35 +89,25 @@ LCDInitLoop:
     ;B      LCDInitLoopWaitBusy  ; if yes wait for busy flag to clear
 
 LCDInitLoopWaitBusy:
-    BL      LCDWaitForBusy
+    BL      LCDWaitForNotBusy
     B       LCDInitLoopWrite
 
+; use noops
 LCDInitLoopWaitTimer:
-    STR     R2, [R4, #GPT_TBILR_OFFSET]        ; set timer A interval load register
-    STREG   INITTIMER_ENABLE | CMDTIMER_ENABLE, R4, GPT_CTL_OFFSET; enable timer A
-
-    ; wait until time out
-LCDInitWaitTimeOut:
-    LDR     R3, [R4, #GPT_RIS_OFFSET]; read raw interrupt status
-    TST     R3, #GPT_RIS_TBTORIS     ; check if timer B timed out
-    BEQ     LCDInitWaitTimeOut       ; if not, wait
-
-    ; clear interrupt
-    STREG   GPT_ICLR_TBTOCINT_CLEAR, R4, GPT_ICLR_OFFSET; write to interrupt clear register
-
+    SUBS	R2, #1
+    BNE		LCDInitLoopWaitTimer
     ;B      LCDInitLoopWrite
 
 LCDInitLoopWrite:
+    ; prepare arguments
     MOV32   R0, 0          ; want to write to register 0 during init
     ; R1 is already set up with DATA
     BL      LCDWriteNoTimer ; write to LCD
         
     ; if address is equal to EndLCDInitTab, break init loop
-    ADR		R3, EndLCDInitTab
-    CMP     R5, R3
-    BNE     LCDInitLoop
-    ;B      LCDInitEnd
+    CMP     R5, R6
+    BNE		LCDInitLoop
 
 LCDInitEnd:
-    POP     {LR, R4, R5}        ; restore return address and R4
+    POP     {LR, R4, R5, R6}        ; restore return address and R4
     BX      LR              ; return

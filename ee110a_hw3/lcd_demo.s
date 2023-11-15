@@ -33,21 +33,18 @@
     .ref LCDInit
     .ref Display
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; MEMORY
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    .data
-
-hello_world:   .cstring "Hello World!"
-adam_krivka:   .cstring "Adam Krivka"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MAIN CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .text
 
+
+hello_world:   .cstring "CCCC"
+adam_krivka:   .cstring "cccc"
+
 ; test cases table
+	.align 4
 LCDTestTab:
     ;     row,  col
     ;     str address
@@ -87,22 +84,30 @@ main:
 
     ; enable output for data pins
     MOV32       R1, GPIO_BASE_ADDR
-    STREG       11111111b << DATA_0_PIN, R1, GPIO_DOE_OFFSET
+    MOV32		R0, ((11111111b << DATA_0_PIN ) | (1 << RW_PIN) | (1 << RS_PIN) | (1 << E_PIN))
+    STR         R0, [R1, #GPIO_DOE_OFFSET]
+
+    ; test
+    STREG		(0xFF << DATA_0_PIN), R1, GPIO_DOUT_OFFSET
+
 
     BL          LCDInit                 ; initialize keypad
 
 ; main loop
+	ADR         R4, LCDTestTab          ; load address of test table
+	ADR         R5, EndLCDTestTab       ; load address of end of test table
 Loop:
-    ADR         R3, LCDTestTab          ; load address of test table
-
     ; load test case
-    LDRH        R0, [R3], #2            ; load row
-    LDRH        R1, [R3], #2            ; load column
-    LDR         R2, [R3], #4            ; load string address
+    LDRH        R0, [R4], #2            ; load row
+    LDRH        R1, [R4], #2            ; load column
+    LDR         R2, [R4], #4            ; load string address
 
     BL          Display                 ; display string
 
-    ADR         R4, EndLCDTestTab       ; load address of end of test table
-    CMP         R3, R4                  ; compare current address to end address
+	CMP         R4, R5                  ; compare current address to end address
     BNE         Loop                    ; if not at end, loop
+
+EndDemo:
+	NOP
+	B			EndDemo
 

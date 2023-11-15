@@ -29,11 +29,11 @@ DATA_5_PIN .equ         20
 DATA_6_PIN .equ         21
 DATA_7_PIN .equ         22
 
-DATA_PIN_CFG .equ       IO_INPUT ; both an output and input pin
+DATA_PIN_CFG .equ       IO_INPUT | IO_NOPUPD ; both an output and input pin
 
 ; pins for controlling the lcd
 RS_PIN .equ             6   ; register select
-RW_PIN .equ             5  ; read/write
+RW_PIN .equ             5   ; read/write
 E_PIN .equ              7   ; enable
 
 RS_PIN_CFG .equ         0x0 ; just output

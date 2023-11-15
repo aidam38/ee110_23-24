@@ -21,7 +21,7 @@
     .def LCDWrite
     .def LCDWriteNoTimer
     .def LCDRead
-    .def LCDWaitForBusy
+    .def LCDWaitForNotBusy
     
 ; LCDWrite
 ;
@@ -66,16 +66,18 @@ LCDWrite:
 LCDWriteWaitTimeOut:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TATORIS     ; check if timer A timed out
-    BNE     LCDWriteWaitTimeOut              ; if not, wait
+    BEQ     LCDWriteWaitTimeOut              ; if not, wait
 
     ; clear interrupt
-    STREG   GPT_ICLR_TATOCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
+    MOVW	R2, #GPT_ICLR_TATOCINT_CLEAR
+    STR     R2, [R5, #GPT_ICLR_OFFSET] ; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
+    BIC		R2, #(1 << RS_PIN)			; clear RS
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
-                                        ; shifting to the RS bit position
-    BIC     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
+										; shifting to the RS bit position
+    BIC     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -89,17 +91,23 @@ LCDWriteWaitNoTimer:
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     ORR     R2, #(1 << E_PIN)          ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
+    BIC		R2, #(11111111b << DATA_0_PIN) ; clear data
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
     ; start command timer
     STREG   CMDTIMER_ENABLE, R5, GPT_CTL_OFFSET
 
+    ; enable output
+    LDR		R0, [R4, #GPIO_DOE_OFFSET]
+    ORR		R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R4, #GPIO_DOE_OFFSET]
+
     ; wait for 450ns by checking the match interrupt
 LCDWriteWaitMatch:
     LDR     R2, [R5, #GPT_RIS_OFFSET]; read raw interrupt status
     TST     R2, #GPT_RIS_TAMRIS      ; check if timer A reached match
-    BNE     LCDWriteWaitMatch                ; if not, wait
+    BEQ     LCDWriteWaitMatch                ; if not, wait
 
     ; clear interrupt
     STREG   GPT_ICLR_TAMCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
@@ -153,9 +161,10 @@ LCDWriteNoTimer:
 
 
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
+    BIC		R2, #(1 << RS_PIN)			; clear RS
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
-                                        ; shifting to the RS bit position
-    BIC     R2, #(1 << RW_PIN)         ; merge R/W = 0 into DOUT while
+										; shifting to the RS bit position
+    BIC     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -168,10 +177,16 @@ LCDWriteNoTimerWait1:
 
     ; write E high and data
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
-    ORR     R2, #(1 << E_PIN)          ; merge E into DOUT while
+    ORR     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
+    BIC     R2, #(11111111b << DATA_0_PIN) ; clear data
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
+
+   	; enable output
+    LDR		R0, [R4, #GPIO_DOE_OFFSET]
+    ORR		R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R4, #GPIO_DOE_OFFSET]
 
     ; wait for 450ns (round_up(450 / 40ns) = 11.25 ~ 12)
     MOV     R3, #12
@@ -185,7 +200,7 @@ LCDWriteNoTimerWait2:
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
-    POP     {LR, R4}              ; restore LR, R4
+    POP     {LR, R4}                    ; restore LR, R4
     BX      LR                          ; return
 
 
@@ -235,13 +250,15 @@ LCDReadWaitTimeOut:
     BEQ     LCDReadWaitTimeOut              ; if not, wait
 
     ; clear interrupt
-    STREG   GPT_ICLR_TATOCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
+    MOVW	R2, #GPT_ICLR_TATOCINT_CLEAR
+    STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write RS based on argument and R/W low
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
-    ORR     R2, R1, LSL #RS_PIN         ; merge RS into DOUT while
-                                        ; shifting to the RS bit position
-    BIC     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
+    BIC		R2, #(1 << RS_PIN)			; clear RS
+    ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
+    									; shifting to the RS bit position
+    ORR     R2, #(1 << RW_PIN)          ; merge R/W = 1 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
@@ -251,7 +268,7 @@ LCDReadWaitNoTimer:
     SUBS    R2, #1      ; decrement counter
     BNE     LCDReadWaitNoTimer
 
-    ; write E high and data
+    ; write E high
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     ORR     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
@@ -259,6 +276,11 @@ LCDReadWaitNoTimer:
 
     ; start command timer
     STREG   CMDTIMER_ENABLE, R5, GPT_CTL_OFFSET
+
+    ; enable input
+    LDR		R0, [R4, #GPIO_DOE_OFFSET]
+    BIC		R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R4, #GPIO_DOE_OFFSET]
 
     ; wait for 450ns by checking the match interrupt
 LCDReadWaitMatch:
@@ -276,6 +298,7 @@ LCDReadWaitMatch:
     STR     R0, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
 
     ; recover data
+    LDR		R0, [R4, #GPIO_DIN_OFFSET]	; read DIN
     LSR     R0, #DATA_0_PIN             ; shift data to the right
     AND     R0, #0xFF                   ; mask out the rest of the bits
 
@@ -305,17 +328,19 @@ LCDReadWaitMatch:
 ; Revision History:
 ;     
 
-LCDWaitForBusy:
-    PUSH    {LR}
-LCDWaitForBusyLoop:
+LCDWaitForNotBusy:
+    PUSH    {LR, R4}
+
+LCDWaitForNotBusyLoop:
     ; read busy flag
     MOV     R0, #0
     BL      LCDRead
 
     ; test if busy flag is set
     TST     R0, #BUSY_FLAG_MASK
-    BEQ     LCDWaitForBusyLoop
+    BNE     LCDWaitForNotBusyLoop
 
+LCDWaitForNotBusyDone:
     ; busy flag not set, so return
-    POP     {LR}
+    POP     {LR, R4}
     BX      LR

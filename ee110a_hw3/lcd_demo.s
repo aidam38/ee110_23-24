@@ -64,34 +64,7 @@ main:
     BL          GPTClockInit              ; turn on GPT clock
     BL          StackInit                 ; initialize stack in SRAM
 
-    ; configure IO pins
-    IOCInit
-
-    ; data pins
-    IOCFG       DATA_0_PIN, DATA_PIN_CFG
-    IOCFG       DATA_1_PIN, DATA_PIN_CFG
-    IOCFG       DATA_2_PIN, DATA_PIN_CFG
-    IOCFG       DATA_3_PIN, DATA_PIN_CFG
-    IOCFG       DATA_4_PIN, DATA_PIN_CFG
-    IOCFG       DATA_5_PIN, DATA_PIN_CFG
-    IOCFG       DATA_6_PIN, DATA_PIN_CFG
-    IOCFG       DATA_7_PIN, DATA_PIN_CFG
-
-    ; control pins
-    IOCFG       RS_PIN, RS_PIN_CFG      ; RS pin
-    IOCFG       RW_PIN, RW_PIN_CFG      ; RW pin
-    IOCFG       E_PIN, E_PIN_CFG        ; E pin
-
-    ; enable output for data pins
-    MOV32       R1, GPIO_BASE_ADDR
-    MOV32		R0, ((11111111b << DATA_0_PIN ) | (1 << RW_PIN) | (1 << RS_PIN) | (1 << E_PIN))
-    STR         R0, [R1, #GPIO_DOE_OFFSET]
-
-    ; test
-    STREG		(0xFF << DATA_0_PIN), R1, GPIO_DOUT_OFFSET
-
-
-    BL          LCDInit                 ; initialize keypad
+    BL          LCDInit                   ; initialize LCD
 
 ; main loop
 	ADR         R4, LCDTestTab          ; load address of test table

@@ -14,7 +14,8 @@
 
 	.include "../cc26x2r/gpio_reg.inc"
 	.include "../cc26x2r/gpt_reg.inc"
-	.include "lcd_demo_symbols.inc"
+    .include "../cc26x2r/ioc_reg.inc"
+    .include "../cc26x2r/ioc_macros.inc"
     .include "lcd_symbols.inc"
     .include "../macros.inc"
 
@@ -22,6 +23,51 @@
     .def LCDWriteNoTimer
     .def LCDRead
     .def LCDWaitForNotBusy
+
+; LCDConfigureForWrite
+LCDConfigureForWrite:
+    PUSH        {LR}
+    ; data pins
+    IOCFG       DATA_0_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_1_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_2_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_3_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_4_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_5_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_6_PIN, IOCFG_GENERIC_OUTPUT
+    IOCFG       DATA_7_PIN, IOCFG_GENERIC_OUTPUT
+
+    ; enable output for data pins
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR		R0, [R1, #GPIO_DOE_OFFSET]
+    ORR		R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
+
+    POP         {LR}
+    BX          LR
+
+; LCDConfigureForRead
+LCDConfigureForRead:
+    PUSH        {LR}
+    ; data pins
+    IOCFG       DATA_0_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_1_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_2_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_3_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_4_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_5_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_6_PIN, IOCFG_GENERIC_INPUT
+    IOCFG       DATA_7_PIN, IOCFG_GENERIC_INPUT
+
+    ; disable output for data pins
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR		R0, [R1, #GPIO_DOE_OFFSET]
+    BIC		R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
+
+    POP         {LR}
+    BX          LR
+
     
 ; LCDWrite
 ;
@@ -55,6 +101,9 @@
 ; R2-R3 = scratch
 LCDWrite:
     PUSH    {LR, R4, R5}                ; save LR, R4, R5
+
+    ; configure pins for write
+    BL      LCDConfigureForWrite
 
     ; load base addresses of 
     ;  - GPIO (R4)
@@ -97,11 +146,6 @@ LCDWriteWaitNoTimer:
 
     ; start command timer
     STREG   CMDTIMER_ENABLE, R5, GPT_CTL_OFFSET
-
-    ; enable output
-    LDR		R0, [R4, #GPIO_DOE_OFFSET]
-    ORR		R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R4, #GPIO_DOE_OFFSET]
 
     ; wait for 450ns by checking the match interrupt
 LCDWriteWaitMatch:
@@ -155,6 +199,9 @@ LCDWriteWaitMatch:
 LCDWriteNoTimer:
     PUSH    {LR, R4}                ; save LR, R4
 
+    ; configure pins for write
+    BL      LCDConfigureForWrite
+
     ; load base addresses of 
     ;  - GPIO (R4)
     MOV32   R4, GPIO_BASE_ADDR          ; prepare to manipulate GPIO pins
@@ -182,11 +229,6 @@ LCDWriteNoTimerWait1:
     BIC     R2, #(11111111b << DATA_0_PIN) ; clear data
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-
-   	; enable output
-    LDR		R0, [R4, #GPIO_DOE_OFFSET]
-    ORR		R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R4, #GPIO_DOE_OFFSET]
 
     ; wait for 450ns (round_up(450 / 40ns) = 11.25 ~ 12)
     MOV     R3, #12
@@ -237,6 +279,9 @@ LCDWriteNoTimerWait2:
 LCDRead:
     PUSH    {LR, R4, R5}                ; save LR, R4, R5
 
+    ; configure pins for read
+    BL      LCDConfigureForRead
+
     ; load base addresses of 
     ;  - GPIO (R4)
     ;  - timer (R5)
@@ -276,11 +321,6 @@ LCDReadWaitNoTimer:
 
     ; start command timer
     STREG   CMDTIMER_ENABLE, R5, GPT_CTL_OFFSET
-
-    ; enable input
-    LDR		R0, [R4, #GPIO_DOE_OFFSET]
-    BIC		R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R4, #GPIO_DOE_OFFSET]
 
     ; wait for 450ns by checking the match interrupt
 LCDReadWaitMatch:

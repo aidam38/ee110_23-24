@@ -62,7 +62,23 @@ EndLCDInitTab:
 ; R5 = tab pointer
 LCDInit:
     PUSH    {LR, R4, R5, R6}        ; save return address and R4
-    ; set up general timer
+
+    ; set up IO pins
+    IOCInit
+
+    ; control pins
+    IOCFG       RS_PIN, IOCFG_GENERIC_OUTPUT      ; RS pin
+    IOCFG       RW_PIN, IOCFG_GENERIC_OUTPUT      ; RW pin
+    IOCFG       E_PIN,IOCFG_GENERIC_OUTPUT        ; E pin
+
+    ; enable output for control pins 
+    MOV32       R1, GPIO_BASE_ADDR
+    MOV32       R0, ((1 << RW_PIN) | (1 << RS_PIN) | (1 << E_PIN))
+    STR         R0, [R1, #GPIO_DOE_OFFSET]
+
+    ; (data pins are configure before each read/write call)
+
+    ; set up timer
     MOV32   R4, TIMER_BASE_ADDR
     STREG   TIMER_CFG, R4, GPT_CFG_OFFSET
 
@@ -75,10 +91,10 @@ LCDInit:
     ; start it so that it's timed out for first read
     STREG   CMDTIMER_ENABLE, R4, GPT_CTL_OFFSET
 
+    ; start init loop
     ; get address of initialization table
     ADR     R5, LCDInitTab
     ADR		R6, EndLCDInitTab
-
 LCDInitLoop:
     LDR     R1, [R5], #4    ; load command (DATA)
     LDR     R2, [R5], #4    ; load delay count

@@ -29,6 +29,7 @@
 ; 
 ; 
 
+row_chars: .cstring "123456789ABCDEF"
 hello_world:   .cstring "Hello world"
 adam_krivka:   .cstring "Adam Krivka"
 
@@ -40,8 +41,35 @@ LCDTestDisplayTab:
     .half 0,    0
     .word hello_world
 
-    .half 0,    5
+    .half 3,    5
     .word adam_krivka
+
+    .half 0,    0
+    .word row_chars
+
+    .half 1,    0
+    .word row_chars
+
+    .half 2,    0
+    .word row_chars
+
+    .half 3,    0
+    .word row_chars
+
+    .half 0,    1
+    .word row_chars
+
+    .half 1,    1
+    .word row_chars
+
+    .half 2,    1
+    .word row_chars
+
+    .half 3,    1
+    .word row_chars
+
+    .half 42,   4200
+    .word hello_world
 
 EndLCDTestDisplayTab:
 
@@ -51,7 +79,22 @@ EndLCDTestDisplayTab:
 LCDTestDisplayCharTab:
     ;     row, col, character, padding
     .byte 0, 0, "a", 0 
-    .byte 0, 5, "b", 0
+    .byte 0, 8, "b", 0
+    .byte 0, 15,"c", 0 
+
+    .byte 1, 0, "a", 0 
+    .byte 1, 8, "b", 0
+    .byte 1, 15,"c", 0 
+
+    .byte 2, 0, "a", 0 
+    .byte 2, 8, "b", 0
+    .byte 2, 15,"c", 0 
+
+    .byte 3, 0, "a", 0 
+    .byte 3, 8, "b", 0
+    .byte 3, 15,"c", 0 
+
+    .byte 42, 4200, "0", 0
 
 EndLCDTestDisplayCharTab:
 

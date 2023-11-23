@@ -27,6 +27,55 @@
     .def LCDWaitForNotBusy
 
 
+LCDConfigureForRead:
+    PUSH    {LR}
+
+    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
+
+    ; reconfigure pins
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_0_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_1_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_2_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_3_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_4_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_5_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_6_PIN
+    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_7_PIN
+
+    ; disable output
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR     R0, [R1, #GPIO_DOE_OFFSET]
+    BIC     R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
+
+    POP     {LR}
+    BX      LR
+
+LCDConfigureForWrite:
+    PUSH    {LR}
+
+    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
+
+    ; reconfigure pins
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_0_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_1_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_2_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_3_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_4_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_5_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_6_PIN
+    STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * DATA_7_PIN
+
+    ; enable output
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR     R0, [R1, #GPIO_DOE_OFFSET]
+    ORR     R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
+
+    POP     {LR}
+    BX      LR
+
+
 
 ; LCDWrite
 ;
@@ -246,12 +295,8 @@ LCDReadEnd:
 LCDWaitForNotBusy:
     PUSH    {LR}
 
-        ; configure pins for read
-    MOV32       R1, GPIO_BASE_ADDR
-    LDR         R0, [R1, #GPIO_DOE_OFFSET]
-    BIC         R0, #(11111111b << DATA_0_PIN)
-    STR         R0, [R1, #GPIO_DOE_OFFSET]
-
+    ; configure pins for read
+    BL      LCDConfigureForRead
 
 LCDWaitForNotBusyLoop:
     ; read busy flag
@@ -264,10 +309,7 @@ LCDWaitForNotBusyLoop:
 
 LCDWaitForNotBusyDone:
 	; configure pins for write
-    MOV32   R1, GPIO_BASE_ADDR
-    LDR        R0, [R1, #GPIO_DOE_OFFSET]
-    ORR        R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R1, #GPIO_DOE_OFFSET]
+    BL      LCDConfigureForWrite
 
     ; busy flag not set, so return
     POP     {LR}

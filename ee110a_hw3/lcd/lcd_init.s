@@ -74,19 +74,8 @@ EndLCDInitTab:
 LCDInit:
     PUSH        {LR, R4, R5, R6, R7}        ; save return address and R4
 
-    ; set up IO pins
-    MOV32       R1, IOC_BASE_ADDR
-    ; data bus
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_0_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_1_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_2_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_3_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_4_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_5_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_6_PIN
-    STREG       IOCFG_GENERIC_INPUT, R1, IOCFG_REG_SIZE * DATA_7_PIN
-
-    ; control pins
+    ; set up control pins
+    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
     STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * RS_PIN      ; RS pin
     STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * RW_PIN      ; RW pin
     STREG       IOCFG_GENERIC_OUTPUT, R1, IOCFG_REG_SIZE * E_PIN       ; E pin
@@ -95,10 +84,7 @@ LCDInit:
     MOV32       R1, GPIO_BASE_ADDR
     STREG       ((1 << RW_PIN) | (1 << RS_PIN) | (1 << E_PIN)), R1, GPIO_DOE_OFFSET
 
-    ; enable output for data pins
-    LDR        R0, [R1, #GPIO_DOE_OFFSET]
-    ORR        R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R1, #GPIO_DOE_OFFSET]
+    BL          LCDConfigureForWrite    ; keep default state of writing
 
     ; set up timer
     MOV32       R1, TIMER_BASE_ADDR

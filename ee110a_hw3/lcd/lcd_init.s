@@ -37,6 +37,9 @@
     .include "lcd_symbols.inc"
     .include "../macros.inc"
     .include "../cc26x2r/gpio_reg.inc"
+	.include "../cc26x2r/ioc_reg.inc"
+	.include "../cc26x2r/ioc_macros.inc"
+
 
     .ref   LCDWaitForNotBusy
     .ref   LCDWriteNoTimer
@@ -61,7 +64,7 @@ EndLCDInitTab:
 ; R4 = TIMER_BASE_ADDR
 ; R5 = tab pointer
 LCDInit:
-    PUSH    {LR, R4, R5, R6}        ; save return address and R4
+    PUSH    {LR, R4, R5, R6, R7, R8}        ; save return address and R4
 
     ; set up IO pins
     IOCInit
@@ -96,11 +99,11 @@ LCDInit:
     ADR     R5, LCDInitTab
     ADR		R6, EndLCDInitTab
 LCDInitLoop:
-    LDR     R1, [R5], #4    ; load command (DATA)
-    LDR     R2, [R5], #4    ; load delay count
+    LDR     R7, [R5], #4    ; load command (DATA)
+    LDR     R8, [R5], #4    ; load delay count
 
     ; check if delay count is -1
-    CMP     R2, #-1
+    CMP     R8, #-1
     BNE     LCDInitLoopWaitTimer ; if not use delay count
     ;B      LCDInitLoopWaitBusy  ; if yes wait for busy flag to clear
 
@@ -110,14 +113,14 @@ LCDInitLoopWaitBusy:
 
 ; use noops
 LCDInitLoopWaitTimer:
-    SUBS	R2, #1
+    SUBS	R8, #1
     BNE		LCDInitLoopWaitTimer
     ;B      LCDInitLoopWrite
 
 LCDInitLoopWrite:
     ; prepare arguments
     MOV32   R0, 0          ; want to write to register 0 during init
-    ; R1 is already set up with DATA
+    MOV		R1, R7
     BL      LCDWriteNoTimer ; write to LCD
         
     ; if address is equal to EndLCDInitTab, break init loop
@@ -125,5 +128,5 @@ LCDInitLoopWrite:
     BNE		LCDInitLoop
 
 LCDInitEnd:
-    POP     {LR, R4, R5, R6}        ; restore return address and R4
+    POP     {LR, R4, R5, R6, R7, R8}        ; restore return address and R4
     BX      LR              ; return

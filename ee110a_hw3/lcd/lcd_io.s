@@ -27,6 +27,7 @@
 ; LCDConfigureForWrite
 LCDConfigureForWrite:
     PUSH        {LR}
+    IOCInit
     ; data pins
     IOCFG       DATA_0_PIN, IOCFG_GENERIC_OUTPUT
     IOCFG       DATA_1_PIN, IOCFG_GENERIC_OUTPUT
@@ -49,6 +50,7 @@ LCDConfigureForWrite:
 ; LCDConfigureForRead
 LCDConfigureForRead:
     PUSH        {LR}
+    IOCInit
     ; data pins
     IOCFG       DATA_0_PIN, IOCFG_GENERIC_INPUT
     IOCFG       DATA_1_PIN, IOCFG_GENERIC_INPUT
@@ -60,10 +62,10 @@ LCDConfigureForRead:
     IOCFG       DATA_7_PIN, IOCFG_GENERIC_INPUT
 
     ; disable output for data pins
-    MOV32   R1, GPIO_BASE_ADDR
-    LDR		R0, [R1, #GPIO_DOE_OFFSET]
-    BIC		R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R1, #GPIO_DOE_OFFSET]
+    MOV32   	R1, GPIO_BASE_ADDR
+    LDR			R0, [R1, #GPIO_DOE_OFFSET]
+    BIC			R0, #(11111111b << DATA_0_PIN)
+    STR     	R0, [R1, #GPIO_DOE_OFFSET]
 
     POP         {LR}
     BX          LR
@@ -103,7 +105,9 @@ LCDWrite:
     PUSH    {LR, R4, R5}                ; save LR, R4, R5
 
     ; configure pins for write
+    PUSH	{R0, R1}
     BL      LCDConfigureForWrite
+    POP		{R0, R1}
 
     ; load base addresses of 
     ;  - GPIO (R4)
@@ -200,7 +204,9 @@ LCDWriteNoTimer:
     PUSH    {LR, R4}                ; save LR, R4
 
     ; configure pins for write
+    PUSH	{R0, R1}
     BL      LCDConfigureForWrite
+    POP		{R0, R1}
 
     ; load base addresses of 
     ;  - GPIO (R4)
@@ -280,7 +286,9 @@ LCDRead:
     PUSH    {LR, R4, R5}                ; save LR, R4, R5
 
     ; configure pins for read
+    PUSH	{R0}
     BL      LCDConfigureForRead
+    POP		{R0}
 
     ; load base addresses of 
     ;  - GPIO (R4)

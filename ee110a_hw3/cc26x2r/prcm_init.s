@@ -17,7 +17,7 @@
 
 ; local include files
     .include "prcm_reg.inc"
-    .include "../macros.inc"
+    .include "../std.inc"
 
 ; exporting functions defined in this file
     .def PeriphPowerInit

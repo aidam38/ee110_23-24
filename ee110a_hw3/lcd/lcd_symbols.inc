@@ -1,35 +1,95 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                               lcd_symbols.inc                              ;
+;                                  LCD Symbols                               ;
+;                                 Include File                               ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; 
+;
+; Revision History:
+;     11/7/23  Adam Krivka      initial revision
+
+
+
+; local includes 
     .include "../cc26x2r/gpt_reg.inc"
     .include "../lcd_demo_symbols.inc"
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; DIMENSIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NUM_ROWS .equ           4       ; number of lines/rows
+NUM_COLS .equ           20      ; number of columns
+
+ROW_0_START .eq         0x0     ; row 0 start address
+ROW_1_START .eq         0x40    ; row 1 start address
+ROW_2_START .eq         0x14    ; row 2 start address
+ROW_3_START .eq         0x54    ; row 3 start address
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PINS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; data bus
+DATA_0_PIN .equ         LCD_DATA_0_PIN
+DATA_1_PIN .equ         LCD_DATA_1_PIN
+DATA_2_PIN .equ         LCD_DATA_2_PIN
+DATA_3_PIN .equ         LCD_DATA_3_PIN
+DATA_4_PIN .equ         LCD_DATA_4_PIN
+DATA_5_PIN .equ         LCD_DATA_5_PIN
+DATA_6_PIN .equ         LCD_DATA_6_PIN
+DATA_7_PIN .equ         LCD_DATA_7_PIN
+
+; control pins
+RS_PIN .equ             LCD_RS_PIN   ; register select
+RW_PIN .equ             LCD_RW_PIN   ; read/write
+E_PIN .equ              LCD_E_PIN   ; enable
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; INSTRUCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BUSY_FLAG_MASK .equ 0x1 << 7    ; the busy flag is at the 7th bit
+
 SET_DDRAM_ADDR .equ 0x1 << 7    ; set DDRAM address instruction
+CLEAR_DISPLAY .equ  0x1         ; clear display
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TIMERS
+; TIMER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; select GPT1 timer for LCD
-TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR
+; timer base address (defined elsewhere for flexibility)
+TIMER_BASE_ADDR .equ    LCD_TIMER_BASE_ADDR
 
-; general settings
+; configuration (we only use timer A)
 TIMER_CFG .equ          GPT_CFG_2_16BIT
 
-; timer for executing commands - timer B
-CMDTIMER_ENABLE .equ    GPT_CTL_TAEN_ENABLED | GPT_CTL_TASTALL_FREEZE
+; timer A enable
+TIMER_ENABLE .equ       GPT_CTL_TAEN_ENABLED
+
 ; one-shot, count up, match interrupt enabled
-CMDTIMER_TAMR .equ      GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXMIE_ENABLED
+TIMER_TAMR .equ         GPT_TXMR_ONESHOT | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXMIE_ENABLED
 
+; 1 us time-out 
 ; 48 Mhz / 48 = 1 Mhz (1 us)
-CMDTIMER_TAILR .equ    48
-; 450 ns / (1 / 48 Mhz) = 21.6 ~ 22
-CMDTIMER_TAMATCHR .equ 22
-CMDTIMER_TAPR .equ     0
+TIMER_TAILR .equ        48
+TIMER_TAPR .equ         0
 
-; instructions
-; (48 Mhz / 2)
-INITTIMER_COUNT_PER_US .equ     24
+; match at 450 ns
+; 450 ns / (1 / 48 Mhz) = 21.6 ~ 22
+TIMER_TAMATCHR .equ     22
+
+; number of 2-instruction loops per microsecond
+; (48 Mhz / 2) = 24 Mhz ~ 24 loops per microsecond
+LOOPS_PER_US .equ       24
 

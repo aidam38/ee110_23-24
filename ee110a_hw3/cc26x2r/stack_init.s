@@ -31,7 +31,7 @@
 
 ; local include files
     .include "stack_symbols.inc"
-    .include "../macros.inc"
+    .include "../std.inc"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MEMORY

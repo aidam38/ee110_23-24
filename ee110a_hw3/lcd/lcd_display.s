@@ -10,15 +10,90 @@
 ;   DisplayChar - display a single character
 ; 
 
-    .include "../constants.inc"
-    .include "../macros.inc"
+
+
+; local includes
+    .include "../std.inc"
     .include "lcd_symbols.inc"
 
+; import functions from other files
     .ref LCDWrite
     .ref LCDWaitForNotBusy
 
-    .def    Display
-    .def    DisplayChar
+; export functions to other files
+    .def Display
+    .def DisplayChar
+
+
+
+; SetCursorPos
+;
+; Description:          Sets cursor position on the LCD. 
+;
+; Arguments:            r in R0, c in R1
+; Return Values:        success/fail in R0.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       If incorrect row and column values are passed, 
+;                       returns FUNCTION_FAIL
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          0
+; 
+; Revision History:
+;     
+
+CursorBaseAddr:
+    .byte ROW_0_START, ROW_1_START, ROW_2_START, ROW_3_START
+
+SetCursorPos:
+    PUSH    {LR, R4, R5}                ; save return address and used registers
+
+; check that row and column are in bounds
+    CMP     R0, #0              ; check if r >= 0
+    BLT     SetCursorPosFail    ; if r < 0, fail
+
+    CMP     R0, #NUM_ROWS       ; check if r < NUM_ROWS
+    BGE     SetCursorPosFail    ; if r >= NUM_ROWS, fail
+
+    CMP     R1, #0              ; check if c >= 0
+    BLT     SetCursorPosFail    ; if c < 0, fail
+
+    CMP     R1, #NUM_COLS       ; check if c < NUM_COLS
+    BGE     SetCursorPosFail    ; if c >= NUM_COLS
+    ;B      SetCursorPosValid
+
+SetCursorPosValid:
+    MOVA    R4, CursorBaseAddr   ; load address of cursor base addresses
+    LDRB    R5, [R4, R0]         ; load CursorBaseAddr[r] to R5
+    ADD     R5, R1               ; add c to address
+    ;B      SetCursorPosWrite
+
+SetCursorPosWrite:
+    BL      LCDWaitForNotBusy   ; wait for LCD to be ready
+
+    ORR     R5, #SET_DDRAM_ADDR ; prepare a set DDRAM command
+    MOV     R0, R5
+    MOV32   R1, 0               ; RS = 0
+    BL      LCDWrite            ; write set DDRAM command to LCD
+
+    B       SetCursorPosSuccess
+
+SetCursorPosFail:
+    MOV32   R0, FUNCTION_FAIL   ; prepare fail return value
+    B       SetCursorPosDone
+
+SetCursorPosSuccess:
+    MOV32   R0, FUNCTION_SUCCESS; prepare success return value
+    ;B      SetCursorPosDone
+
+SetCursorPosDone:
+    POP     {LR, R4, R5}        ; restore return address and used registers
+    BX      LR                  ; return
+
 
 ; Display
 ;
@@ -33,9 +108,6 @@
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Inputs:               Function arguments.
-; Outputs:              LCD.
-;
 ; Error Handling:       If if the string ever goes out of screen,
 ;                       the function returns a fail value
 ;
@@ -46,41 +118,46 @@
 ;     
 
 Display:
-    PUSH    {LR, R4, R5}        ; save return address
+    PUSH    {LR, R4, R5}            ; save return address and used registers
 
-    ; save string pointer
-    MOV		R4, R2
+    MOV     R4, R1                  ; save column
+    MOV     R5, R2                  ; save string pointer
 
-    ; set DD RAM command
-    MOV32   R0, SET_DDRAM_ADDR
-    MOV32   R1, 0      ; RS = 0
-    BL      LCDWrite
+    BL      SetCursorPos            ; set cursor position based on r, c
+
+    CMP     R0, FUNCTION_FAIL       ; check if setting cursor failed
+    BEQ     DisplayFail             ; fail this function too if so
 
 DisplayLoop:
-    ; load character from str (post-increment address)
-    LDRB    R5, [R4], #1
+    LDRB    R5, [R4], #1            ; load character from str (post-incr address)
+    ADD     R1, #1                  ; add 1 to column
+    
+    CMP     R1, #NUM_COLS           ; check if we're off screen
+    BGT     DisplayFail             ; if yes, stop and return fail value
 
-    ; check if character is null terminator
-    CMP     R5, #0
-    BEQ     DisplayDone ; if yes, we're done
+    CMP     R5, #0                  ; check if character is null terminator
+    BEQ     DisplaySuccess          ; if yes, we're done printing the string
 
-    BL      LCDWaitForNotBusy  ; wait for LCD to be ready
+    BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD
-    MOV32   R0, 1      ; RS = 1
-    MOV		R1, R5	   ; copy character
-    BL      LCDWrite        ; write data to LCD
+    MOV32   R0, 1                   ; RS = 1
+    MOV     R1, R5                  ; copy character
+    BL      LCDWrite                ; write data to LCD
 
-    B       DisplayLoop ; loop
+    B       DisplayLoop             ; loop
+
+DisplayFail:
+    MOV32   R0, FUNCTION_FAIL       ; prepare fail return value
+    B       DisplayDone
+
+DisplaySuccess:
+    MOV32   R0, FUNCTION_SUCCESS    ; prepare success return value
+    ;B      DisplayDone
 
 DisplayDone:
-    ; read cursor and if it's out of bounds, return FUNCTION_FAIL
-    ; TODO
-
-    ; otherwise return FUNCTION_SUCCESS
-    MOV     R0, #FUNCTION_SUCCESS
     POP     {LR, R4, R5}        ; save return address
-    BX      LR          ; return
+    BX      LR                  ; return
 
 
 
@@ -95,9 +172,6 @@ DisplayDone:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Inputs:               Function arguments.
-; Outputs:              LCD.
-;
 ; Error Handling:       If the row and column are out of bounds, the function
 ;                       returns a fail value.
 ;
@@ -108,23 +182,67 @@ DisplayDone:
 ;     
 
 DisplayChar:
-    PUSH    {LR}        ; save return address
+    PUSH    {LR, R4, R5}                ; save return address and used registers
 
-    ; set DD RAM command
-    MOV32   R0, SET_DDRAM_ADDR
-    MOV32   R1, 0      ; RS = 0
-    BL      LCDWrite
+    MOV     R4, R1              ; save column
+    MOV     R5, R2              ; save character
+
+    BL      SetCursorPos        ; set cursor position based on r, c
+
+    CMP     R0, FUNCTION_FAIL   ; check if setting cursor failed
+    BEQ     DisplayCharFail         ; fail this function too if so
 
     ; write character to LCD
-    MOV32   R0, 1      ; RS = 1
-    MOV     R1, R2      ; character is originally in R2
+    MOV32   R0, 1               ; RS = 1
+    MOV     R1, R5              ; copy character
+    BL      LCDWrite            ; write data to LCD
+
+    B       DisplayCharSuccess  ; we've successfully written the character
+
+DisplayCharFail:
+    MOV32   R0, FUNCTION_FAIL   ; prepare fail return value
+    B       DisplayCharDone
+
+DisplayCharSuccess:
+    MOV32   R0, FUNCTION_SUCCESS; prepare success return value
+    ;B      DisplayCharDone
+
+DisplayCharDone:
+    POP     {LR, R4, R5}        ; save return address
+    BX      LR                  ; return
+
+
+
+
+; ClearDisplay
+;
+; Description:          Clears the LCD display
+;
+; Arguments:            None
+; Return Values:        None.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       If the row and column are out of bounds, the function
+;                       returns a fail value.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          0
+; 
+; Revision History:
+;     
+
+ClearDisplay:
+    PUSH    {LR}
+
+    BL      LCDWaitForNotBusy   ; wait for LCD to not be busy
+
+    ; call LCDWrite(CLEAR_DISPLAY, RS = 1)
+    MOV32   R0, CLEAR_DISPLAY
+    MOV32   R1, 1
     BL      LCDWrite
 
-    ; read cursor and if it's out of bounds, return FUNCTION_FAIL
-    ; TODO
-
-    ; otherwise return FUNCTION_SUCCESS
-    MOV     R0, #FUNCTION_SUCCESS
-    POP     {LR}        ; save return address
-    BX      LR          ; return
-
+    POP     {LR}
+    BX      LR

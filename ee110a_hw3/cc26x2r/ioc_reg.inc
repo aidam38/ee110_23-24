@@ -29,4 +29,4 @@ IOCFG_GENERIC_OUTPUT .equ     IO_NOPUPD
 
 
 ; other constants
-IOCFG_REGISTER_SIZE .equ    0x4
+IOCFG_REG_SIZE .equ    0x4

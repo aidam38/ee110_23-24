@@ -34,8 +34,7 @@
 
 ; local include files
     .include "cpu_scs_reg.inc"
-    .include "../macros.inc"
-    .include "../constants.inc"
+    .include "../std.inc"
 
 
 

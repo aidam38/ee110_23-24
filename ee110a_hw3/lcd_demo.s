@@ -15,11 +15,8 @@
 
 ; local include files
     .include "lcd_demo_symbols.inc"
-    .include "constants.inc"
-    .include "macros.inc"
+    .include "std.inc"
 
-    .include "cc26x2r/ioc_macros.inc"
-    .include "cc26x2r/store_event_handler.inc"
     .include "cc26x2r/gpt_reg.inc"
     .include "cc26x2r/gpio_reg.inc"
     .include "cc26x2r/cpu_scs_reg.inc"
@@ -31,31 +28,13 @@
     .ref GPTClockInit
 
     .ref LCDInit
-    .ref Display
+    .ref LCDTestDisplay
+    .ref LCDTestDisplayChar
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MAIN CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    .text
-
-
-hello_world:   .cstring "CCCC"
-adam_krivka:   .cstring "cccc"
-
-; test cases table
-	.align 4
-LCDTestTab:
-    ;     row,  col
-    ;     str address
-    .half 0,    0
-    .word hello_world
-
-    .half 5,    5
-    .word adam_krivka
-
-EndLCDTestTab:
-    
     .global ResetISR ; exposing the program entry-point
 ResetISR:
 main:
@@ -66,21 +45,10 @@ main:
 
     BL          LCDInit                   ; initialize LCD
 
-; main loop
-	ADR         R4, LCDTestTab          ; load address of test table
-	ADR         R5, EndLCDTestTab       ; load address of end of test table
-Loop:
-    ; load test case
-    LDRH        R0, [R4], #2            ; load row
-    LDRH        R1, [R4], #2            ; load column
-    LDR         R2, [R4], #4            ; load string address
-
-    BL          Display                 ; display string
-
-	CMP         R4, R5                  ; compare current address to end address
-    BNE         Loop                    ; if not at end, loop
+    BL          LCDTestDisplay            ; test the Display function
+    BL          LCDTestDiplayChar         ; test the DisplayChar function
 
 EndDemo:
-	NOP
-	B			EndDemo
+    NOP
+    B            EndDemo
 

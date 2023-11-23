@@ -1,12 +1,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                                  macros.inc                               ;
-;                                CC2652  Macros                        ;
+;                                   std.inc                                  ;
+;                  General ARM32 Assembly Symbols and Macros                 ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; This file contains generally useful macros for the CC2652 processor.  The
-; macros included are:
+; This file contains generally useful symbols and macros for ARM32 assembly. 
+;
+; The symbols defined are:
+;    BITS_PER_WORD
+;    BYTES_PER_WORD
+;    FUNCTION_SUCCESS
+;    FUNCTION_FAIL
+; 
+; The macros included are:
 ;    MOV32 - move a 32-bit value into a register
 ;    MOVA  - move a 32-bit address into a register
 ;    STREG - store a 32-bit value in a MCU register using a base register
@@ -18,12 +25,26 @@
 
 
 
-
 ; local include files
 ;   none
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SYMBOLS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BITS_PER_WORD .equ     32      ; number of bits in a word
+BYTES_PER_WORD  .equ   4       ; number of bytes in a word
+
+FUNCTION_SUCCESS .equ  0       ; return value for successful function call
+FUNCTION_FAIL .equ     -1      ; return value for failed function call
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; MACROS 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; MOV32
 ;

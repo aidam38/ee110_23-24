@@ -1,14 +1,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
 ;                                 lcd_display.s                              ;
-;                               4x4 Keypad Driver                            ;
+;                             LCD Display function                           ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; This file contains high-level display functionality of a 14-pin character LCD.
+; 
 ; This file defines functions:
 ;   Display - display a string
 ;   DisplayChar - display a single character
+;   ClearDisplay
 ; 
+; Revision History:
+;     11/22/23  Adam Krivka      initial revision
 
 
 
@@ -26,6 +31,11 @@
     .def ClearDisplay
 
 
+; CursorBaseAddr
+;
+; Table containing the addresses of the first character in each row.
+CursorBaseAddr:
+    .byte ROW_0_START, ROW_1_START, ROW_2_START, ROW_3_START
 
 ; SetCursorPos
 ;
@@ -45,10 +55,7 @@
 ; Stack Depth:          0
 ; 
 ; Revision History:
-;     
-
-CursorBaseAddr:
-    .byte ROW_0_START, ROW_1_START, ROW_2_START, ROW_3_START
+;     11/22/23  Adam Krivka      initial revision
 
 SetCursorPos:
     PUSH    {LR, R4, R5}                ; save return address and used registers
@@ -98,12 +105,12 @@ SetCursorPosDone:
 
 ; Display
 ;
-; Description:         Displays a string starting at the given row and column.
-;                      Uses whatever cursor incrementing mode is currently
-;                      set on the LCD. 
+; Description:          Displays a string starting at the given row and column.
+;                       Uses whatever cursor incrementing mode is currently
+;                       set on the LCD. 
 ;
 ; Arguments:            r in R0, c in R1, str in R2
-; Return Values:        success/fail.
+; Return Values:        success/fail in R0.
 ;
 ; Local Variables:      r, c, character in R3
 ; Shared Variables:     None.
@@ -113,13 +120,14 @@ SetCursorPosDone:
 ;                       the function returns a fail value
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          0
+; Stack Depth:          4
 ; 
 ; Revision History:
-;     
+;     11/22/23  Adam Krivka      initial revision
+
 
 Display:
-    PUSH    {LR, R4, R5, R6}            ; save return address and used registers
+    PUSH    {LR, R4, R5, R6}        ; save return address and used registers
 
     MOV     R4, R1                  ; save column
     MOV     R5, R2                  ; save string pointer
@@ -129,8 +137,8 @@ Display:
     CMP     R0, #FUNCTION_FAIL      ; check if setting cursor failed
     BEQ     DisplayFail             ; fail this function too if so
 
-	SUB		R4, #1					; subtract 1 from column so that it is
-									; correct on the first iteration of the loop
+    SUB		R4, #1					; subtract 1 from column so that it is
+                                    ; correct on the first iteration of the loop
 DisplayLoop:
     LDRB    R6, [R5], #1            ; load character from str (post-incr address)
     ADD     R4, #1                  ; add 1 to column
@@ -159,8 +167,8 @@ DisplaySuccess:
     ;B      DisplayDone
 
 DisplayDone:
-    POP     {LR, R4, R5, R6}        ; save return address
-    BX      LR                  ; return
+    POP     {LR, R4, R5, R6}        ; restore return address and used registers
+    BX      LR                      ; return
 
 
 
@@ -179,13 +187,13 @@ DisplayDone:
 ;                       returns a fail value.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          0
+; Stack Depth:          3
 ; 
 ; Revision History:
 ;     
 
 DisplayChar:
-    PUSH    {LR, R4, R5}                ; save return address and used registers
+    PUSH    {LR, R4, R5}        ; save return address and used registers
 
     MOV     R4, R1              ; save column
     MOV     R5, R2              ; save character
@@ -193,7 +201,7 @@ DisplayChar:
     BL      SetCursorPos        ; set cursor position based on r, c
 
     CMP     R0, #FUNCTION_FAIL  ; check if setting cursor failed
-    BEQ     DisplayCharFail         ; fail this function too if so
+    BEQ     DisplayCharFail     ; fail this function too if so
 
     BL      LCDWaitForNotBusy   ; wait for LCD to not be busy
 
@@ -213,15 +221,14 @@ DisplayCharSuccess:
     ;B      DisplayCharDone
 
 DisplayCharDone:
-    POP     {LR, R4, R5}        ; save return address
+    POP     {LR, R4, R5}        ; restore return address and used registers
     BX      LR                  ; return
-
 
 
 
 ; ClearDisplay
 ;
-; Description:          Clears the LCD display
+; Description:          Clears the LCD display and sets the cursor to top left.
 ;
 ; Arguments:            None
 ; Return Values:        None.
@@ -230,24 +237,22 @@ DisplayCharDone:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       If the row and column are out of bounds, the function
-;                       returns a fail value.
+; Error Handling:       None.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          0
+; Stack Depth:          1
 ; 
 ; Revision History:
-;     
+;     11/22/23  Adam Krivka      initial revision
 
 ClearDisplay:
-    PUSH    {LR}
+    PUSH    {LR}                ; store return address
 
     BL      LCDWaitForNotBusy   ; wait for LCD to not be busy
 
-    ; call LCDWrite(CLEAR_DISPLAY, RS = 0)
-    MOV32   R0, 0
-    MOV32   R1, CLEAR_DISPLAY
-    BL      LCDWrite
+    MOV32   R0, 0               ; RS = 0
+    MOV32   R1, CLEAR_DISPLAY   ; command = CLEAR_DISPLAY
+    BL      LCDWrite            ; call LCDWrite(CLEAR_DISPLAY, RS = 0)
 
-    POP     {LR}
-    BX      LR
+    POP     {LR}                ; restore return address
+    BX      LR                  ; return

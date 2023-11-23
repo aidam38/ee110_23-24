@@ -2,6 +2,7 @@
 ;                                                                            ;
 ;                                   std.inc                                  ;
 ;                  General ARM32 Assembly Symbols and Macros                 ;
+;                                 Include File                               ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -22,6 +23,7 @@
 ; Revision History
 ;     2/14/22  Glen George         initial revision
 ;    11/05/23  Glen George         updated style
+;    11/22/23  Adam Krivka         added general symbols
 
 
 

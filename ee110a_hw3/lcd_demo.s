@@ -5,12 +5,13 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This demo contains a test loop which displays a series of characters and
-; strings on the LCD.  The test loop is implemented using a table of strings
-; and a loop which iterates through the table.  The functions used to interact
-; with the LCD are defined in the folder "lcd".
+; This file contains a program which demos the functionality of a 14-pin
+; character LCD. The LCD functionality as well as the test loop is implemented
+; the the lcd folder. This file contains the main loop which initializes the
+; board and runs the tests. The tests test the functions Display and DisplayChar.
 ;
 ; Revision History: 
+;     11/22/23  Adam Krivka      initial revision
 
 
 ; local include files
@@ -28,8 +29,8 @@
     .ref GPTClockInit
 
     .ref LCDInit
-    .ref LCDTestDisplay
-    .ref LCDTestDisplayChar
+    .ref TestDisplay
+    .ref TestDisplayChar
     .ref Display
 
 
@@ -37,33 +38,42 @@
 ; MAIN CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	.text
-i_love_ee: .cstring "I LOVE EE!!!"
-adam: .cstring "- Adam"
+; main
+;
+; Description:          Main loop of the LCD Demo program. Initializes
+;                       the board and the LCD, and tests the Display
+;                       and DisplayChar functions.
+;
+; Arguments:            None.
+; Return Values:        None.
+; 
+; Local Variables:      In nested functions...
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       Facilitated using FUNCTION_SUCCESS and FUNCTION_FAIL
+;                       in called functions.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          5?
+; 
+; Revision History:
+;     11/22/23  Adam Krivka      initial revision
 
-    .global ResetISR ; exposing the program entry-point
+    .global ResetISR                  ; exposing the program entry-point
 ResetISR:
 main:
-    BL          PeriphPowerInit           ; turn on peripheral power domain
-    BL          GPIOClockInit             ; turn on GPIO clock
-    BL          GPTClockInit              ; turn on GPT clock
-    BL          StackInit                 ; initialize stack in SRAM
+    BL      PeriphPowerInit           ; turn on peripheral power domain
+    BL      GPIOClockInit             ; turn on GPIO clock
+    BL      GPTClockInit              ; turn on GPT clock
+    BL      StackInit                 ; initialize stack in SRAM
 
-    BL          LCDInit                   ; initialize LCD
+    BL      LCDInit                   ; initialize LCD
 
-    MOV32	R0, 0
-    MOV32	R1, 0
-    MOVA	R2, i_love_ee
-    BL		Display
-
-    MOV32	R0, 1
-    MOV32	R1, 0
-    MOVA	R2, adam
-    BL		Display
-
-    BL          LCDTestDisplay            ; test the Display function
-    BL          LCDTestDisplayChar        ; test the DisplayChar function
+    BL      TestDisplay            ; test the Display function
+    BL      TestDisplayChar        ; test the DisplayChar function
 
 EndDemo:
     NOP
-    B            EndDemo
+    B       EndDemo
 

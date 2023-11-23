@@ -5,10 +5,14 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; This file contains the initialization procedure for a 14-pin character LCD.
+; To configure the LCD (pins, timer), look at `lcd_symbols.inc`.
+
 ; This file defines functions:
 ;   LCDInit
 ; 
-
+; Revision History:
+;     11/22/23  Adam Krivka      initial revision
 
 
 ; local includes
@@ -30,8 +34,12 @@
     .text
 ; LCDInitTab
 ; 
-; 
-    .align 4 ; TODO why
+; This table contains the initializition procedure of the LCD. Each step
+; is 2-words and contains the command/data to be sent to the LCD, and the 
+; delay to wait _before_ the command is sent. If the delay is -1, the busy
+; is to be read.
+
+    .align 4 ; align to word
 LCDInitTab:
            ;Command         Delay Count
     .word   00111000b,     15000 * LOOPS_PER_US   ; wait for 150ms
@@ -54,7 +62,7 @@ EndLCDInitTab:
 ;                       to the LCD.  The commands are stored in a table in
 ;                       a table, and are sent to the LCD one at a time.
 ;
-; Arguments:            r, c, str
+; Arguments:            r in R0, c in R1, str in R2
 ; Return Values:        None.
 ;
 ; Local Variables:      None.
@@ -66,14 +74,15 @@ EndLCDInitTab:
 ;
 ; Error Handling:       None.
 ;
-; Registers Changed:    
-; Stack Depth:          
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          5
 ; 
 ; Revision History:
-;     
+;     11/22/23  Adam Krivka      initial revision
+
 
 LCDInit:
-    PUSH        {LR, R4, R5, R6, R7}        ; save return address and R4
+    PUSH        {LR, R4, R5, R6, R7}        ; save return address and used registers
 
     ; set up control pins
     MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
@@ -85,7 +94,8 @@ LCDInit:
     MOV32       R1, GPIO_BASE_ADDR
     STREG       ((1 << RW_PIN) | (1 << RS_PIN) | (1 << E_PIN)), R1, GPIO_DOE_OFFSET
 
-    BL          LCDConfigureForWrite    ; keep default state of writing
+    ; keep default state of writing
+    BL          LCDConfigureForWrite
 
     ; set up timer
     MOV32       R1, TIMER_BASE_ADDR
@@ -99,7 +109,6 @@ LCDInit:
     STREG       TIMER_ENABLE, R1, GPT_CTL_OFFSET
 
     ; start init loop
-
     ; get address of initialization table
     ADR     R4, LCDInitTab
     ADR        R5, EndLCDInitTab
@@ -110,28 +119,28 @@ LCDInitLoop:
     ; check if delay count is -1
     CMP     R7, #-1
     BNE     LCDInitLoopWaitLoop ; if not use delay count
-    ;B      LCDInitLoopWaitBusy  ; if yes wait for busy flag to clear
+    ;B      LCDInitLoopWaitBusy ; if yes wait for busy flag to clear
 
 LCDInitLoopWaitBusy:
-    BL      LCDWaitForNotBusy
-    B       LCDInitLoopWrite
+    BL      LCDWaitForNotBusy   ; wait for busy flag to go be cleared
+    B       LCDInitLoopWrite    ; carry to writing the next command
 
-; use noops
+; wait using a loop
 LCDInitLoopWaitLoop:
-    SUBS    R7, #1
-    BNE        LCDInitLoopWaitLoop
-    ;B      LCDInitLoopWrite
+    SUBS    R7, #1              ; subtract from delay count
+    BNE     LCDInitLoopWaitLoop ; if not zero, loop again
+    ;B      LCDInitLoopWrite    ; if zero, carry on to writing
 
 LCDInitLoopWrite:
     ; prepare arguments
-    MOV32   R0, 0          ; want to write to register 0 during init
-    MOV        R1, R6         ; command/DATA
+    MOV32   R0, 0          ; RS = 0
+    MOV     R1, R6         ; command/DATA
     BL      LCDWrite       ; write to LCD
         
     ; if address is equal to EndLCDInitTab, break init loop
     CMP     R4, R5
-    BNE        LCDInitLoop
+    BNE     LCDInitLoop
 
 LCDInitEnd:
-    POP     {LR, R4, R5, R6, R7}        ; restore return address and R4
-    BX      LR              ; return
+    POP     {LR, R4, R5, R6, R7}        ; restore return address and used registers
+    BX      LR                          ; return

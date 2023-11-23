@@ -6,10 +6,10 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; 
+; This file contains symbols to configure a 4-line character LCD display.
 ;
 ; Revision History:
-;     11/7/23  Adam Krivka      initial revision
+;     11/22/23  Adam Krivka      initial revision
 
 
 
@@ -59,6 +59,7 @@ E_PIN .equ              LCD_E_PIN   ; enable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BUSY_FLAG_MASK .equ 0x1 << 7    ; the busy flag is at the 7th bit
+DATA_MASK      .equ 0xFF        ; 8-bit mask for the data bus
 
 SET_DDRAM_ADDR .equ 0x1 << 7    ; set DDRAM address instruction
 CLEAR_DISPLAY .equ  0x1         ; clear display
@@ -93,3 +94,6 @@ TIMER_TAMATCHR .equ     22
 ; (48 Mhz / 2) = 24 Mhz ~ 24 loops per microsecond
 LOOPS_PER_US .equ       24
 
+; number of loops to wait before bringing enable high in read/write operation
+; should be at least 140ns (round_up(140 / 40ns) = 3.5 ~ 4)
+LOOPS_IN_SETUP .equ      4

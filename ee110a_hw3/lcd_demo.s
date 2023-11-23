@@ -30,11 +30,16 @@
     .ref LCDInit
     .ref LCDTestDisplay
     .ref LCDTestDisplayChar
+    .ref Display
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MAIN CODE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	.text
+i_love_ee: .cstring "I LOVE EE!!!"
+adam: .cstring "- Adam"
+
     .global ResetISR ; exposing the program entry-point
 ResetISR:
 main:
@@ -44,6 +49,16 @@ main:
     BL          StackInit                 ; initialize stack in SRAM
 
     BL          LCDInit                   ; initialize LCD
+
+    MOV32	R0, 0
+    MOV32	R1, 0
+    MOVA	R2, i_love_ee
+    BL		Display
+
+    MOV32	R0, 1
+    MOV32	R1, 0
+    MOVA	R2, adam
+    BL		Display
 
     BL          LCDTestDisplay            ; test the Display function
     BL          LCDTestDisplayChar        ; test the DisplayChar function

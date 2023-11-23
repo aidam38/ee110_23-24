@@ -29,7 +29,7 @@
 ; 
 ; 
 
-row_chars: .cstring "123456789ABCDEF"
+row_chars: .cstring "0123456789ABCDEF"
 hello_world:   .cstring "Hello world"
 adam_krivka:   .cstring "Adam Krivka"
 
@@ -56,16 +56,16 @@ LCDTestDisplayTab:
     .half 3,    0
     .word row_chars
 
-    .half 0,    1
+    .half 0,    4
     .word row_chars
 
-    .half 1,    1
+    .half 1,    4
     .word row_chars
 
-    .half 2,    1
+    .half 2,    4
     .word row_chars
 
-    .half 3,    1
+    .half 3,    4
     .word row_chars
 
     .half 42,   4200

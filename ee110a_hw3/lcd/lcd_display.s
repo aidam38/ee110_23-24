@@ -129,11 +129,17 @@ Display:
     CMP     R0, #FUNCTION_FAIL      ; check if setting cursor failed
     BEQ     DisplayFail             ; fail this function too if so
 
+	SUB		R4, #1					; subtract 1 from column so that it is
+									; correct on the first iteration of the loop
 DisplayLoop:
     LDRB    R6, [R5], #1            ; load character from str (post-incr address)
-    
+    ADD     R4, #1                  ; add 1 to column
+
     CMP     R6, #0                  ; check if character is null terminator
     BEQ     DisplaySuccess          ; if yes, we're done printing the string
+
+    CMP     R4, #NUM_COLS           ; check if we're off screen
+    BGE     DisplayFail             ; if yes, stop and return fail value
 
     BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
@@ -142,9 +148,6 @@ DisplayLoop:
     MOV     R1, R6                  ; copy character
     BL      LCDWrite                ; write data to LCD
 
-    ADD     R4, #1                  ; add 1 to column
-    CMP     R4, #NUM_COLS           ; check if we're off screen
-    BGT     DisplayFail             ; if yes, stop and return fail value
     B       DisplayLoop             ; else, loop
 
 DisplayFail:

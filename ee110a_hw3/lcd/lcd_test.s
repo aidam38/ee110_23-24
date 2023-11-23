@@ -14,7 +14,10 @@
 ; local includes
 ; none
 
-
+; import functions from other files
+	.ref Display
+	.ref DisplayChar
+	.ref ClearDisplay
 
 ; export symbols to other files
     .def LCDTestDisplay

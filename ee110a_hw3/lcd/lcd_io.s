@@ -156,12 +156,6 @@ LCDWriteWaitPulse:
 LCDRead:
     PUSH    {LR, R4, R5}                ; save LR, R4, R5
 
-    ; configure pins for read
-    MOV32       R1, GPIO_BASE_ADDR
-    LDR         R0, [R1, #GPIO_DOE_OFFSET]
-    BIC         R0, #(11111111b << DATA_0_PIN)
-    STR         R0, [R1, #GPIO_DOE_OFFSET]
-
     ; load base addresses of 
     ;  - GPIO (R4)
     ;  - timer (R5)
@@ -223,12 +217,6 @@ LCDReadWaitPulse:
     AND     R0, #0xFF                   ; mask out the rest of the bits
 
 LCDReadEnd:
-    ; configure pins for write
-    MOV32   R1, GPIO_BASE_ADDR
-    LDR        R0, [R1, #GPIO_DOE_OFFSET]
-    ORR        R0, #(11111111b << DATA_0_PIN)
-    STR     R0, [R1, #GPIO_DOE_OFFSET]
-
     POP     {LR, R4, R5}                ; restore LR, R4, R5
     BX      LR                          ; return
 
@@ -258,6 +246,13 @@ LCDReadEnd:
 LCDWaitForNotBusy:
     PUSH    {LR}
 
+        ; configure pins for read
+    MOV32       R1, GPIO_BASE_ADDR
+    LDR         R0, [R1, #GPIO_DOE_OFFSET]
+    BIC         R0, #(11111111b << DATA_0_PIN)
+    STR         R0, [R1, #GPIO_DOE_OFFSET]
+
+
 LCDWaitForNotBusyLoop:
     ; read busy flag
     MOV     R0, #0
@@ -268,6 +263,12 @@ LCDWaitForNotBusyLoop:
     BNE     LCDWaitForNotBusyLoop
 
 LCDWaitForNotBusyDone:
+	; configure pins for write
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR        R0, [R1, #GPIO_DOE_OFFSET]
+    ORR        R0, #(11111111b << DATA_0_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
+
     ; busy flag not set, so return
     POP     {LR}
     BX      LR

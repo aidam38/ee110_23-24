@@ -46,7 +46,7 @@ main:
     BL          LCDInit                   ; initialize LCD
 
     BL          LCDTestDisplay            ; test the Display function
-    BL          LCDTestDiplayChar         ; test the DisplayChar function
+    BL          LCDTestDisplayChar        ; test the DisplayChar function
 
 EndDemo:
     NOP

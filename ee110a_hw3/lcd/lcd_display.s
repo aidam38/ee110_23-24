@@ -23,6 +23,7 @@
 ; export functions to other files
     .def Display
     .def DisplayChar
+    .def ClearDisplay
 
 
 
@@ -125,7 +126,7 @@ Display:
 
     BL      SetCursorPos            ; set cursor position based on r, c
 
-    CMP     R0, FUNCTION_FAIL       ; check if setting cursor failed
+    CMP     R0, #FUNCTION_FAIL      ; check if setting cursor failed
     BEQ     DisplayFail             ; fail this function too if so
 
 DisplayLoop:
@@ -189,7 +190,7 @@ DisplayChar:
 
     BL      SetCursorPos        ; set cursor position based on r, c
 
-    CMP     R0, FUNCTION_FAIL   ; check if setting cursor failed
+    CMP     R0, #FUNCTION_FAIL  ; check if setting cursor failed
     BEQ     DisplayCharFail         ; fail this function too if so
 
     ; write character to LCD

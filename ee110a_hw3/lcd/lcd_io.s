@@ -25,6 +25,8 @@
     .def LCDWrite
     .def LCDRead
     .def LCDWaitForNotBusy
+    .def LCDConfigureForWrite
+    .def LCDConfigureForRead
 
 
 LCDConfigureForRead:

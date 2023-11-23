@@ -20,6 +20,7 @@
 ; import functinos from other files
     .ref   LCDWaitForNotBusy
     .ref   LCDWrite
+    .ref   LCDConfigureForWrite
 
 ; export functions to other files
     .def   LCDInit

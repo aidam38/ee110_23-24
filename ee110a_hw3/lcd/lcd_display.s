@@ -77,8 +77,8 @@ SetCursorPosWrite:
     BL      LCDWaitForNotBusy   ; wait for LCD to be ready
 
     ORR     R5, #SET_DDRAM_ADDR ; prepare a set DDRAM command
-    MOV     R0, R5
-    MOV32   R1, 0               ; RS = 0
+    MOV     R1, R5
+    MOV32   R0, 0               ; RS = 0
     BL      LCDWrite            ; write set DDRAM command to LCD
 
     B       SetCursorPosSuccess
@@ -119,7 +119,7 @@ SetCursorPosDone:
 ;     
 
 Display:
-    PUSH    {LR, R4, R5}            ; save return address and used registers
+    PUSH    {LR, R4, R5, R6}            ; save return address and used registers
 
     MOV     R4, R1                  ; save column
     MOV     R5, R2                  ; save string pointer
@@ -130,23 +130,22 @@ Display:
     BEQ     DisplayFail             ; fail this function too if so
 
 DisplayLoop:
-    LDRB    R5, [R4], #1            ; load character from str (post-incr address)
-    ADD     R1, #1                  ; add 1 to column
+    LDRB    R6, [R5], #1            ; load character from str (post-incr address)
     
-    CMP     R1, #NUM_COLS           ; check if we're off screen
-    BGT     DisplayFail             ; if yes, stop and return fail value
-
-    CMP     R5, #0                  ; check if character is null terminator
+    CMP     R6, #0                  ; check if character is null terminator
     BEQ     DisplaySuccess          ; if yes, we're done printing the string
 
     BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD
     MOV32   R0, 1                   ; RS = 1
-    MOV     R1, R5                  ; copy character
+    MOV     R1, R6                  ; copy character
     BL      LCDWrite                ; write data to LCD
 
-    B       DisplayLoop             ; loop
+    ADD     R4, #1                  ; add 1 to column
+    CMP     R4, #NUM_COLS           ; check if we're off screen
+    BGT     DisplayFail             ; if yes, stop and return fail value
+    B       DisplayLoop             ; else, loop
 
 DisplayFail:
     MOV32   R0, FUNCTION_FAIL       ; prepare fail return value
@@ -157,7 +156,7 @@ DisplaySuccess:
     ;B      DisplayDone
 
 DisplayDone:
-    POP     {LR, R4, R5}        ; save return address
+    POP     {LR, R4, R5, R6}        ; save return address
     BX      LR                  ; return
 
 
@@ -192,6 +191,8 @@ DisplayChar:
 
     CMP     R0, #FUNCTION_FAIL  ; check if setting cursor failed
     BEQ     DisplayCharFail         ; fail this function too if so
+
+    BL      LCDWaitForNotBusy   ; wait for LCD to not be busy
 
     ; write character to LCD
     MOV32   R0, 1               ; RS = 1
@@ -240,9 +241,9 @@ ClearDisplay:
 
     BL      LCDWaitForNotBusy   ; wait for LCD to not be busy
 
-    ; call LCDWrite(CLEAR_DISPLAY, RS = 1)
-    MOV32   R0, CLEAR_DISPLAY
-    MOV32   R1, 1
+    ; call LCDWrite(CLEAR_DISPLAY, RS = 0)
+    MOV32   R0, 0
+    MOV32   R1, CLEAR_DISPLAY
     BL      LCDWrite
 
     POP     {LR}

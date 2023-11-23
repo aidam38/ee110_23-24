@@ -24,12 +24,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NUM_ROWS .equ           4       ; number of lines/rows
-NUM_COLS .equ           20      ; number of columns
+NUM_COLS .equ           16      ; number of columns
 
 ROW_0_START .equ        0x0     ; row 0 start address
 ROW_1_START .equ        0x40    ; row 1 start address
-ROW_2_START .equ        0x14    ; row 2 start address
-ROW_3_START .equ        0x54    ; row 3 start address
+ROW_2_START .equ        0x10    ; row 2 start address
+ROW_3_START .equ        0x50    ; row 3 start address
 
 
 

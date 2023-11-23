@@ -24,7 +24,7 @@
     .def LCDTestDisplayChar
 
 
-
+	.text
 ; Test Table
 ; 
 ; 
@@ -40,7 +40,7 @@ LCDTestDisplayTab:
     .half 0,    0
     .word hello_world
 
-    .half 5,    5
+    .half 0,    5
     .word adam_krivka
 
 EndLCDTestDisplayTab:
@@ -51,7 +51,7 @@ EndLCDTestDisplayTab:
 LCDTestDisplayCharTab:
     ;     row, col, character, padding
     .byte 0, 0, "a", 0 
-    .byte 5, 5, "b", 0
+    .byte 0, 5, "b", 0
 
 EndLCDTestDisplayCharTab:
 
@@ -77,17 +77,18 @@ EndLCDTestDisplayCharTab:
 ;     
 
 LCDTestDisplay:
-    PUSH        {R4, R5}
+    PUSH        {LR, R4, R5}
     ; main loop
     ADR         R4, LCDTestDisplayTab          ; load address of test table
     ADR         R5, EndLCDTestDisplayTab       ; load address of end of test table
 LCDTestDisplayLoop:
+    BL          ClearDisplay            ; clear display
+
     ; load test case
     LDRH        R0, [R4], #2            ; load row
     LDRH        R1, [R4], #2            ; load column
     LDR         R2, [R4], #4            ; load string address
 
-    BL          ClearDisplay            ; clear display
     BL          Display                 ; display string
 
     CMP         R4, R5                  ; compare current address to end address
@@ -95,7 +96,7 @@ LCDTestDisplayLoop:
     ;B          LCDTestDisplayEnd
 
 LCDTestDisplayEnd:
-    POP         {R4, R5}
+    POP         {LR, R4, R5}
     BX          LR
 
 
@@ -120,7 +121,7 @@ LCDTestDisplayEnd:
 ;     
 
 LCDTestDisplayChar:
-    PUSH        {R4, R5}
+    PUSH        {LR, R4, R5}
 
     BL          ClearDisplay            ; clear display
 
@@ -140,5 +141,5 @@ LCDTestDisplayCharLoop:
     ;B          LCDTestDisplayCharEnd
 
 LCDTestDisplayCharEnd:
-    POP         {R4, R5}
+    POP         {LR, R4, R5}
     BX          LR

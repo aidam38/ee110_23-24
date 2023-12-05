@@ -12,6 +12,8 @@
 ; Revision History: 
 ;     
 
+	.def AngleToAscii
+
 MIN_ANGLE .equ		359	; minimum angle value we can print
 MAX_ANGLE .equ		359		; maximum angle value we can print
 ANGLE_RANGE .equ	(MAX_ANGLE - MIN_ANGLE)

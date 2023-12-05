@@ -28,7 +28,7 @@
 	.ref ReleaseServo
 	.ref GetServo
 	.ref Display
-	.ref IntToAscii
+	.ref AngleToAscii
 
 ; export symbols to other files
     .def TestServo
@@ -63,7 +63,7 @@ TestServoEventHandler:
 
 	BL		GetServo		; call GetServo
 
-	BL		IntToAscii		; convert signed integer to ascii
+	BL		AngleToAscii	; convert signed integer to ascii
 	MOV		R4, R0			; save string in R4
 
 	MOV		R0, #0			; push all zeros to stack (so that string will be null-delimited)

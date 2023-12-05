@@ -26,7 +26,7 @@
     .def TestServo
 
 TestServoTab:
-	.byte 0, -90, -89, -85, 90, 89, 58, -45, 45, -10, 10, -91, 1000000
+	.byte 0, -90, -89, -85, 90, 89, 58, -45, 45, -10, 10, -91, 255
 EndTestServoTab:
 
 ; TestServo

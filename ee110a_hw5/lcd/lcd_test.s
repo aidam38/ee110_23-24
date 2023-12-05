@@ -77,7 +77,7 @@ TestDisplayTab:
     .half 3,    4       ; Fourth row going 4 chars over, should return fail
     .word row_chars
 
-    .half 42,   4200    ; Invalid row and column, should return fail
+    .half 42,   255    ; Invalid row and column, should return fail
     .word hello_world
 
 EndTestDisplayTab:

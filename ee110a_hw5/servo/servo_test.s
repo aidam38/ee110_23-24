@@ -120,9 +120,9 @@ TestServo:
 	; Set up interrupt in CPU
 	MOV32	R1, SCS_BASE_ADDR
 	STREG	(0x1 << TESTTIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET ; enable interrupt
-	LDR		R0, [R1, #SCS_VTOR_OFFSET] 		; load VTOR address
-	MOVA	R1, TestServoEventHandler		; load event handler address
-	STR		R1, [R0, #(BYTES_PER_WORD * TESTTIMER_IRQ_NUMBER)] ; store event handler
+	LDR		R1, [R1, #SCS_VTOR_OFFSET] 		; load VTOR address
+	MOVA	R0, TestServoEventHandler		; load event handler address
+	STR		R0, [R1, #(BYTES_PER_WORD * TESTTIMER_EXCEPTION_NUMBER)] ; store event handler
 
 	ADR		R4, TestServoTab		; load address of test table
 	ADR		R5, EndTestServoTab		; load address of end of test table

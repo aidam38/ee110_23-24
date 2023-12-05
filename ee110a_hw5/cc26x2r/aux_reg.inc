@@ -80,7 +80,7 @@ AUX_ANAIF_ADCTRIG_OFFSET .equ		0x1C		; ADC Trigger
 AUX_ANAIF_ADCCTL_DISABLE .equ		0x0			; Disable ADC Interface
 AUX_ANAIF_ADCCTL_ENABLE .equ		0x1			; Enable ADC Interface
 AUX_ANAIF_ADCCTL_FLUSH .equ			0x3			; Flush ADC FIFO
-AUX_ANAIF_ADCCTL_TRIG_NO_EVENT .equ	0x3F		; No trigger
+AUX_ANAIF_ADCCTL_TRIG_NO_EVENT .equ	0x3F << 8	; No trigger
 
 AUX_ANAIF_ADCFIFOSTAT_EMPTY .equ	0x1			; FIFO Empty
 

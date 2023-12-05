@@ -84,20 +84,6 @@ InitServo:
 	STREG	EVENT_GPTXCAPTSEL_PORT, R1, EVENT_TIMERCAPTSEL_OFFSET ; select output for timer
 
 ; Set up ADC
-	; Select input pin, configure ADC, and enable reference module
-	MOV32	R1, AUX_ADI4_BASE_ADDR		; prepare aux master base address
-	STREG	MUX3_MASK, R1, AUX_ADI4_MUX3_OFFSET ; select POS_PIN
-	STREG	ADC0, R1, AUX_ADI4_ADC0_OFFSET	; configure ADC0
-	STREG	ADCREF0, R1, AUX_ADI4_ADCREF0_OFFSET ; enable reference module
-
-	; Allow input
-	MOV32	R1, AUX_AIODIO3_BASE_ADDR	; prepare AIO/DIO base address
-	STREG	AUX_AIODIO_IOMODE_INPUT << AIODIO3_PIN, R1, AUX_AIODIO_IOMODE_OFFSET ; write to AIODIO3_PIN IO
-
-	; Enable ADC, disable start events (other than manual trigger)
-	MOV32	R1, AUX_ANAIF_BASE_ADDR		; prepare analog interface base address
-	STREG	ADCCTL, R1, AUX_ANAIF_ADCCTL_OFFSET
-
 	; Enable ADC clock
 	MOV32	R1, AUX_SYSIF_BASE_ADDR		; prepare system interface base address
 	STREG	AUX_SYSIF_ADCCLKCTL_ENABLE, R1, AUX_SYSIF_ADCCLKCTL_OFFSET ; enable clock
@@ -106,6 +92,22 @@ InitServoADCClockLoop:
 	LDR		R0, [R1, #AUX_SYSIF_ADCCLKCTL_OFFSET]	; read ADC Clock Control register
 	TST		R0, #AUX_SYSIF_ADCCLKCTL_ACK_ENABLE		; check ACK flag
 	BEQ		InitServoADCClockLoop					; if not set, loop
+	;B		InitServoADCContinue
+
+InitServoADCContinue:
+	; Select input pin, configure ADC, and enable reference module
+	MOV32	R1, AUX_ADI4_BASE_ADDR		; prepare aux master base address
+	STREG	ADCREF0, R1, AUX_ADI4_ADCREF0_OFFSET ; enable reference module
+	STREG	MUX3_MASK, R1, AUX_ADI4_MUX3_OFFSET ; select POS_PIN
+	STREG	ADC0, R1, AUX_ADI4_ADC0_OFFSET	; configure ADC0
+
+	; Allow input
+	MOV32	R1, AUX_AIODIO3_BASE_ADDR	; prepare AIO/DIO base address
+	STREG	AUX_AIODIO_IOMODE_INPUT << AIODIO3_PIN, R1, AUX_AIODIO_IOMODE_OFFSET ; write to AIODIO3_PIN IO
+
+	; Enable ADC, disable start events (other than manual trigger)
+	MOV32	R1, AUX_ANAIF_BASE_ADDR		; prepare analog interface base address
+	STREG	ADCCTL, R1, AUX_ANAIF_ADCCTL_OFFSET
 
 	POP		{LR}						; restore return address
 	BX		LR							; return
@@ -238,12 +240,12 @@ ReleaseServo:
 GetServo:
 	PUSH	{LR}					; save return address and used registers
 
-; Flush FIFO
-	MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
-	STREG	AUX_ANAIF_ADCCTL_FLUSH, R1, AUX_ANAIF_ADCCTL_OFFSET ; flush!
-	NOP								; Wait two clock cycles
-	NOP
-	STREG	AUX_ANAIF_ADCCTL_ENABLE, R1, AUX_ANAIF_ADCCTL_OFFSET ; re-enable
+; Flush FIFO (commented out for now because probably don't need)
+	; MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
+	; STREG	AUX_ANAIF_ADCCTL_FLUSH, R1, AUX_ANAIF_ADCCTL_OFFSET ; flush!
+	; NOP								; Wait two clock cycles
+	; NOP
+	; STREG	AUX_ANAIF_ADCCTL_ENABLE, R1, AUX_ANAIF_ADCCTL_OFFSET ; re-enable
 
 ; Trigger ADC conversion
 	STREG	AUX_ANAIF_ADCTRIG_TRIG, R1, AUX_ANAIF_ADCTRIG_OFFSET ; trigger

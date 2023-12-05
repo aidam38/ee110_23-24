@@ -1,16 +1,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                             lcd_demo_symbols.inc                           ;
+;                           servo_demo_symbols.inc                           ;
 ;                             Symbols for LCD Demo                           ;
-;                                 Include File                               ;
+;                                Include File                                ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This file contains the symbols used by the keypad demo.  It is included
-; by the main keypad demo file.
+; This file contains the symbols used by the servo demo.
 ;
 ; Revision History:
-;     11/22/23  Adam Krivka      initial revision
+;     
 
 
 
@@ -19,9 +18,19 @@
     .include "cc26x2r/gpt_reg.inc"
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; SERVO
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Servo pins
+SERVO_PWM_PIN .equ			24	; PWM control pin of the servomotor
+SERVO_POS_PIN .equ			23	; analog input pin connected to the potentiometer
+
+; Servo timer
+SERVO_TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; PINS
+; LCD
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; LCD data bus
@@ -39,10 +48,5 @@ LCD_RS_PIN .equ             6   ; register select
 LCD_RW_PIN .equ             5   ; read/write
 LCD_E_PIN .equ              7   ; enable
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TIMERS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+; LCD timer
 LCD_TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR

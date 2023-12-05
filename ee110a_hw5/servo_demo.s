@@ -1,21 +1,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                            EE 110a - Homework #3                           ;
-;                                 LCD Demo                                   ;
+;                            EE 110a - Homework #5                           ;
+;                                 Servo Demo                                 ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This file contains a program which demos the functionality of a 14-pin
-; character LCD. The LCD functionality as well as the test loop is implemented
-; the the lcd folder. This file contains the main loop which initializes the
-; board and runs the tests. The tests test the functions Display and DisplayChar.
+; This file contains a program which demos ...
 ;
 ; Revision History: 
-;     11/22/23  Adam Krivka      initial revision
+;     
 
 
 ; local include files
-    .include "lcd_demo_symbols.inc"
+    .include "servo_demo_symbols.inc"
     .include "std.inc"
 
     .include "cc26x2r/gpt_reg.inc"
@@ -28,10 +25,9 @@
     .ref StackInit
     .ref GPTClockInit
 
+	.ref Ini
     .ref LCDInit
-    .ref TestDisplay
-    .ref TestDisplayChar
-    .ref Display
+    .ref TestServo
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,9 +36,9 @@
 	.text
 ; main
 ;
-; Description:          Main loop of the LCD Demo program. Initializes
-;                       the board and the LCD, and tests the Display
-;                       and DisplayChar functions.
+; Description:          Main loop of the Servo Demo program. Initializes
+;                       the board, the Servo, and the LCD, and tests the 
+;                       Servo using functions from servo/servo_test.s
 ;
 ; Arguments:            None.
 ; Return Values:        None.
@@ -68,10 +64,12 @@ main:
     BL      GPTClockInit              ; turn on GPT clock
     BL      StackInit                 ; initialize stack in SRAM
 
+; initialize Servo and LCD
+	BL		InitServo					; initialize Servo
     BL      LCDInit                   ; initialize LCD
 
-    BL      TestDisplay            ; test the Display function
-    BL      TestDisplayChar        ; test the DisplayChar function
+; test Servo
+    BL      TestServo               ; test the Display function
 
 EndDemo:
     NOP

@@ -69,7 +69,7 @@ GPT_TXMR_TXCM_EDGCNT .equ        0x0 << 2   ; edge count mode
 GPT_TXMR_TXCM_EDGTIME .equ       0x1 << 2   ; edge time mode
 
 GPT_TXMR_TXAMS_CAPTURE .equ      0x0 << 3   ; capture mode
-GPT_TXMR_TXASM_PWM .equ          0x1 << 3   ; PWM mode
+GPT_TXMR_TXAMS_PWM .equ          0x1 << 3   ; PWM mode
 
 GPT_TXMR_TXCDIR_DOWN .equ        0x0 << 4   ; count down
 GPT_TXMR_TXCDIR_UP .equ          0x1 << 4   ; count up

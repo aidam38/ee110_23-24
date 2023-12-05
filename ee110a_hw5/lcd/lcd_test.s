@@ -70,7 +70,8 @@ TestDisplayTab:
     .half 1,    4       ; Second row going 4 chars over, should return fail
     .word row_chars
 
-    .half 2,    4       ; Third row going 4 chars over, should return fail
+    .half 2,    4   
+	    ; Third row going 4 chars over, should return fail
     .word row_chars
 
     .half 3,    4       ; Fourth row going 4 chars over, should return fail

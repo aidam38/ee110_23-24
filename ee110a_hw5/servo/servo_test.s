@@ -15,7 +15,12 @@
 
 
 ; local includes
-; none
+	.include "../std.inc"
+	.include "../cc26x2r/gpio_reg.inc"
+	.include "../cc26x2r/gpt_reg.inc"
+	.include "../cc26x2r/event_reg.inc"
+	.include "../cc26x2r/aux_reg.inc"
+	.include "servo_symbols.inc"
 
 ; import functions from other files
 	.ref SetServo

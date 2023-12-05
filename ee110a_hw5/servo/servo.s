@@ -82,6 +82,30 @@ InitServo:
 	MOV32	R1, EVENT_BASE_ADDR			; prepare EVENT base address
 	STREG	EVENT_GPTXCAPTSEL_PORT, R1, EVENT_TIMERCAPTSEL_OFFSET ; select output for timer
 
+; Set up ADC
+	; Select input pin, configure ADC, and enable reference module
+	MOV32	R1, AUX_ADI4_BASE_ADDR		; prepare aux master base address
+	STREG	MUX3_MASK, R1, AUX_ADI4_MUX3_OFFSET ; select POS_PIN
+	STREG	ADC0, R1, AUX_ADI4_ADC0_OFFSET	; configure ADC0
+	STREG	ADCREF0, R1, AUX_ADI4_ADCREF0_OFFSET ; enable reference module
+
+	; Allow input
+	MOV32	R1, AUX_AIODIO3_BASE_ADDR	; prepare AIO/DIO base address
+	STREG	AUX_AIODIO_IOMODE_INPUT << AIODIO3_PIN, R1, AUX_AIODIO_IOMODE_OFFSET ; write to AIODIO3_PIN IO
+
+	; Enable ADC, disable start events (other than manual trigger)
+	MOV32	R1, AUX_ANAIF_BASE_ADDR		; prepare analog interface base address
+	STREG	ADCCTL, R1, AUX_ANAIF_ADCCTL_OFFSET
+
+	; Enable ADC clock
+	MOV32	R1, AUX_SYSIF_BASE_ADDR		; prepare system interface base address
+	STREG	AUX_SYSIF_ADCCLKCTL_ENABLE, R1, AUX_SYSIF_ADCCLKCTL_OFFSET ; enable clock
+
+InitServoADCClockLoop:
+	LDR		R0, [R1, #AUX_SYSIF_ADCCLKCTL_OFFSET]	; read ADC Clock Control register
+	TST		R0, #AUX_SYSIF_ADCCLKCTL_ACK_ENABLE		; check ACK flag
+	BEQ		InitServoADCClockLoop					; if not set, loop
+
 	POP		{LR}						; restore return address
 	BX		LR							; return
 
@@ -181,6 +205,11 @@ SetServoEnd:
 
 ReleaseServo:
 	PUSH	{LR}					; save return address and used registers
+
+; Disable timer 
+	MOV32	TIMER_BASE_ADDR			; prepare timer base address
+	STREG	TIMER_DISABLE, R1, GPT_CTL_OFFSET ; stop the timer
+
 	POP		{LR}					; restore return address
 	BX		LR						; return
 
@@ -207,5 +236,47 @@ ReleaseServo:
 
 GetServo:
 	PUSH	{LR}					; save return address and used registers
+
+; Flush FIFO
+	MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
+	STREG	AUX_ANAIF_ADCCTL_FLUSH, R1, AUX_ANAIF_ADCCTL_OFFSET ; flush!
+	NOP								; Wait two clock cycles
+	NOP
+	STREG	AUX_ANAIF_ADCCTL_ENABLE, R1, AUX_ANAIF_ADCCTL_OFFSET ; re-enable
+
+; Trigger ADC conversion
+	STREG	AUX_ANAIF_ADCTRIG_TRIG, R1, AUX_ANAIF_ADCTRIG_OFFSET ; trigger
+
+; Wait for conversion to finish...
+GetServoWait:
+	LDR		R0, [R1, #AUX_ANAIF_ADCFIFOSTAT_OFFSET]	; read FIFO status
+	TST		R0, #AUX_ANAIF_ADCFIFOSTAT_EMPTY		; check if empty
+	BNE		GetServoWait							; if empty, loop
+	;B		GetServoRead
+
+; Read servo position using ADC
+GetServoRead:
+	LDR		R0, [R1, #AUX_ANAIF_ADCFIFO_OFFSET]		; read FIFO, get 12-bit value
+	AND		R0, #AUX_ANAIF_ADCFIFO_MASK				; mask out higher bits in
+													; case they're mangled
+	;B		GetServoConvert
+
+; Covert ADC output to angle in degrees
+GetServoConvert:
+	MOV32	R1, ADC_MIN			; [ADC_MIN, ADC_MAX] 	=> [0, ADC_RANGE]
+	SUB		R0, R1
+
+	MOV32	R1, ANGLE_RANGE		; 						=> [0, ADC_RANGE*ANGLE_RANGE]
+	MUL		R0, R1
+
+	MOV32	R1, ADC_RANGE		;						=> [0, ANGLE_RANGE]
+	SDIV	R0, R1
+
+	MOV32	R1, MIN_ANGLE		;						=> [MIN_ANGLE, MAX_ANGLE]
+	SUB		R0, R1
+	
+	;B		GetServoReturn
+
+GetServoReturn:
 	POP		{LR}					; restore return address
 	BX		LR						; return

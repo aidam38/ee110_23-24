@@ -55,6 +55,9 @@ AUX_ADI4_ADC0_2700ns .equ			0x3 < 3		; 2.7us sampling duration
 AUX_ADI4_ADC0_SYNC .equ				0x0 < 7		; Synchronous mode
 AUX_ADI4_ADC0_ASYNC .equ			0x1 < 7		; Asynchronous mode
 
+AUX_ADI4_ADCREF0_ENABLE .equ		0x1			; enable ADC reference module
+AUX_ADI4_ADCREF0_REF_ON_IDLE .equ	0x1 << 6	; enable ADC in idle state
+
 ; AUX_AIODIO
 ; register offsets
 AUX_AIODIO_IOMODE_OFFSET .equ		0x0			; Input Output Mode

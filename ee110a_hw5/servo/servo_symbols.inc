@@ -46,18 +46,21 @@ TIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
 TIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
 TIMER_TAMR .equ			GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXAMS_PWM | GPT_TXMR_TXCINTD_DISABLED
 
-; 20 ms period
-; 48 MHz / (256 * (1000/20)) = 3750
-TIMER_TAILR .equ		3750					; interval = 3750
-TIMER_TAPR .equ			255						; prescale = 256
-TIMER_TAPMR .equ        255                     ; match prescale = 256
+; 20 ms period / 50 Hz frequency
+; 48 000 0000 / 50 = 960 000
+TIMER_TAILR .equ		(960000 & 0xFFFF)		; interval
+TIMER_TAPR .equ			(960000 >> 16)			; prescale
 
-; min pulse = 0.5 ms -> 0.0005 * 48000000 / 256 ~= 94
-; max pules = 2.5 ms -> 0.0025 * 48000000 / 256 ~= 469
-TIMER_MATCH_MIN .equ	94
-TIMER_MATCH_MAX .equ	469
+; min pulse = 0.5 ms -> 0.0005 * 48000000 ~= 24 000
+TIMER_MATCH_MIN .equ	(24000 & 0xFFFF)
+TIMER_TAPMR_MIN .equ	(24000 >> 16)
+
+; max pules = 2.5 ms -> 0.0025 * 48000000 ~= 120 000
+TIMER_MATCH_MAX .equ	(120000 & 0xFFFF)
+TIMER_TAPMR_MAX .equ    (120000 >> 16)			
 
 TIMER_MATCH_RANGE .equ	(TIMER_MATCH_MAX - TIMER_MATCH_MIN)
+
 
 EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture select
 									; hardcoded to timer 2 right now

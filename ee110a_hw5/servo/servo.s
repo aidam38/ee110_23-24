@@ -208,7 +208,7 @@ ReleaseServo:
 	PUSH	{LR}					; save return address and used registers
 
 ; Disable timer 
-	MOV32	TIMER_BASE_ADDR			; prepare timer base address
+	MOV32	R1, TIMER_BASE_ADDR			; prepare timer base address
 	STREG	TIMER_DISABLE, R1, GPT_CTL_OFFSET ; stop the timer
 
 	POP		{LR}					; restore return address
@@ -271,7 +271,7 @@ GetServoConvert:
 	MUL		R0, R1
 
 	MOV32	R1, ADC_RANGE		;						=> [0, ANGLE_RANGE]
-	SDIV	R0, R1
+	SDIV	R0, R0, R1
 
 	MOV32	R1, MIN_ANGLE		;						=> [MIN_ANGLE, MAX_ANGLE]
 	SUB		R0, R1

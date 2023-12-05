@@ -101,7 +101,7 @@ InitServo:
 SetServo:
 	PUSH	{LR}					; save return address and used registers
 
-	CMP		R0, #MIN_ANGLE			; check if pos < MIN_ANGLE
+	CMN		R0, #MIN_ANGLE			; check if pos < MIN_ANGLE
 	BLT		SetServoFail			; if not, fail
 
 	CMP		R0, #MAX_ANGLE			; check if pos > MAX_ANGLE
@@ -114,14 +114,14 @@ SetServoInputGood:
 	ADD		R0, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
 	
 	MOV32	R1, (ANGLE_RANGE / TIMER_MATCH_RANGE)
-	SDIV	R0, R1					;							=> [0, TIMER_MATCH_RANGE]
+	SDIV	R0, R0, R1				;							=> [0, TIMER_MATCH_RANGE]
 
 	MOV32	R1, TIMER_MATCH_MIN
 	SUB		R0, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
 
 ; Change PWM pulse width
 	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address
-	STR		R0, [R1, GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
+	STR		R0, [R1, #GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
 	B		SetServoSuccess			; return success
 
 SetServoFail:

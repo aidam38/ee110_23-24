@@ -61,6 +61,6 @@ TIMER_MATCH_RANGE .equ	(TIMER_MATCH_MAX - TIMER_MATCH_MIN)
 ; OTHER CONSTANTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MIN_ANGLE .equ			-90						; minimum angle in degrees
+MIN_ANGLE .equ			90						; minimum angle in degrees (negative!)
 MAX_ANGLE .equ			90						; maximum angle in degrees
 ANGLE_RANGE .equ		(MAX_ANGLE - MIN_ANGLE)	; total angle range

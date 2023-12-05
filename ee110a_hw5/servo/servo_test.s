@@ -27,7 +27,7 @@
 
 	.align 4		; ADR expects a word-aligned address
 TestServoTab:
-	.byte 0, -90, -89, -85, 90, 89, 58, -45, 45, -10, 10, -91, 255
+	.word 0, -60, 60, -30, 30, -15, 15, 0, 255
 EndTestServoTab:
 
 ; TestServo
@@ -59,7 +59,7 @@ TestServo:
 	ADR		R5, EndTestServoTab		; load address of end of test table
 
 TestServoLoop:
-	LDRB	R0, [R4], #1			; load position
+	LDR		R0, [R4], #4			; load position
 	BL		SetServo				; set servo's position
 	BL		ReleaseServo			; release servo
 

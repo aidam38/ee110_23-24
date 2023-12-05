@@ -72,6 +72,10 @@ InitServo:
 	STREG	TIMER_TAILR, R1, GPT_TAILR_OFFSET
 	STREG	TIMER_TAPR, R1, GPT_TAPR_OFFSET
 
+	; start in MIN_ANGLE position
+	STREG	TIMER_TAMATCHR_MIN, R1, GPT_TAMATCHR_OFFSET
+	STREG	TIMER_TAPMR_MIN, R1, GPT_TAPMR_OFFSET
+
 	STREG	TIMER_ENABLE, R1, GPT_CTL_OFFSET ; start the timer
 
 ; Map timer output to pin
@@ -128,11 +132,16 @@ SetServoInputGood:
 	ADD		R0, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
 
 ; Change PWM pulse width
-	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address
+	; map value for down counter
+	MOV32	R1, TIMER_PULSE_WIDTH
+	SUB		R0, R1, R0
 
 	; split match value into interval and prescale
-	AND		R2, R0, #0xFFFF			; interval
+	MOV		R1, #0xFFFF
+	AND		R2, R0, R1				; interval
 	LSR		R3, R0, #16				; prescale
+
+	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address
 	STR		R2, [R1, #GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
 	STR		R3, [R1, #GPT_TAPMR_OFFSET] ; write to Timer A Match prescale register
 	B		SetServoSuccess			; return success

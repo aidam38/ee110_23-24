@@ -44,22 +44,23 @@ POS_PIN_CFG .equ		IO_PORT_ID_AUXIO | IO_NOPUPD | IO_INPUT
 TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR			; timer base address
 TIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
 TIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
-TIMER_TAMR .equ			GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXAMS_PWM | GPT_TXMR_TXCINTD_DISABLED
+TIMER_TAMR .equ			GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_DOWN | GPT_TXMR_TXAMS_PWM | GPT_TXMR_TXCINTD_DISABLED | GPT_TXMR_TXPLO_HIGH
 
 ; 20 ms period / 50 Hz frequency
 ; 48 000 0000 / 50 = 960 000
-TIMER_TAILR .equ		(960000 & 0xFFFF)		; interval
-TIMER_TAPR .equ			(960000 >> 16)			; prescale
+TIMER_PULSE_WIDTH .equ  960000
+TIMER_TAILR .equ		(TIMER_PULSE_WIDTH & 0xFFFF)		; interval
+TIMER_TAPR .equ			(TIMER_PULSE_WIDTH >> 16)			; prescale
 
-; min pulse = 0.5 ms -> 0.0005 * 48000000 ~= 24 000
+; min pulse = 0.5 ms -> 0.001 * 48000000 ~= 48 000
 TIMER_MATCH_MIN .equ	24000
-TIMER_TAMATCHR_MIN .equ	(TIMER_MATCH_MIN & 0xFFFF)
-TIMER_TAPMR_MIN .equ	(TIMER_MATCH_MIN >> 16)
+TIMER_TAMATCHR_MIN .equ	((TIMER_PULSE_WIDTH - TIMER_MATCH_MIN) & 0xFFFF)
+TIMER_TAPMR_MIN .equ	((TIMER_PULSE_WIDTH - TIMER_MATCH_MIN) >> 16)
 
-; max pules = 2.5 ms -> 0.0025 * 48000000 ~= 120 000
+; max pules = 2 ms -> 0.0025 * 48000000 ~= 96 000
 TIMER_MATCH_MAX .equ	120000
-TIMER_TAMATCHR_MAX .equ	(TIMER_MATCH_MAX & 0xFFFF)
-TIMER_TAPMR_MAX .equ    (TIMER_MATCH_MAX >> 16)			
+TIMER_TAMATCHR_MAX .equ	((TIMER_PULSE_WIDTH - TIMER_MATCH_MAX) & 0xFFFF)
+TIMER_TAPMR_MAX .equ    ((TIMER_PULSE_WIDTH - TIMER_MATCH_MAX) >> 16)
 
 TIMER_MATCH_RANGE .equ	(TIMER_MATCH_MAX - TIMER_MATCH_MIN)
 
@@ -71,6 +72,6 @@ EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture
 ; OTHER CONSTANTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MIN_ANGLE .equ			90						; minimum angle in degrees (negative!)
-MAX_ANGLE .equ			90						; maximum angle in degrees
+MIN_ANGLE .equ			60						; minimum angle in degrees (negative!)
+MAX_ANGLE .equ			60						; maximum angle in degrees
 ANGLE_RANGE .equ		((MAX_ANGLE + MIN_ANGLE))	; total angle range

@@ -258,8 +258,8 @@ GetServoWait:
 ; Read servo position using ADC
 GetServoRead:
 	LDR		R0, [R1, #AUX_ANAIF_ADCFIFO_OFFSET]		; read FIFO, get 12-bit value
-	AND		R0, #AUX_ANAIF_ADCFIFO_MASK				; mask out higher bits in
-													; case they're mangled
+	MOV32	R1, AUX_ANAIF_ADCFIFO_MASK				; mask out higher bits in
+	AND		R0, R1									; case they're mangled
 	;B		GetServoConvert
 
 ; Covert ADC output to angle in degrees

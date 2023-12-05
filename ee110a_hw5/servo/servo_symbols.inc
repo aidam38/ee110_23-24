@@ -50,6 +50,7 @@ TIMER_TAMR .equ			GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXAMS_PWM | 
 ; 48 MHz / (256 * (1000/20)) = 3750
 TIMER_TAILR .equ		3750					; interval = 3750
 TIMER_TAPR .equ			255						; prescale = 256
+TIMER_TAPMR .equ        255                     ; match prescale = 256
 
 ; min pulse = 0.5 ms -> 0.0005 * 48000000 / 256 ~= 94
 ; max pules = 2.5 ms -> 0.0025 * 48000000 / 256 ~= 469
@@ -67,4 +68,4 @@ EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture
 
 MIN_ANGLE .equ			90						; minimum angle in degrees (negative!)
 MAX_ANGLE .equ			90						; maximum angle in degrees
-ANGLE_RANGE .equ		(MAX_ANGLE - MIN_ANGLE)	; total angle range
+ANGLE_RANGE .equ		((MAX_ANGLE + MIN_ANGLE))	; total angle range

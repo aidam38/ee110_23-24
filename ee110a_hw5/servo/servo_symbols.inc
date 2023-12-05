@@ -15,6 +15,13 @@
 ;	TIMER_BASE_ADDR
 ;	EVENT_TIMERCAPTSEL_OFFSET
 ;
+; WARNING: This file currently hardcodes the usage of pin 23 for the position
+; analog input. If one wanted to make this file more flexible, they'd have
+; to change:
+;	POS_PIN
+;	MUX3_MASK
+;	AIODIO3_PIN
+;
 ; Revision History:
 ;     
 
@@ -29,7 +36,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PWM_PIN .equ			SERVO_PWM_PIN	; PWM Control 
-POS_PIN .equ			SERVO_POS_PIN	; Potentiometer Position
+POS_PIN .equ			23				; Potentiometer Position
 
 ; PWM pin should received signal from the timer
 PWM_PIN_CFG .equ		IO_PORT_ID_EVENT4 | IO_NOPUPD
@@ -44,6 +51,7 @@ POS_PIN_CFG .equ		IO_PORT_ID_AUXIO | IO_NOPUPD | IO_INPUT
 TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR			; timer base address
 TIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
 TIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
+TIMER_DISABLE .equ		0						; timer A disable
 TIMER_TAMR .equ			GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_UP | GPT_TXMR_TXAMS_PWM | GPT_TXMR_TXCINTD_DISABLED
 
 ; 20 ms period / 50 Hz frequency
@@ -68,9 +76,36 @@ EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture
 									; hardcoded to timer 2 right now
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; TEST TIMER
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TESTTIMER_BASE_ADDR .equ	GPT3_BASE_ADDR			; test timer base address
+TESTTIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
+TESTTIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
+TESTTIMER_TAMR .equ			GPT_TXMR_PERIODIC		; periodic
+
+; 1 s period / 1 Hz frequency
+; 48 000 000 / 1 = 48 000 000
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ANALOG-DIGITAL CONVERTER
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ADC0 .equ				AUX_ADI4_ADC0_EN | AUX_ADI4_ADC0_NORMAL | AUX_ADI4_ADC0_2700ns
+ADCREF0 .equ			AUX_ADI4_ADCREF0_ENABLE | AUX_ADI4_ADCREF0_REF_ON_IDLE
+MUX3_MASK .equ			01000000b	; one-hot encoding to select POS_PIN
+AIODIO3_PIN .equ		1			; select pin in AIODIO3 range
+ADCCTL .equ				AUX_ANAIF_ADCCTL_ENABLE | AUX_ANAIF_ADCCTL_TRIG_NO_EVENT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER CONSTANTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MIN_ANGLE .equ			90						; minimum angle in degrees (negative!)
 MAX_ANGLE .equ			90						; maximum angle in degrees
 ANGLE_RANGE .equ		((MAX_ANGLE + MIN_ANGLE))	; total angle range
+
+ADC_MIN .equ			0				; value in ADC corresponding to voltage when servo is at MIN_ANGLE
+ADC_MAX .equ			111111111111b	; value in ADC corresponding to voltage when servo is at MAX_ANGLE
+ADC_RANGE .equ			(ADC_MAX - ADC_MIN)

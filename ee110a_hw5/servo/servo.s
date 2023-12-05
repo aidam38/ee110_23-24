@@ -145,6 +145,10 @@ SetServo:
 	;B		SetServoInputGood
 
 SetServoInputGood:
+; Enable timer
+	MOV32	R1, TIMER_BASE_ADDR			; prepare timer base address
+	STREG	TIMER_ENABLE, R1, GPT_CTL_OFFSET ; stop the timer
+
 ; Convert pos to a timer match value
 	MOV32	R1, MIN_ANGLE
 	ADD		R0, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]

@@ -71,7 +71,6 @@ InitServo:
 	STREG	TIMER_TAMR, R1, GPT_TAMR_OFFSET
 	STREG	TIMER_TAILR, R1, GPT_TAILR_OFFSET
 	STREG	TIMER_TAPR, R1, GPT_TAPR_OFFSET
-	STREG	TIMER_TAPMR, R1, GPT_TAPMR_OFFSET
 
 	STREG	TIMER_ENABLE, R1, GPT_CTL_OFFSET ; start the timer
 
@@ -130,7 +129,12 @@ SetServoInputGood:
 
 ; Change PWM pulse width
 	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address
-	STR		R0, [R1, #GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
+
+	; split match value into interval and prescale
+	AND		R2, R0, #0xFFFF			; interval
+	LSR		R3, R0, #16				; prescale
+	STR		R2, [R1, #GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
+	STR		R3, [R1, #GPT_TAPMR_OFFSET] ; write to Timer A Match prescale register
 	B		SetServoSuccess			; return success
 
 SetServoFail:

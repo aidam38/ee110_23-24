@@ -24,6 +24,7 @@
     .ref GPIOClockInit
     .ref StackInit
     .ref GPTClockInit
+	.ref MoveVecTable
 
 	.ref InitServo
     .ref LCDInit

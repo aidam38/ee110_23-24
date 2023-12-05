@@ -21,6 +21,8 @@
 
 ; local includes
 	.include "../std.inc"
+	.include "../cc26x2r/gpio_reg.inc"
+	.include "../cc26x2r/gpt_reg.inc"
 	.include "servo_symbols.inc"
 
 ; export functions to other files
@@ -108,9 +110,14 @@ SetServo:
 
 SetServoInputGood:
 ; Convert pos to a timer match value
-	ADD		R0, #MIN_ANGLE			; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
-	SDIV	R0, #(ANGLE_RANGE / TIMER_MATCH_RANGE)	;			=> [0, TIMER_MATCH_RANGE]
-	SUB		R0, #TIMER_MATCH_MIN	;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
+	MOV32	R1, MIN_ANGLE
+	ADD		R0, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
+	
+	MOV32	R1, (ANGLE_RANGE / TIMER_MATCH_RANGE)
+	SDIV	R0, R1					;							=> [0, TIMER_MATCH_RANGE]
+
+	MOV32	R1, TIMER_MATCH_MIN
+	SUB		R0, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
 
 ; Change PWM pulse width
 	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address

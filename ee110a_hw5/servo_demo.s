@@ -25,7 +25,7 @@
     .ref StackInit
     .ref GPTClockInit
 
-	.ref Ini
+	.ref InitServo
     .ref LCDInit
     .ref TestServo
 

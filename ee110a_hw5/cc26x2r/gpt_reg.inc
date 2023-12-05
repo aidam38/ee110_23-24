@@ -217,8 +217,27 @@ GPT_ICLR_CBECINT_CLEAR .equ      0x1 << 10  ; capture mode event interrupt clear
 GPT_ICLR_TBMCINT_CLEAR .equ      0x1 << 11  ; match interrupt clear
 GPT_ICLR_DMABINT_CLEAR .equ      0x1 << 13  ; DMA interrupt clear
 
-
-
 ; exception numbers
 GPT0A_IRQ_NUMBER .equ            15         ; GPT0A interrupt number
 GPT0A_EXCEPTION_NUMBER .equ      31         ; GPT0A exception number
+
+GPT0B_IRQ_NUMBER .equ            16         ; GPT0B interrupt number
+GPT0B_EXCEPTION_NUMBER .equ      32         ; GPT0B exception number
+
+GPT1A_IRQ_NUMBER .equ            17         ; GPT1A interrupt number
+GPT1A_EXCEPTION_NUMBER .equ      33         ; GPT1A exception number
+
+GPT1B_IRQ_NUMBER .equ            18         ; GPT1B interrupt number
+GPT1B_EXCEPTION_NUMBER .equ      34         ; GPT1B exception number
+
+GPT2A_IRQ_NUMBER .equ            19         ; GPT2A interrupt number
+GPT2A_EXCEPTION_NUMBER .equ      35         ; GPT2A exception number
+
+GPT2B_IRQ_NUMBER .equ            20         ; GPT2B interrupt number
+GPT2B_EXCEPTION_NUMBER .equ      36         ; GPT2B exception number
+
+GPT3A_IRQ_NUMBER .equ            21         ; GPT3A interrupt number
+GPT3A_EXCEPTION_NUMBER .equ      37         ; GPT3A exception number
+
+GPT3B_IRQ_NUMBER .equ            22         ; GPT3B interrupt number
+GPT3B_EXCEPTION_NUMBER .equ      38         ; GPT3B exception number

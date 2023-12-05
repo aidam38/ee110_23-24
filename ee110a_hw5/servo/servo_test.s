@@ -20,6 +20,7 @@
 	.include "../cc26x2r/gpt_reg.inc"
 	.include "../cc26x2r/event_reg.inc"
 	.include "../cc26x2r/aux_reg.inc"
+	.include "../cc26x2r/cpu_scs_reg.inc"
 	.include "servo_symbols.inc"
 
 ; import functions from other files
@@ -114,7 +115,7 @@ TestServo:
 	STREG	TESTTIMER_TAILR, R1, GPT_TAILR_OFFSET
 	STREG	TESTTIMER_TAPR, R1, GPT_TAPR_OFFSET
 
-	STREG	TESTTIMER_ENABLE, R1, TESTTIMER_CTL	; enable timer
+	STREG	TESTTIMER_ENABLE, R1, TESTTIMER_CTL_OFFSET	; enable timer
 
 	; Set up interrupt in CPU
 	MOV32	R1, SCS_BASE_ADDR

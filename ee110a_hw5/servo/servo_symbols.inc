@@ -76,19 +76,6 @@ EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture
 									; hardcoded to timer 2 right now
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TEST TIMER
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TESTTIMER_BASE_ADDR .equ	GPT3_BASE_ADDR			; test timer base address
-TESTTIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
-TESTTIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
-TESTTIMER_TAMR .equ			GPT_TXMR_PERIODIC		; periodic
-
-; 1 s period / 1 Hz frequency
-; 48 000 000 / 1 = 48 000 000
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ANALOG-DIGITAL CONVERTER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -109,3 +96,28 @@ ANGLE_RANGE .equ		((MAX_ANGLE + MIN_ANGLE))	; total angle range
 ADC_MIN .equ			0				; value in ADC corresponding to voltage when servo is at MIN_ANGLE
 ADC_MAX .equ			111111111111b	; value in ADC corresponding to voltage when servo is at MAX_ANGLE
 ADC_RANGE .equ			(ADC_MAX - ADC_MIN)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; TEST TIMER
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TESTTIMER_BASE_ADDR .equ	GPT3_BASE_ADDR			; test timer base address
+TESTTIMER_IRQ_NUMBER .equ	GPT3A_IRQ_NUMBER		; interrupt number
+TESTTIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
+TESTTIMER_IMR .equ			GPT_IMR_TATOIM_ENABLED	; enable interrupt
+TESTTIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
+TESTTIMER_TAMR .equ			GPT_TXMR_PERIODIC		; periodic
+
+; 1 s period / 1 Hz frequency
+; 48 000 000 / 1 = 48 000 000
+TESTTIMER_LENGTH .equ		48000000
+TESTTIMER_TAILR .equ		(TESTTIMER_LENGTH & 0xFFFF)	; interval
+TESTTIMER_TAPR .equ			(TESTTIMER_LENGTH >> 16)	; prescale
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; OTHER TEST CONSTANTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; row, col to display angle value at
+DISPLAY_ROW .equ			0
+DISPLAY_COL .equ			0

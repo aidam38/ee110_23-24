@@ -63,6 +63,7 @@ main:
     BL      GPIOClockInit             ; turn on GPIO clock
     BL      GPTClockInit              ; turn on GPT clock
     BL      StackInit                 ; initialize stack in SRAM
+	BL		MoveVecTable			  ; move interrupt vector table
 
 ; initialize Servo and LCD
 	BL		InitServo					; initialize Servo

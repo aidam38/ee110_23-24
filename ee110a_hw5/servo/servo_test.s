@@ -115,14 +115,14 @@ TestServo:
 	STREG	TESTTIMER_TAILR, R1, GPT_TAILR_OFFSET
 	STREG	TESTTIMER_TAPR, R1, GPT_TAPR_OFFSET
 
-	STREG	TESTTIMER_ENABLE, R1, TESTTIMER_CTL_OFFSET	; enable timer
+	STREG	TESTTIMER_ENABLE, R1, GPT_CTL_OFFSET	; enable timer
 
 	; Set up interrupt in CPU
 	MOV32	R1, SCS_BASE_ADDR
 	STREG	(0x1 << TESTTIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET ; enable interrupt
 	LDR		R0, [R1, #SCS_VTOR_OFFSET] 		; load VTOR address
 	MOVA	R1, TestServoEventHandler		; load event handler address
-	STR		R1, [R0, #(BYTES_PER_WORD, except_num)] ; store event handler
+	STR		R1, [R0, #(BYTES_PER_WORD * TESTTIMER_IRQ_NUMBER)] ; store event handler
 
 	ADR		R4, TestServoTab		; load address of test table
 	ADR		R5, EndTestServoTab		; load address of end of test table

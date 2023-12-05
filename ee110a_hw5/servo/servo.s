@@ -23,6 +23,7 @@
 	.include "../std.inc"
 	.include "../cc26x2r/gpio_reg.inc"
 	.include "../cc26x2r/gpt_reg.inc"
+	.include "../cc26x2r/event_reg.inc"
 	.include "servo_symbols.inc"
 
 ; export functions to other files
@@ -72,6 +73,10 @@ InitServo:
 	STREG	TIMER_TAPR, R1, GPT_TAPR_OFFSET
 
 	STREG	TIMER_ENABLE, R1, GPT_CTL_OFFSET ; start the timer
+
+; Map timer output to pin
+	MOV32	R1, EVENT_BASE_ADDR			; prepare EVENT base address
+	STREG	EVENT_GPTXCAPTSEL_PORT, R1, EVENT_TIMERCAPTSEL_OFFSET ; select output for timer
 
 	POP		{LR}						; restore return address
 	BX		LR							; return

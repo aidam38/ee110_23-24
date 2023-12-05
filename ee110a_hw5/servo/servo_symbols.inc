@@ -13,6 +13,7 @@
 ; following constants to be derived from a SERVO_TIMER [0-3]:
 ;	PWM_PIN_CFG (select the correct PORT_EVENT)
 ;	TIMER_BASE_ADDR
+;	EVENT_TIMERCAPTSEL_OFFSET
 ;
 ; Revision History:
 ;     
@@ -56,6 +57,9 @@ TIMER_MATCH_MIN .equ	94
 TIMER_MATCH_MAX .equ	469
 
 TIMER_MATCH_RANGE .equ	(TIMER_MATCH_MAX - TIMER_MATCH_MIN)
+
+EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture select
+									; hardcoded to timer 2 right now
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER CONSTANTS

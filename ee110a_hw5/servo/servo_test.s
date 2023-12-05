@@ -25,6 +25,7 @@
 ; export symbols to other files
     .def TestServo
 
+	.align 4		; ADR expects a word-aligned address
 TestServoTab:
 	.byte 0, -90, -89, -85, 90, 89, 58, -45, 45, -10, 10, -91, 255
 EndTestServoTab:

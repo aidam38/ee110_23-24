@@ -72,8 +72,8 @@ TestServoEventHandler:
 	PUSH	{R4}			; push string to stack
 	MOV		R2, R13			; stack pointer should point to the start of string
 
-	MOV		R0, DISPLAY_ROW ; prepare row argument
-	MOV		R1, DISPLAY_COL ; prepare column argument
+	MOV		R0, #DISPLAY_ROW; prepare row argument
+	MOV		R1, #DISPLAY_COL; prepare column argument
 
 	BL		Display			; display
 
@@ -134,9 +134,9 @@ TestServoLoop:
 
 	; PUT BREAKPOINT HERE
 
-	CMP         R4, R5				; compare current address to end address
-    BNE         TestServoLoop		; if not at end, loop
-    ;B          TestServoEnd
+	CMP		R4, R5					; compare current address to end address
+    BNE		TestServoLoop			; if not at end, loop
+    ;B		TestServoEnd
 
 TestServoEnd:
 	POP		{LR, R4, R5}			; restore return address

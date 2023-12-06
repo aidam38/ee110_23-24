@@ -36,7 +36,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PWM_PIN .equ			SERVO_PWM_PIN	; PWM Control 
-POS_PIN .equ			23				; Potentiometer Position
+POS_PIN .equ			23				; Potentiometer Position (pin 26 in AUX domain!)
 
 ; PWM pin should received signal from the timer
 PWM_PIN_CFG .equ		IO_PORT_ID_EVENT4 | IO_NOPUPD
@@ -80,22 +80,23 @@ EVENT_TIMERCAPTSEL_OFFSET .equ 	EVENT_GPT2ACAPTSEL_OFFSET ; Event fabric capture
 ; ANALOG-DIGITAL CONVERTER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ADC0 .equ				AUX_ADI4_ADC0_EN | AUX_ADI4_ADC0_NORMAL | AUX_ADI4_ADC0_2700ns
+ADC0_RESET .equ			AUX_ADI4_ADC0_EN | AUX_ADI4_ADC0_RESET | AUX_ADI4_ADC0_2700ns
+ADC0_NORMAL .equ        AUX_ADI4_ADC0_EN | AUX_ADI4_ADC0_NORMAL | AUX_ADI4_ADC0_2700ns
 ADCREF0 .equ			AUX_ADI4_ADCREF0_ENABLE | AUX_ADI4_ADCREF0_REF_ON_IDLE
-MUX3_MASK .equ			01000000b	; one-hot encoding to select POS_PIN
-AIODIO3_PIN .equ		1			; select pin in AIODIO3 range
+MUX3_MASK .equ			00000001b	; one-hot encoding to select POS_PIN
+AIODIO3_PIN .equ		2			; select pin in AIODIO3 range
 ADCCTL .equ				AUX_ANAIF_ADCCTL_ENABLE | AUX_ANAIF_ADCCTL_TRIG_NO_EVENT
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER CONSTANTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MIN_ANGLE .equ			60						; minimum angle in degrees (negative!)
-MAX_ANGLE .equ			60						; maximum angle in degrees
-ANGLE_RANGE .equ		((MAX_ANGLE + MIN_ANGLE))	; total angle range
+MIN_ANGLE .equ			90						; minimum angle in degrees (negative!)
+MAX_ANGLE .equ			90						; maximum angle in degrees
+ANGLE_RANGE .equ		(MAX_ANGLE + MIN_ANGLE)	; total angle range
 
-ADC_MIN .equ			0				; value in ADC corresponding to voltage when servo is at MIN_ANGLE
-ADC_MAX .equ			111111111111b	; value in ADC corresponding to voltage when servo is at MAX_ANGLE
+ADC_MIN .equ			0x0000009C				; value in ADC corresponding to voltage when servo is at MIN_ANGLE
+ADC_MAX .equ			0x000006EF	            ; value in ADC corresponding to voltage when servo is at MAX_ANGLE
 ADC_RANGE .equ			(ADC_MAX - ADC_MIN)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -119,6 +120,9 @@ TESTTIMER_TAPR .equ			(TESTTIMER_LENGTH >> 16)	; prescale
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER TEST CONSTANTS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; 1 second hold ~ 24 MHz / 1 Hz = 24 000 000
+HOLD_TIME .equ              24000000
 
 ; row, col to display angle value at
 DISPLAY_ROW .equ			0

@@ -97,13 +97,15 @@ InitServoADCClockLoop:
 InitServoADCContinue:
 	; Select input pin, configure ADC, and enable reference module
 	MOV32	R1, AUX_ADI4_BASE_ADDR		; prepare aux master base address
+	STREG	ADC0_RESET, R1, AUX_ADI4_ADC0_OFFSET	; enable ADC in reset mode
 	STREG	ADCREF0, R1, AUX_ADI4_ADCREF0_OFFSET ; enable reference module
 	STREG	MUX3_MASK, R1, AUX_ADI4_MUX3_OFFSET ; select POS_PIN
-	STREG	ADC0, R1, AUX_ADI4_ADC0_OFFSET	; configure ADC0
+	STREG	ADC0_NORMAL, R1, AUX_ADI4_ADC0_OFFSET	; put ADC in normal mode
+	STREG	ADCREF0, R1, AUX_ADI4_ADCREF0_OFFSET ; enable reference module again?
 
 	; Allow input
 	MOV32	R1, AUX_AIODIO3_BASE_ADDR	; prepare AIO/DIO base address
-	STREG	AUX_AIODIO_IOMODE_INPUT << AIODIO3_PIN, R1, AUX_AIODIO_IOMODE_OFFSET ; write to AIODIO3_PIN IO
+	STREG	(AUX_AIODIO_IOMODE_INPUT << AIODIO3_PIN * AUX_AIODIO_IOMODE_IOSIZE), R1, AUX_AIODIO_IOMODE_OFFSET ; write to AIODIO3_PIN IO
 
 	; Enable ADC, disable start events (other than manual trigger)
 	MOV32	R1, AUX_ANAIF_BASE_ADDR		; prepare analog interface base address
@@ -135,12 +137,14 @@ InitServoADCContinue:
 ;		
 
 SetServo:
-	PUSH	{LR}					; save return address and used registers
+	PUSH	{LR, R4}				; save return address and used registers
 
-	CMN		R0, #MIN_ANGLE			; check if pos < MIN_ANGLE
+	MOV		R4, R0					; save pos as local variable
+
+	CMN		R4, #MIN_ANGLE			; check if pos < MIN_ANGLE
 	BLT		SetServoFail			; if not, fail
 
-	CMP		R0, #MAX_ANGLE			; check if pos > MAX_ANGLE
+	CMP		R4, #MAX_ANGLE			; check if pos > MAX_ANGLE
 	BGT		SetServoFail			; if not, fail
 	;B		SetServoInputGood
 
@@ -151,26 +155,29 @@ SetServoInputGood:
 
 ; Convert pos to a timer match value
 	MOV32	R1, MIN_ANGLE
-	ADD		R0, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
+	ADD		R4, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
 	
+	MOV32	R1, ANGLE_RANGE
+	SUB		R4, R1, R4
+
 	MOV32	R1, TIMER_MATCH_RANGE
-	MUL		R0, R0, R1				;							=> [0, ANGLE_RANGE * TIMER_MATCH_RANGE]
+	MUL		R4, R4, R1				;							=> [0, ANGLE_RANGE * TIMER_MATCH_RANGE]
 
 	MOV32	R1, ANGLE_RANGE
-	SDIV	R0, R0, R1				;							=> [0, TIMER_MATCH_RANGE]
+	SDIV	R4, R4, R1				;							=> [0, TIMER_MATCH_RANGE]
 
 	MOV32	R1, TIMER_MATCH_MIN
-	ADD		R0, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
+	ADD		R4, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
 
 ; Change PWM pulse width
 	; map value for down counter
 	MOV32	R1, TIMER_PULSE_WIDTH
-	SUB		R0, R1, R0
+	SUB		R4, R1, R4
 
 	; split match value into interval and prescale
 	MOV		R1, #0xFFFF
-	AND		R2, R0, R1				; interval
-	LSR		R3, R0, #16				; prescale
+	AND		R2, R4, R1				; interval
+	LSR		R3, R4, #16				; prescale
 
 	MOV32	R1, TIMER_BASE_ADDR		; prepare timer base address
 	STR		R2, [R1, #GPT_TAMATCHR_OFFSET] ; write to Timer A Match register
@@ -186,7 +193,7 @@ SetServoSuccess:
 	;B		SetServoEnd
 
 SetServoEnd:
-	POP		{LR}					; restore return address
+	POP		{LR, R4}				; restore return address
 	BX		LR						; return
 
 
@@ -245,7 +252,7 @@ GetServo:
 	PUSH	{LR}					; save return address and used registers
 
 ; Flush FIFO (commented out for now because probably don't need)
-	; MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
+	MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
 	; STREG	AUX_ANAIF_ADCCTL_FLUSH, R1, AUX_ANAIF_ADCCTL_OFFSET ; flush!
 	; NOP								; Wait two clock cycles
 	; NOP
@@ -272,6 +279,9 @@ GetServoRead:
 GetServoConvert:
 	MOV32	R1, ADC_MIN			; [ADC_MIN, ADC_MAX] 	=> [0, ADC_RANGE]
 	SUB		R0, R1
+
+	MOV32	R1, ADC_RANGE		;						invert
+	SUB		R0, R1, R0
 
 	MOV32	R1, ANGLE_RANGE		; 						=> [0, ADC_RANGE*ANGLE_RANGE]
 	MUL		R0, R1

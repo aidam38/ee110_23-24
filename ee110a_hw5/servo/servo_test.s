@@ -35,7 +35,7 @@
 
 	.align 4		; ADR expects a word-aligned address
 TestServoTab:
-	.word 0, -60, 60, -30, 30, -15, 15, 0, 255
+	.word 0, -90, 0, 90, 0, -45, 0, 45, 0, -10, 0, 10, 0, 255
 EndTestServoTab:
 
 
@@ -64,13 +64,7 @@ TestServoEventHandler:
 	BL		GetServo		; call GetServo
 
 	BL		AngleToAscii	; convert signed integer to ascii
-	MOV		R4, R0			; save string in R4
-
-	MOV		R0, #0			; push all zeros to stack (so that string will be null-delimited)
-	PUSH	{R0}			
-
-	PUSH	{R4}			; push string to stack
-	MOV		R2, R13			; stack pointer should point to the start of string
+	MOV		R2, R0			; prepare string pointer as argument in R2
 
 	MOV		R0, #DISPLAY_ROW; prepare row argument
 	MOV		R1, #DISPLAY_COL; prepare column argument
@@ -130,6 +124,15 @@ TestServo:
 TestServoLoop:
 	LDR		R0, [R4], #4			; load position
 	BL		SetServo				; set servo's position
+
+; Hold for 1 second
+	MOV32	R0, HOLD_TIME			; prepare down counter
+TestServoHoldLoop:
+	SUBS	R0, #1					; decrement
+	BNE		TestServoHoldLoop		; if not zero, loop
+	;B		TestServoRelease
+
+TestServoRelease:
 	BL		ReleaseServo			; release servo
 
 	; PUT BREAKPOINT HERE

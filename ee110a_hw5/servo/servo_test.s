@@ -10,7 +10,7 @@
 ; which tests Servo functionality, defined in servo.s.
 ; 
 ; Revision History: 
-;     
+;		12/5/23	Adam Krivka		initial revision
 
 
 
@@ -41,7 +41,8 @@ EndTestServoTab:
 
 ; TestServoEventHandler
 ;
-; Description:          
+; Description:          Display the current servo position and clear the
+;						interrupt.
 ;
 ; Arguments:            None.
 ; Return Values:        None.
@@ -50,13 +51,13 @@ EndTestServoTab:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       None.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          2
 ; 
 ; Revision History:
-;		
+;		12/5/23	Adam Krivka		initial revision
 
 TestServoEventHandler:
 	PUSH	{LR, R4}		; save return address and used registers
@@ -81,22 +82,28 @@ TestServoEventHandler:
 
 ; TestServo
 ;
-; Description:          
+; Description:          Test the servo functionality by going over the angle
+;						values TestServoTab, setting the PWM pulse to the 
+;						appropriate value, holding for HOLD_TIME, and then
+;						releasing the servo.
 ;
 ; Arguments:            None.
-; Return Values:        pos in R0.
+; Return Values:        None.
 ;
 ; Local Variables:      None.
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       SetServo might return an error value, but this function
+;						does not anything different then (one is supposed to
+;						check the return value in the debugger if one wishes
+;						to check the error handling of SetServo)
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          3
 ; 
 ; Revision History:
-;		
+;		12/5/23	Adam Krivka		initial revision
 
 TestServo:
 	PUSH	{LR, R4, R5}			; save return address and used registers

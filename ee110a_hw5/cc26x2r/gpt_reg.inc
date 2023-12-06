@@ -10,7 +10,8 @@
 ; registers for the TI CC2652 microcontroller.
 ;
 ; Revision History:
-;     11/7/23  Adam Krivka      initial revision
+;     	11/7/23  	Adam Krivka		initial revision
+;		12/5/23		Adam Krivka		added IRQ numbers 
 
 
 ; base addresses

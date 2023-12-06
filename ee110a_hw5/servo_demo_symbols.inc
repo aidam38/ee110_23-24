@@ -9,7 +9,7 @@
 ; This file contains the symbols used by the servo demo.
 ;
 ; Revision History:
-;     
+;		12/5/23	Adam Krivka		initial revision
 
 
 
@@ -23,11 +23,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Servo pins
-SERVO_PWM_PIN .equ			24	; PWM control pin of the servomotor
-SERVO_POS_PIN .equ			23	; analog input pin connected to the potentiometer
+;SERVO_PWM_PIN .equ			24	; PWM control pin of the servomotor
+;SERVO_POS_PIN .equ			23	; analog input pin connected to the potentiometer
 
 ; Servo timer
-SERVO_TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR
+;SERVO_TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; LCD

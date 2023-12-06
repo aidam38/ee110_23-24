@@ -16,7 +16,8 @@
 ;		GetServo() - get servo's current position
 ; 
 ; Revision History:
-;     
+;		12/5/23	Adam Krivka		initial revision
+
 
 
 ; local includes
@@ -35,22 +36,23 @@
 
 ; InitServo
 ;
-; Description:          
+; Description:          Initializes the servo pins, the PWM timer, and
+;						the Analog-to-Digital converter.
 ;
-; Arguments:            pos in R0
-; Return Values:        success/fail in R0.
+; Arguments:            None.
+; Return Values:        None.
 ;
 ; Local Variables:      None.
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       None.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          1
 ; 
-; Revision History:
-;		
+; Revision History:	
+;		12/5/23	Adam Krivka		initial revision
 
 InitServo:
 	PUSH	{LR}						; save return address and used registers
@@ -116,10 +118,10 @@ InitServoADCContinue:
 
 
 
-
 ; SetServo
 ;
-; Description:          
+; Description:          Set servo position to pos, which should be a signed
+;						integer in the range [-MIN_ANGLE, MAX_ANGLE].
 ;
 ; Arguments:            pos in R0
 ; Return Values:        success/fail in R0.
@@ -128,13 +130,14 @@ InitServoADCContinue:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       If pos is outside [-MIN_ANGLE, MAX_ANGLE], don't do
+;						anything to the PWM signal and return FUNCTION_FAIL
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          2
 ; 
 ; Revision History:
-;		
+;		12/5/23	Adam Krivka		initial revision
 
 SetServo:
 	PUSH	{LR, R4}				; save return address and used registers
@@ -155,19 +158,19 @@ SetServoInputGood:
 
 ; Convert pos to a timer match value
 	MOV32	R1, MIN_ANGLE
-	ADD		R4, R1					; [MIN_ANGLE, MAX_ANGLE] 	=> [0, ANGLE_RANGE]
+	ADD		R4, R1				; [MIN_ANGLE, MAX_ANGLE] => [0, ANGLE_RANGE]
 	
-	MOV32	R1, ANGLE_RANGE
+	MOV32	R1, ANGLE_RANGE		;			invert
 	SUB		R4, R1, R4
 
 	MOV32	R1, TIMER_MATCH_RANGE
-	MUL		R4, R4, R1				;							=> [0, ANGLE_RANGE * TIMER_MATCH_RANGE]
+	MUL		R4, R4, R1			;			=> [0, ANGLE_RANGE * TIMER_MATCH_RANGE]
 
 	MOV32	R1, ANGLE_RANGE
-	SDIV	R4, R4, R1				;							=> [0, TIMER_MATCH_RANGE]
+	SDIV	R4, R4, R1			;			=> [0, TIMER_MATCH_RANGE]
 
 	MOV32	R1, TIMER_MATCH_MIN
-	ADD		R4, R1					;							=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
+	ADD		R4, R1				;			=> [TIMER_MATCH_MIN, TIMER_MATCH_MAX]
 
 ; Change PWM pulse width
 	; map value for down counter
@@ -200,7 +203,8 @@ SetServoEnd:
 
 ; ReleaseServo
 ;
-; Description:          
+; Description:          Release servo by turning of the PWM timer (pin
+;						should go low).
 ;
 ; Arguments:            None.
 ; Return Values:        None.
@@ -209,13 +213,13 @@ SetServoEnd:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       None.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          1
 ; 
 ; Revision History:
-;		
+;		12/5/23	Adam Krivka		initial revision
 
 ReleaseServo:
 	PUSH	{LR}					; save return address and used registers
@@ -231,7 +235,8 @@ ReleaseServo:
 
 ; GetServo
 ;
-; Description:          
+; Description:          Get the current servo position using the Analog-to-Digital
+;						interface.
 ;
 ; Arguments:            None.
 ; Return Values:        pos in R0.
@@ -240,23 +245,16 @@ ReleaseServo:
 ; Shared Variables:     None.
 ; Global Variables:     None.
 ;
-; Error Handling:       
+; Error Handling:       None.
 ;
 ; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          
+; Stack Depth:          1
 ; 
 ; Revision History:
-;		
+;		12/5/23	Adam Krivka		initial revision
 
 GetServo:
 	PUSH	{LR}					; save return address and used registers
-
-; Flush FIFO (commented out for now because probably don't need)
-	MOV32	R1, AUX_ANAIF_BASE_ADDR	; prepare analog interface base address
-	; STREG	AUX_ANAIF_ADCCTL_FLUSH, R1, AUX_ANAIF_ADCCTL_OFFSET ; flush!
-	; NOP								; Wait two clock cycles
-	; NOP
-	; STREG	AUX_ANAIF_ADCCTL_ENABLE, R1, AUX_ANAIF_ADCCTL_OFFSET ; re-enable
 
 ; Trigger ADC conversion
 	STREG	AUX_ANAIF_ADCTRIG_TRIG, R1, AUX_ANAIF_ADCTRIG_OFFSET ; trigger
@@ -277,19 +275,19 @@ GetServoRead:
 
 ; Covert ADC output to angle in degrees
 GetServoConvert:
-	MOV32	R1, ADC_MIN			; [ADC_MIN, ADC_MAX] 	=> [0, ADC_RANGE]
+	MOV32	R1, ADC_MIN			; [ADC_MIN, ADC_MAX] => [0, ADC_RANGE]
 	SUB		R0, R1
 
-	MOV32	R1, ADC_RANGE		;						invert
+	MOV32	R1, ADC_RANGE		;					invert
 	SUB		R0, R1, R0
 
-	MOV32	R1, ANGLE_RANGE		; 						=> [0, ADC_RANGE*ANGLE_RANGE]
+	MOV32	R1, ANGLE_RANGE		; 					=> [0, ADC_RANGE*ANGLE_RANGE]
 	MUL		R0, R1
 
-	MOV32	R1, ADC_RANGE		;						=> [0, ANGLE_RANGE]
+	MOV32	R1, ADC_RANGE		;					=> [0, ANGLE_RANGE]
 	SDIV	R0, R0, R1
 
-	MOV32	R1, MIN_ANGLE		;						=> [MIN_ANGLE, MAX_ANGLE]
+	MOV32	R1, MIN_ANGLE		;					=> [MIN_ANGLE, MAX_ANGLE]
 	SUB		R0, R1
 	
 	;B		GetServoReturn

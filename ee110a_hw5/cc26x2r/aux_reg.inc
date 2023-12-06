@@ -10,7 +10,9 @@
 ; CC2652 microcontroller.
 ;
 ; Revision History:
-;     
+;		12/5/23	Adam Krivka		initial revision
+
+
 
 ; base addresses
 AUX_SPIM_BASE_ADDR .equ				0x400C1000	; AUX Domain SPI Master
@@ -58,6 +60,8 @@ AUX_ADI4_ADC0_ASYNC .equ			0x1 << 7	; Asynchronous mode
 AUX_ADI4_ADCREF0_ENABLE .equ		0x1			; enable ADC reference module
 AUX_ADI4_ADCREF0_REF_ON_IDLE .equ	0x1 << 6	; enable ADC in idle state
 
+
+
 ; AUX_AIODIO
 ; register offsets
 AUX_AIODIO_IOMODE_OFFSET .equ		0x0			; Input Output Mode
@@ -68,6 +72,8 @@ AUX_AIODIO_IOMODE_OUTPUT .equ		0x0			; Output Mode
 AUX_AIODIO_IOMODE_INPUT .equ		0x1			; Input Mode
 AUX_AIODIO_IOMODE_OPENDRAIN .equ	0x2			; Open-Drain Mode
 AUX_AIODIO_IOMODE_OPENSOURCE .equ	0x0			; Open-Source Mode
+
+
 
 ; AUX_ANAIF
 ; register offsets
@@ -87,6 +93,8 @@ AUX_ANAIF_ADCFIFOSTAT_EMPTY .equ	0x1			; FIFO Empty
 AUX_ANAIF_ADCFIFO_MASK .equ			0xFFF		; FIFO Data
 
 AUX_ANAIF_ADCTRIG_TRIG .equ			0x1			; Single ADC trigger
+
+
 
 ; AUX_SYSIF
 ; register offsets

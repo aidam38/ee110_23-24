@@ -6,11 +6,11 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; This file contains the constants for the EVENT contro registers for
+; This file contains the constants for the EVENT control registers for
 ; the TI CC2652 microcontroller.
 ;
 ; Revision History:
-;     
+;		12/5/23	Adam Krivka		initial revision
 
 
 ; base address

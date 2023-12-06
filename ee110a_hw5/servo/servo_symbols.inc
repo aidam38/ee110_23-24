@@ -15,6 +15,11 @@
 ;	TIMER_BASE_ADDR
 ;	EVENT_TIMERCAPTSEL_OFFSET
 ;
+; WARNING: This file currently harcodes the usage of pin 24 for the PWM
+; control. If one wanted to make this file more flexible, they'd have to change:
+;	PWM_PIN
+;	PWM_PIN_CFG (select the correct port event)
+;
 ; WARNING: This file currently hardcodes the usage of pin 23 for the position
 ; analog input. If one wanted to make this file more flexible, they'd have
 ; to change:
@@ -22,8 +27,12 @@
 ;	MUX3_MASK
 ;	AIODIO3_PIN
 ;
+; NOTE: The test code uses Timer 3 for the GetServo/Display interrupt.
+;
 ; Revision History:
-;     
+;		12/5/23	Adam Krivka		initial revision
+
+
 
 ; local includes 
 	.include "../cc26x2r/gpt_reg.inc"
@@ -35,7 +44,7 @@
 ; PINS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PWM_PIN .equ			SERVO_PWM_PIN	; PWM Control 
+PWM_PIN .equ			24				; PWM Control 
 POS_PIN .equ			23				; Potentiometer Position (pin 26 in AUX domain!)
 
 ; PWM pin should received signal from the timer

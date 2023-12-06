@@ -5,10 +5,13 @@
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This file contains a program which demos ...
+; This file contains a program which demos the Servo functionality, defined
+; in subfolder servo/. The demo moves the servo to different angles while
+; displaying the current angle on the LCD.
 ;
 ; Revision History: 
-;     
+;		12/5/23	Adam Krivka		initial revision
+
 
 
 ; local include files
@@ -55,24 +58,26 @@
 ; Stack Depth:          5?
 ; 
 ; Revision History:
-;     11/22/23  Adam Krivka      initial revision
+;		12/5/23	Adam Krivka		initial revision
 
-    .global ResetISR                  ; exposing the program entry-point
+
+    .global ResetISR					; expose the program entry-point
 ResetISR:
 main:
-    BL      PeriphPowerInit           ; turn on peripheral power domain
-    BL      GPIOClockInit             ; turn on GPIO clock
-    BL      GPTClockInit              ; turn on GPT clock
-    BL      StackInit                 ; initialize stack in SRAM
-	BL		MoveVecTable			  ; move interrupt vector table
+    BL      PeriphPowerInit				; turn on peripheral power domain
+    BL      GPIOClockInit				; turn on GPIO clock
+    BL      GPTClockInit				; turn on GPT clock
+    BL      StackInit					; initialize stack in SRAM
+	BL		MoveVecTable				; move interrupt vector table
 
 ; initialize Servo and LCD
 	BL		InitServo					; initialize Servo
-    BL      LCDInit                   ; initialize LCD
+    BL      LCDInit						; initialize LCD
 
 ; test Servo
-    BL      TestServo               ; test the Display function
+    BL      TestServo
 
+; loop forever
 EndDemo:
     NOP
     B       EndDemo

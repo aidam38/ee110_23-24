@@ -1,15 +1,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                           servo_demo_symbols.inc                           ;
-;                             Symbols for LCD Demo                           ;
+;                             imu_demo_symbols.inc                           ;
+;                             Symbols for IMU Demo                           ;
 ;                                Include File                                ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This file contains the symbols used by the servo demo.
+; This file contains the symbols used by the IMU demo.
 ;
 ; Revision History:
-;		12/5/23	Adam Krivka		initial revision
 
 
 
@@ -19,12 +18,14 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; SERVO
+; IMU Serial Port
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Servo pins
-;SERVO_PWM_PIN .equ			24	; PWM control pin of the servomotor
-;SERVO_POS_PIN .equ			23	; analog input pin connected to the potentiometer
+; Serial pins
+SSI_TX_PIN .equ			    0			; Serial Transmit Pin
+SSI_RX_PIN .equ			    1			; Serial Receive Pin
+SSI_CLK_PIN .equ		    2			; Serial Clock Pin
+SSI_CS_PIN .equ			    3			; Serial Chip Select Pin
 
 ; Servo timer
 ;SERVO_TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR

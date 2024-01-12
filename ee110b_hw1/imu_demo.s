@@ -1,21 +1,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                            EE 110a - Homework #5                           ;
-;                                 Servo Demo                                 ;
+;                            EE 110b - Homework #1                           ;
+;                                  IMU Demo                                  ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; This file contains a program which demos the Servo functionality, defined
-; in subfolder servo/. The demo moves the servo to different angles while
-; displaying the current angle on the LCD.
+; This file contains a program which demos the IMU functionality, defined
+; in subfolder imu/. The demo can test either the accelerometer and the 
+; gyroscope functionality, or the magnetometer functionality (switch
+; the test function in the main loop). Both tests display the current
+; x,y,z values on the LCD
 ;
 ; Revision History: 
-;		12/5/23	Adam Krivka		initial revision
-
+debounce
 
 
 ; local include files
-    .include "servo_demo_symbols.inc"
+    .include "imu_demo_symbols.inc"
     .include "std.inc"
 
     .include "cc26x2r/gpt_reg.inc"
@@ -29,9 +30,12 @@
     .ref GPTClockInit
 	.ref MoveVecTable
 
-	.ref InitServo
+	.ref InitIMU
     .ref LCDInit
-    .ref TestServo
+    .ref TestIMUAccelGyro
+    .ref TestIMUMagnet
+    .ref i16ToString
+    .ref Display
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,15 +74,25 @@ main:
     BL      StackInit					; initialize stack in SRAM
 	BL		MoveVecTable				; move interrupt vector table
 
-; initialize Servo and LCD
-	BL		InitServo					; initialize Servo
+; initialize IMU and LCD
+	BL		InitIMU 					; initialize IMU
     BL      LCDInit						; initialize LCD
 
-; test Servo
-    BL      TestServo
+; test i16ToString
+    SUBS    R13, #8
+    MOV     R4, R13
+    MOV     R0, #12345
+    MOV     R1, R4
+    BL      i16ToString
+    MOV     R0, #0
+    MOV     R1, #0
+    MOV     R2, R4
+    BL      Display
 
-; loop forever
-EndDemo:
-    NOP
-    B       EndDemo
+; test IMU
+    BL      TestIMUAccelGyro            ; test accelerometer and gyroscope
+;    BL      TestIMUMagnet               ; test magnetometer
 
+; infinite loop
+Loop:
+    B       Loop						; infinite loop

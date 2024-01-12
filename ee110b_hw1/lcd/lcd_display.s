@@ -26,7 +26,6 @@
     .ref LCDWaitForNotBusy
 
 ; export functions to other files
-    .def SetCursorPos
     .def Display
     .def DisplayChar
     .def ClearDisplay

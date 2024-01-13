@@ -35,7 +35,7 @@
 	.ref SerialSendData
 
 ; export functions to other files
-	.def InitIMU
+	;.def InitIMU
 	.def GetAccelX
 	.def GetAccelY
 	.def GetAccelZ
@@ -122,21 +122,21 @@ ReadMagnetReg:
 
 GetAccelX:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #ACCEL_XOUT_H			; set register address
+	MOV		R0, #ACCEL_XOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetAccelY:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #ACCEL_YOUT_H			; set register address
+	MOV		R0, #ACCEL_YOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetAccelZ:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #ACCEL_ZOUT_H			; set register address
+	MOV		R0, #ACCEL_ZOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
@@ -163,21 +163,21 @@ GetAccelZ:
 
 GetGyroX:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #GYRO_XOUT_H			; set register address
+	MOV		R0, #GYRO_XOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetGyroY:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #GYRO_YOUT_H			; set register address
+	MOV		R0, #GYRO_YOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetGyroZ:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #GYRO_ZOUT_H			; set register address
+	MOV		R0, #GYRO_ZOUT_H_OFFSET		; set register address
 	BL		ReadAccelGyroReg			; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
@@ -204,21 +204,21 @@ GetGyroZ:
 
 GetMagX:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #MAG_XOUT_L			; set register address
+	MOV		R0, #MAG_XOUT_L_OFFSET		; set register address
 	BL		ReadMagnetReg				; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetMagY:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #MAG_YOUT_L			; set register address
+	MOV		R0, #MAG_YOUT_L_OFFSET		; set register address
 	BL		ReadMagnetReg				; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 GetMagZ:
 	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #MAG_ZOUT_L			; set register address
+	MOV		R0, #MAG_ZOUT_L_OFFSET		; set register address
 	BL		ReadMagnetReg				; read register
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return

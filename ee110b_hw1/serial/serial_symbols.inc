@@ -27,16 +27,16 @@ RX_PIN .equ			SSI_RX_PIN			; Serial Receive Pin
 CLK_PIN .equ		SSI_CLK_PIN			; Serial Clock Pin
 CS_PIN .equ			SSI_CS_PIN			; Serial Chip Select Pin
 
-TX_PIN_CFG .equ		IO_PORT_ID_SSI0_TX	; Serial Transmit Pin Configuration
-RX_PIN_CFG .equ		IO_PORT_ID_SSI0_RX | IO_INPUT	; Serial Receive Pin Configuration
-CLK_PIN_CFG .equ	IO_PORT_ID_SSI0_CLK	; Serial Clock Pin Configuration
-CS_PIN_CFG .equ		IO_PORT_ID_SSI0_FSS	; Serial Chip Select Pin Configuration
+TX_PIN_CFG .equ		IO_PORT_ID_SSI1_TX	; Serial Transmit Pin Configuration
+RX_PIN_CFG .equ		IO_PORT_ID_SSI1_RX | IO_INPUT	; Serial Receive Pin Configuration
+CLK_PIN_CFG .equ	IO_PORT_ID_SSI1_CLK	; Serial Clock Pin Configuration
+CS_PIN_CFG .equ		IO_PORT_ID_SSI1_FSS	; Serial Chip Select Pin Configuration
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; SSI
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SSI_BASE_ADDR .equ		SSI0_BASE_ADDR			; Serial Base Address
+SSI_BASE_ADDR .equ		SSI1_BASE_ADDR			; Serial Base Address
 SSI_CR0 .equ			CR0_DSS_16_BIT			; Serial Control Register 0
 SSI_CR1 .equ			CR1_SSE_ENABLE			; Serial Control Register 1
 SSI_CPSR .equ			48						; Serial Clock Prescale Register

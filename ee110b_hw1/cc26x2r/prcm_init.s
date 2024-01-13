@@ -10,9 +10,11 @@
 ;    PeriphPowerInit - initializes the Power Domain for the peripherals
 ;    GPIOClockInit - initializes the clock for the GPIO peripheral
 ;    GPTClockInit - initializes the clock for the GPT peripheral
+;	 SSIClockInit - initializes the clock for the SSI module
 ;
 ; Revision History:
 ;     11/7/23  Adam Krivka      initial revision
+;	  1/12/24  Adam Krivka		added SSIClockInit
 
 
 ; local include files
@@ -23,6 +25,7 @@
     .def PeriphPowerInit
     .def GPIOClockInit
     .def GPTClockInit
+    .def SSIClockInit
 
 ; ----------------------------------------------------------------------------
 
@@ -154,4 +157,49 @@ GPTClockLoop:
     CMP        R1, #CLKLOADCTL_LOAD_DONE    
 
     BNE        GPTClockLoop                ; if not, loop/try again
+    BX         LR                          ; if yes, return
+
+
+
+; SSIClockInit
+;
+; Description:        Initializes the clock for the GPT peripheral.
+;
+; Operation:        Sets SSICLKGR to turn on the clock, then waits for
+;                    CLKLOADCTL to indicate that the clock is on.
+;
+; Arguments:        None
+; Returns:            None
+;
+; Local Variables:    None
+; Global Variables:    None
+;
+; Error Handling:    None
+;
+; Algorithms:        None
+; Data Structures:    None
+;
+; Registers Changed:    R0, R1
+; Stack Depth:        0
+;
+; Revision History:    11/7/23  Adam Krivka  initial revision
+
+SSIClockInit:
+    MOV32      R0, PRCM_BASE_ADDR           ; prepare PRCM register base address
+    MOV        R1, #SSICLKGR_ENABLE_SSI1     ; prepare CLK_EN (clock enable) value
+                                            ; for GPTCLKGR
+    STR        R1, [R0, #SSICLKGR_OFFSET]   ; write to GPTCLKGR register to turn
+                                            ; on the clock
+
+    MOV        R1, #CLKLOADCTL_LOAD         ; prepare LOAD value for CLKLOADCTL
+    STR        R1, [R0, #CLKLOADCTL_OFFSET] ; write to CLKLOADCTL to load the clock
+    ;GPTClockLoop
+
+; Wait for CLKLOADCTL to signal clock done loading
+SSIClockLoop:
+    ; check if CLKLOADCTL has LOAD_DONE bit set active
+    LDR        R1, [R0, #CLKLOADCTL_OFFSET]
+    CMP        R1, #CLKLOADCTL_LOAD_DONE
+
+    BNE        SSIClockLoop                ; if not, loop/try again
     BX         LR                          ; if yes, return

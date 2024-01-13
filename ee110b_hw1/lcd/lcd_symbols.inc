@@ -15,7 +15,7 @@
 
 ; local includes 
     .include "../cc26x2r/gpt_reg.inc"
-    .include "../servo_demo_symbols.inc"
+    .include "../imu_demo_symbols.inc"
 
 
 

@@ -20,7 +20,7 @@
 
 ; local includes
 	.include "../std.inc"
-	.include "../serial_symbols.inc"
+	.include "serial_symbols.inc"
 	.include "../cc26x2r/gpio_reg.inc"
 	.include "../cc26x2r/gpt_reg.inc"
 	.include "../cc26x2r/event_reg.inc"
@@ -128,12 +128,14 @@ SerialSendRdyExit:
 SerialSendData:
 	PUSH	{LR}						; save return address and used registers
 
+	MOV		R4, R0						; save argument in variable
+
 	BL		SerialSendRdy				; check if the serial interface is ready to send
 	CMP		R0, #0						; if the serial interface is not ready to send
 	BEQ		SerialSendDataExit			; return without sending data
 
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
-	STR		R0, [R1, #DR_OFFSET]		; send data
+	STR		R4, [R1, #DR_OFFSET]		; send data
 
 SerialSendDataExit:
 	POP		{LR}						; restore return address and used registers

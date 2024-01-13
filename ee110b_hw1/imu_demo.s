@@ -28,10 +28,12 @@ debounce
     .ref GPIOClockInit
     .ref StackInit
     .ref GPTClockInit
+    .ref SSIClockInit
 	.ref MoveVecTable
 
-	.ref InitIMU
+	;.ref InitIMU
     .ref LCDInit
+    .ref InitSerial
     .ref TestIMUAccelGyro
     .ref TestIMUMagnet
     .ref i16ToString
@@ -71,11 +73,13 @@ main:
     BL      PeriphPowerInit				; turn on peripheral power domain
     BL      GPIOClockInit				; turn on GPIO clock
     BL      GPTClockInit				; turn on GPT clock
+    BL      SSIClockInit				; turn on GPT clock
     BL      StackInit					; initialize stack in SRAM
 	BL		MoveVecTable				; move interrupt vector table
 
 ; initialize IMU and LCD
-	BL		InitIMU 					; initialize IMU
+	;BL		InitIMU 					; initialize IMU
+	BL		InitSerial					; initialize Serial Interface
     BL      LCDInit						; initialize LCD
 
 ; test i16ToString

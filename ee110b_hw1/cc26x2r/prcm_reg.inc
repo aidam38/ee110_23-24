@@ -27,6 +27,7 @@ CLKLOADCTL_OFFSET .equ      0x28        ; Clock Load Control Register
 GPTCLKGR_OFFSET .equ        0x54        ; GPT Clock Gating Register
 GPTCLKGS_OFFSET .equ        0x58        ; GPT Clock Gating Register in sleep mode
 GPTCLKGDS_OFFSET .equ       0x5C        ; GPT Clock Gating Register in deep sleep mode
+SSICLKGR_OFFSET .equ        0x78        ; SSI Clock gating Register
 
 ; register values
 
@@ -54,3 +55,7 @@ GPTCLKGR_GPT3_ENABLE .equ  0x8          ; Enable GPT3 Clock
 
 GPTCLKGR_GPT_ENABLE_ALL .equ GPTCLKGR_GPT0_ENABLE | GPTCLKGR_GPT1_ENABLE | GPTCLKGR_GPT2_ENABLE | GPTCLKGR_GPT3_ENABLE
                                         ; Enable all clocks
+
+; SSI clock
+SSICLKGR_ENABLE_SSI0 .equ       0x1          ; Enable SSI0 Clock
+SSICLKGR_ENABLE_SSI1 .equ       0x2          ; Enable SSI1 Clock

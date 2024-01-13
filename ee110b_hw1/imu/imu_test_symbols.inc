@@ -48,9 +48,9 @@ GYRO_Z_COL .equ			8
 ; TEST TIMER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TESTTIMER_BASE_ADDR .equ	GPT4_BASE_ADDR			; test timer base address
-TESTTIMER_IRQ_NUMBER .equ	GPT4A_IRQ_NUMBER		; interrupt number
-TESTTIMER_EXCEPTION_NUMBER .equ GPT4A_EXCEPTION_NUMBER ; exception number
+TESTTIMER_BASE_ADDR .equ	GPT3_BASE_ADDR			; test timer base address
+TESTTIMER_IRQ_NUMBER .equ	GPT3A_IRQ_NUMBER		; interrupt number
+TESTTIMER_EXCEPTION_NUMBER .equ GPT3A_EXCEPTION_NUMBER ; exception number
 TESTTIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
 TESTTIMER_IMR .equ			GPT_IMR_TATOIM_ENABLED	; enable interrupt
 TESTTIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable

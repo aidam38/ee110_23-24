@@ -26,9 +26,9 @@ GYRO_ZOUT_H_OFFSET .equ 			0x47		; gyroscope Z-axis high byte
 GYRO_ZOUT_L_OFFSET .equ 			0x48		; gyroscope Z-axis low byte
 
 ; magnetometer auxiliary register offsets
-MAGNET_XOUT_H_OFFSET .equ 			0x03		; magnetometer X-axis high byte
-MAGNET_XOUT_L_OFFSET .equ 			0x04		; magnetometer X-axis low byte
-MAGNET_YOUT_H_OFFSET .equ 			0x05		; magnetometer Y-axis high byte
-MAGNET_YOUT_L_OFFSET .equ 			0x06		; magnetometer Y-axis low byte
-MAGNET_ZOUT_H_OFFSET .equ 			0x07		; magnetometer Z-axis high byte
-MAGNET_ZOUT_L_OFFSET .equ 			0x08		; magnetometer Z-axis low byte
+MAG_XOUT_H_OFFSET .equ 			0x03		; magnetometer X-axis high byte
+MAG_XOUT_L_OFFSET .equ 			0x04		; magnetometer X-axis low byte
+MAG_YOUT_H_OFFSET .equ 			0x05		; magnetometer Y-axis high byte
+MAG_YOUT_L_OFFSET .equ 			0x06		; magnetometer Y-axis low byte
+MAG_ZOUT_H_OFFSET .equ 			0x07		; magnetometer Z-axis high byte
+MAG_ZOUT_L_OFFSET .equ 			0x08		; magnetometer Z-axis low byte

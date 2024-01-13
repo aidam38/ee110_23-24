@@ -49,19 +49,22 @@ i16ToString:
 	STR		R2, [R1], #4				; set first word to zero
 	STR		R2, [R1], #4				; set second word to zero
 
-; create local buffer of 8 bytes on the stack
-	SUB		R13, #8
+; create zeroed local buffer of 8 bytes on the stack
+	STR		R2, [R13, #-4]!
+	STR		R2, [R13, #-4]!
 	MOV		R6, R13						; store its top in a variable
 
+	MOV		R3, #10						; prepare base 10
 i16ToStringConversionLoop:
-	SDIV	R0, R4, #10					; R0 = R4 / 10 (rounded towards zero)
-	CMP		R0, #0						; check if we're not done
-	BEQ		i16ToStringConversionLoopDone
+	SDIV	R0, R4, R3					; R0 = R4 / 10 (rounded towards zero)
+	MLS		R1, R0, R3, R4				; R1 = R4 - R0*10 (R1 = R4 % 10)
 
-	MLS		R1, R0, #10, R4				; R1 = R4 - R0*10 (R1 = R4 % 10)
 	ADD		R1, #48						; convert to ASCII
 
 	STRB	R1, [R6], #1				; store in stack buffer
+
+	CMP		R0, #0						; if result was zero, this was the last digit
+	BEQ		i16ToStringConversionLoopDone
 
 	MOV		R4, R0						; update number to convert
 
@@ -83,10 +86,11 @@ i16ToStringPositive:
 i16ToStringCopyLoop:
 	LDRB	R1, [R6], #-1				; load byte from stack buffer
 	STRB	R1, [R5], #1				; store byte in string buffer
-	CMP		R6, R13						; check if we're at the top of stack
-	BNE		i16ToStringCopyLoop
+	CMP		R6, R13						; check if below the top of stack
+	BGE		i16ToStringCopyLoop
 	;B		i16ToStringCopyDone
 
 i16ToStringCopyDone:
+	ADD		R13, #8
 	POP		{LR, R4, R5, R6}			; restore return address and used registers
 	BX		LR							; return

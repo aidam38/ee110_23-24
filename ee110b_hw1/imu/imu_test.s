@@ -16,8 +16,12 @@
 
 ; local includes
 	.include "../std.inc"
-	.include "../imu_test_symbols.inc"
+	.include "imu_test_symbols.inc"
+	.include "../cc26x2r/gpio_reg.inc"
 	.include "../cc26x2r/gpt_reg.inc"
+	.include "../cc26x2r/event_reg.inc"
+	.include "../cc26x2r/aux_reg.inc"
+	.include "../cc26x2r/cpu_scs_reg.inc"
 
 ; import functions from other files
 	.ref InitIMU
@@ -31,7 +35,7 @@
 	.ref GetMagY
 	.ref GetMagZ
 	.ref SetCursorPos
-	.ref DisplayString
+	.ref Display
 	.ref i16ToString
 
 ; export functions to other files
@@ -117,6 +121,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R2, R4						; string buffer pointer
 	BL		Display						; display string
 
+	ADD		R13, #8						; return stack pointer
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 

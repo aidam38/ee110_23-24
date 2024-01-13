@@ -121,26 +121,40 @@ ReadMagnetReg:
 ; Revision History:
 
 GetAccelX:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 	MOV		R0, #ACCEL_XOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8						
+	MOV		R0, #ACCEL_XOUT_L_OFFSET	; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 GetAccelY:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 	MOV		R0, #ACCEL_YOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8						
+	MOV		R0, #ACCEL_YOUT_L_OFFSET	; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 GetAccelZ:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 	MOV		R0, #ACCEL_ZOUT_H_OFFSET	; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8						
+	MOV		R0, #ACCEL_ZOUT_L_OFFSET	; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
-
 
 
 ; GetGyroX, GetGyroY, GetGyroZ
@@ -162,26 +176,40 @@ GetAccelZ:
 ; Revision History:
 
 GetGyroX:
-	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #GYRO_XOUT_H_OFFSET	; set register address
+	PUSH	{LR, R4}						; save return address and used registers
+	MOV		R0, #GYRO_XOUT_H_OFFSET		; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8
+	MOV		R0, #GYRO_XOUT_L_OFFSET		; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 GetGyroY:
-	PUSH	{LR}						; save return address and used registers
-	MOV		R0, #GYRO_YOUT_H_OFFSET	; set register address
+	PUSH	{LR, R4}						; save return address and used registers
+	MOV		R0, #GYRO_YOUT_H_OFFSET		; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8
+	MOV		R0, #GYRO_YOUT_L_OFFSET		; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 GetGyroZ:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 	MOV		R0, #GYRO_ZOUT_H_OFFSET		; set register address
 	BL		ReadAccelGyroReg			; read register
-	POP		{LR}						; restore return address and used registers
+	MOV		R4, R0						; save high byte
+	LSL		R4, #8
+	MOV		R0, #GYRO_ZOUT_L_OFFSET		; set register address
+	BL		ReadAccelGyroReg			; read register
+	ORR		R0, R4						; combine high and low bytes
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
-
 
 
 ; GetMagX, GetMagY, GetMagZ

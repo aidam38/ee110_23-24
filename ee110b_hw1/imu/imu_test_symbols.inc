@@ -43,6 +43,8 @@ GYRO_Y_COL .equ			8
 GYRO_Z_ROW .equ			2
 GYRO_Z_COL .equ			8
 
+; display length
+DISPLAY_LENGTH .equ		8
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; TEST TIMER

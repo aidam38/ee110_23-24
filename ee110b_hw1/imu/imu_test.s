@@ -79,6 +79,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #ACCEL_X_ROW			; set row
 	MOV		R1, #ACCEL_X_COL			; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	BL		GetGyroX					; get gyroscope X value
@@ -87,6 +88,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #GYRO_X_ROW				; set row
 	MOV		R1, #GYRO_X_COL				; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	BL		GetAccelY					; get accelerometer Y value
@@ -95,6 +97,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #ACCEL_Y_ROW			; set row
 	MOV		R1, #ACCEL_Y_COL			; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	BL		GetGyroY					; get gyroscope Y value
@@ -103,6 +106,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #GYRO_Y_ROW				; set row
 	MOV		R1, #GYRO_Y_COL				; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	BL		GetAccelZ					; get accelerometer Z value
@@ -111,6 +115,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #ACCEL_Z_ROW			; set row
 	MOV		R1, #ACCEL_Z_COL			; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	BL		GetGyroZ					; get gyroscope Z value
@@ -119,6 +124,7 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R0, #GYRO_Z_ROW				; set row
 	MOV		R1, #GYRO_Z_COL				; set column
 	MOV		R2, R4						; string buffer pointer
+	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
 	ADD		R13, #8						; return stack pointer

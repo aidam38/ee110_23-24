@@ -24,7 +24,7 @@
 ; Serial pins
 SSI_TX_PIN .equ			    0			; Serial Transmit Pin
 SSI_RX_PIN .equ			    1			; Serial Receive Pin
-SSI_CLK_PIN .equ		    2			; Serial Clock Pin
+SSI_CLK_PIN .equ		    4			; Serial Clock Pin
 SSI_CS_PIN .equ			    3			; Serial Chip Select Pin
 
 ; Servo timer

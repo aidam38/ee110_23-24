@@ -35,7 +35,7 @@
 	.ref SerialSendData
 
 ; export functions to other files
-	;.def InitIMU
+	.def InitIMU
 	.def GetAccelX
 	.def GetAccelY
 	.def GetAccelZ
@@ -48,6 +48,14 @@
 
 
 ; TODO: InitIMU
+InitIMU:
+	PUSH	{LR}			; save return address
+
+	MOV		R0, #((USER_CTRL_OFFSET << IMU_WORD) | (IMU_WRITE | USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN))
+	BL		SerialSendData
+
+	POP		{LR}			; restor return address
+	BX 		LR				; return
 
 ; ReadAccelGyroReg
 ;
@@ -70,6 +78,9 @@
 
 ReadAccelGyroReg:
 	PUSH	{LR}						; save return address and used registers
+
+	ORR		R0, #IMU_READ				; specify read operation
+	LSL		R0, #IMU_WORD				; move address to the first byte
 
 	BL		SerialSendData				; send the register address
 	BL		SerialGetData				; get the register value

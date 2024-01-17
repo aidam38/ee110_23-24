@@ -126,7 +126,7 @@ SerialSendRdyExit:
 ; Revision History:
 
 SerialSendData:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 
 	MOV		R4, R0						; save argument in variable
 
@@ -138,7 +138,7 @@ SerialSendData:
 	STR		R4, [R1, #DR_OFFSET]		; send data
 
 SerialSendDataExit:
-	POP		{LR}						; restore return address and used registers
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 

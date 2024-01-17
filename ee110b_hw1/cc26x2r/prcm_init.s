@@ -54,7 +54,7 @@
 
 PeriphPowerInit:
     MOV32     R0, PRCM_BASE_ADDR            ; prepare PRCM register base address
-    MOV        R1, #PDCTL0_PERIPH_ON        ; prepare PDCTL0 value for turning 
+    MOV        R1, #PDCTL0_PERIPH_ON        ; prepare PDCTL0 value for turning
                                         ; on peripheral power
     STR     R1, [R0, #PDCTL0_OFFSET]    ; write PDCTL0 to turn on peripheral power
     ;B        PeriphPowerLoop
@@ -186,14 +186,14 @@ GPTClockLoop:
 
 SSIClockInit:
     MOV32      R0, PRCM_BASE_ADDR           ; prepare PRCM register base address
-    MOV        R1, #SSICLKGR_ENABLE_SSI1     ; prepare CLK_EN (clock enable) value
+    MOV        R1, #SSICLKGR_ENABLE_SSI1_FORCE ; prepare CLK_EN (clock enable) value
                                             ; for GPTCLKGR
     STR        R1, [R0, #SSICLKGR_OFFSET]   ; write to GPTCLKGR register to turn
                                             ; on the clock
 
     MOV        R1, #CLKLOADCTL_LOAD         ; prepare LOAD value for CLKLOADCTL
     STR        R1, [R0, #CLKLOADCTL_OFFSET] ; write to CLKLOADCTL to load the clock
-    ;GPTClockLoop
+    ;SSIClockLoop
 
 ; Wait for CLKLOADCTL to signal clock done loading
 SSIClockLoop:

@@ -59,3 +59,6 @@ GPTCLKGR_GPT_ENABLE_ALL .equ GPTCLKGR_GPT0_ENABLE | GPTCLKGR_GPT1_ENABLE | GPTCL
 ; SSI clock
 SSICLKGR_ENABLE_SSI0 .equ       0x1          ; Enable SSI0 Clock
 SSICLKGR_ENABLE_SSI1 .equ       0x2          ; Enable SSI1 Clock
+
+SSICLKGR_ENABLE_SSI0_FORCE .equ 0x1 << 8     ; Enable SSI0 Clock Override
+SSICLKGR_ENABLE_SSI1_FORCE .equ 0x2 << 8     ; Enable SSI1 Clock Override

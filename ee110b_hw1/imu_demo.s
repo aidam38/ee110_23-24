@@ -31,7 +31,7 @@ debounce
     .ref SSIClockInit
 	.ref MoveVecTable
 
-	;.ref InitIMU
+	.ref InitIMU
     .ref LCDInit
     .ref InitSerial
     .ref TestIMUAccelGyro
@@ -78,20 +78,9 @@ main:
 	BL		MoveVecTable				; move interrupt vector table
 
 ; initialize IMU and LCD
-	;BL		InitIMU 					; initialize IMU
 	BL		InitSerial					; initialize Serial Interface
+	BL		InitIMU 					; initialize IMU
     BL      LCDInit						; initialize LCD
-
-; test i16ToString
-    SUBS    R13, #8
-    MOV     R4, R13
-    MOV     R0, #12345
-    MOV     R1, R4
-    BL      i16ToString
-    MOV     R0, #0
-    MOV     R1, #0
-    MOV     R2, R4
-    BL      Display
 
 ; test IMU
     BL      TestIMUAccelGyro            ; test accelerometer and gyroscope

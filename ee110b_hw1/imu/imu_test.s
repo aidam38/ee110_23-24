@@ -34,7 +34,7 @@
 	.ref GetMagX
 	.ref GetMagY
 	.ref GetMagZ
-	.ref SetCursorPos
+	.ref ClearDisplay
 	.ref Display
 	.ref i16ToString
 

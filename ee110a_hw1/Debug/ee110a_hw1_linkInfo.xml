@@ -2,7 +2,7 @@
 <link_info>
    <banner>TI ARM Linker PC v20.2.7.LTS</banner>
    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>
-   <link_time>0x65a2049e</link_time>
+   <link_time>0x65a70e07</link_time>
    <link_errors>0x0</link_errors>
    <output_file>ee110a_hw1.out</output_file>
    <entry_point>
@@ -121,7 +121,7 @@
          <run_address>0x20013f00</run_address>
          <size>0x0</size>
       </object_component>
-      <object_component id="oc-1c">
+      <object_component id="oc-1e">
          <name>.debug_info</name>
          <load_address>0x0</load_address>
          <run_address>0x0</run_address>
@@ -148,7 +148,7 @@
          <run_address>0x254</run_address>
          <size>0x9c</size>
       </object_component>
-      <object_component id="oc-1f">
+      <object_component id="oc-1c">
          <name>.debug_line</name>
          <load_address>0x0</load_address>
          <run_address>0x0</run_address>
@@ -203,7 +203,7 @@
          <size>0x20</size>
          <input_file_ref idref="fl-2"/>
       </object_component>
-      <object_component id="oc-1e">
+      <object_component id="oc-1f">
          <name>.debug_pubnames</name>
          <load_address>0x0</load_address>
          <run_address>0x0</run_address>
@@ -405,7 +405,7 @@
          <run_address>0x0</run_address>
          <size>0x2f0</size>
          <contents>
-            <object_component_ref idref="oc-1c"/>
+            <object_component_ref idref="oc-1e"/>
             <object_component_ref idref="oc-38"/>
             <object_component_ref idref="oc-2f"/>
             <object_component_ref idref="oc-b1"/>
@@ -417,7 +417,7 @@
          <run_address>0x0</run_address>
          <size>0xab</size>
          <contents>
-            <object_component_ref idref="oc-1f"/>
+            <object_component_ref idref="oc-1c"/>
             <object_component_ref idref="oc-3b"/>
             <object_component_ref idref="oc-56"/>
          </contents>
@@ -449,7 +449,7 @@
          <run_address>0x0</run_address>
          <size>0x47</size>
          <contents>
-            <object_component_ref idref="oc-1e"/>
+            <object_component_ref idref="oc-1f"/>
             <object_component_ref idref="oc-30"/>
          </contents>
       </logical_group>

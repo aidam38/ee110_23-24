@@ -11,7 +11,7 @@
 ; Revision History:
 
 ; local includes
-;  none
+	.include "ascii.inc"
 
 ; export functions to other files
 	.def i16ToString
@@ -37,10 +37,10 @@
 ; 
 ; Revision History:
 
-	ASR_LENGTH	.equ	31
-	BUFFER_SIZE	.equ	8
-	WORD_SIZE	.equ	4
-	BASE		.equ	10
+ASR_LENGTH	.equ	31
+BUFFER_SIZE	.equ	8
+WORD_SIZE	.equ	4
+BASE		.equ	10
 i16ToString:
 	PUSH	{LR, R4, R5, R6, R7}		; save return address and used registers
 
@@ -74,7 +74,7 @@ i16ToStringConversionLoop:
 	SDIV	R0, R4, R3					; R0 = R4 / 10 (rounded towards zero)
 	MLS		R1, R0, R3, R4				; R1 = R4 - R0*10 (R1 = R4 % 10)
 
-	ADD		R1, '0'						; convert to ASCII
+	ADD		R1, ASCII_ZERO				; convert to ASCII
 
 	STRB	R1, [R7], #1				; store in stack buffer
 
@@ -91,7 +91,7 @@ i16ToStringConversionLoopDone:
 	;B		i16ToStringNegative
 
 i16ToStringNegative:
-	MOV		R1, '-'						; prepare minus sign ASCII code
+	MOV		R1, ASCII_MINUS				; prepare minus sign ASCII code
 	STRB	R1, [R7], #1				; add minus sign to buffer
 	;B		i16ToStringPositive
 

@@ -20,6 +20,7 @@
 ; local includes
     .include "../std.inc"
     .include "lcd_symbols.inc"
+    .include "../lib/ascii.inc"
 
 ; import functions from other files
     .ref LCDWrite
@@ -177,7 +178,7 @@ DisplayPadRest:
 
     ; prepare arguments for writing to LCD
     MOV32   R0, 1                   ; RS = 1
-    MOV     R1, ' '                 ; copy space character
+    MOV     R1, ASCII_SPACE         ; copy space character
     BL      LCDWrite                ; write data to LCD
 
     SUB     R7, #1                  ; decrement target length

@@ -14,6 +14,7 @@
 
 ; local includes 
 	.include "../cc26x2r/gpt_reg.inc"
+	.include "../imu_demo_symbols.inc"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DISPLAY LOCATIONS
@@ -50,17 +51,17 @@ DISPLAY_LENGTH .equ		8
 ; TEST TIMER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TESTTIMER_BASE_ADDR .equ	GPT3_BASE_ADDR			; test timer base address
-TESTTIMER_IRQ_NUMBER .equ	GPT3A_IRQ_NUMBER		; interrupt number
-TESTTIMER_EXCEPTION_NUMBER .equ GPT3A_EXCEPTION_NUMBER ; exception number
-TESTTIMER_CFG .equ			GPT_CFG_2_16BIT			; only timer A
+TESTTIMER_BASE_ADDR .equ	IMU_TESTTIMER_BASE_ADDR			; test timer base address
+TESTTIMER_IRQ_NUMBER .equ	IMU_TESTTIMER_IRQ_NUMBER		; interrupt number
+TESTTIMER_EXCEPTION_NUMBER .equ IMU_TESTTIMER_EXCEPTION_NUMBER ; exception number
+TESTTIMER_CFG .equ			GPT_CFG_32BIT			; only timer A
 TESTTIMER_IMR .equ			GPT_IMR_TATOIM_ENABLED	; enable interrupt
 TESTTIMER_ENABLE .equ		GPT_CTL_TAEN_ENABLED	; timer A enable
 TESTTIMER_TAMR .equ			GPT_TXMR_PERIODIC		; periodic
 
-; 60 Hz frequency
-; 48 000 000 / 60 = 800 000
-TESTTIMER_LENGTH .equ		800000
-TESTTIMER_TAILR .equ		(TESTTIMER_LENGTH & 0xFFFF)	; interval
-TESTTIMER_TAPR .equ			(TESTTIMER_LENGTH >> 16)	; prescale
+; 4 Hz frequency
+; 48 000 000 / 4 = 6 000 000
+TESTTIMER_LENGTH .equ		(48000000/2)
+TESTTIMER_TAILR .equ		(TESTTIMER_LENGTH)      ; interval
+TESTTIMER_TAPR .equ			0                     	; prescale
 

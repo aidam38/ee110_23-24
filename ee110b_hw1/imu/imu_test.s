@@ -67,7 +67,7 @@
 ; Revision History:
 
 TestIMUAccelGyroShowOnLCD:
-	PUSH	{LR}						; save return address and used registers
+	PUSH	{LR, R4}						; save return address and used registers
 
 ; create local 8-byte string buffer
 	SUBS	R13, #8			
@@ -127,8 +127,12 @@ TestIMUAccelGyroShowOnLCD:
 	MOV		R3, #DISPLAY_LENGTH			; display exactly DISPLAY_LENGTH characters
 	BL		Display						; display string
 
+	; Clear interrupt
+	MOV32	R1, TESTTIMER_BASE_ADDR	; prepare timer base address
+	STREG	GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET	; clear Timer A Time-out bit
+
 	ADD		R13, #8						; return stack pointer
-	POP		{LR}						; restore return address and used registers
+	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
 
 ; TestIMUAccelGyro

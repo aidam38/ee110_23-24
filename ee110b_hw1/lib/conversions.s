@@ -74,7 +74,7 @@ i16ToStringConversionLoop:
 	SDIV	R0, R4, R3					; R0 = R4 / 10 (rounded towards zero)
 	MLS		R1, R0, R3, R4				; R1 = R4 - R0*10 (R1 = R4 % 10)
 
-	ADD		R1, ASCII_ZERO				; convert to ASCII
+	ADD		R1, #ASCII_ZERO				; convert to ASCII
 
 	STRB	R1, [R7], #1				; store in stack buffer
 
@@ -91,7 +91,7 @@ i16ToStringConversionLoopDone:
 	;B		i16ToStringNegative
 
 i16ToStringNegative:
-	MOV		R1, ASCII_MINUS				; prepare minus sign ASCII code
+	MOV		R1, #ASCII_MINUS				; prepare minus sign ASCII code
 	STRB	R1, [R7], #1				; add minus sign to buffer
 	;B		i16ToStringPositive
 

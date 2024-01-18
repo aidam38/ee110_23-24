@@ -27,8 +27,13 @@ SSI_RX_PIN .equ			    1			; Serial Receive Pin
 SSI_CLK_PIN .equ		    4			; Serial Clock Pin
 SSI_CS_PIN .equ			    3			; Serial Chip Select Pin
 
-; Servo timer
-;SERVO_TIMER_BASE_ADDR .equ	GPT2_BASE_ADDR
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; IMU Test Timer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IMU_TESTTIMER_BASE_ADDR .equ    GPT0_BASE_ADDR
+IMU_TESTTIMER_IRQ_NUMBER .equ   GPT0A_IRQ_NUMBER
+IMU_TESTTIMER_EXCEPTION_NUMBER .equ GPT0A_EXCEPTION_NUMBER
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; LCD

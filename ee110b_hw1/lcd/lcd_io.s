@@ -293,7 +293,7 @@ LCDReadWaitTimeOut:
     CPSID i   ; disable interrupts because if interrupted we could overwrite 
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
-    BIC        R2, #(1 << RS_PIN)            ; clear RS
+    BIC     R2, #(1 << RS_PIN)            ; clear RS
     ORR     R2, R0, LSL #RS_PIN         ; merge RS into DOUT while
                                         ; shifting to the RS bit position
     ORR     R2, #(1 << RW_PIN)          ; merge R/W = 1 into DOUT while

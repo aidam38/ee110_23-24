@@ -44,6 +44,18 @@ GYRO_Y_COL .equ			8
 GYRO_Z_ROW .equ			2
 GYRO_Z_COL .equ			8
 
+; X mag at (0,0)
+MAG_X_ROW .equ			0
+MAG_X_COL .equ			0
+
+; Y mag at (1,0)
+MAG_Y_ROW .equ			1
+MAG_Y_COL .equ			0
+
+; Z mag at (2,0)
+MAG_Z_ROW .equ			2
+MAG_Z_COL .equ			0
+
 ; display length
 DISPLAY_LENGTH .equ		8
 

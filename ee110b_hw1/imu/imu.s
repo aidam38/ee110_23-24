@@ -65,6 +65,7 @@
 ;
 ; Revision History:
 
+DELAY .equ		500
 InitIMU:
 	PUSH	{LR}			; save return address
 
@@ -75,22 +76,30 @@ InitIMU:
 	MOV		R0, #(((IMU_WRITE | USER_CTRL_OFFSET) << IMU_WORD) | (USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN | USER_CTRL_SIG_COND_RST))
 	BL		SerialSendData
 
+	;MOV		R0, #DELAY
+;blah:
+	;SUBS	R0, #1
+	;BNE		blah
+
+	;MOV		R0, #USER_CTRL_OFFSET
+	;BL		ReadAccelGyroReg
+
 	; configure the I2C master interface
-	MOV		R0, #(((IMU_WRITE | I2C_MST_CTRL_OFFSET) << IMU_WORD) | (I2C_MST_CLK_348 | I2C_MST_P_NSR_STOP))
-	BL		SerialSendData
+	;MOV		R0, #(((IMU_WRITE | I2C_MST_CTRL_OFFSET) << IMU_WORD) | (I2C_MST_CLK_400 | I2C_MST_P_NSR_STOP))
+	;BL		SerialSendData
 
 	; configure the accelerometer
-	MOV		R0, #(((IMU_WRITE | ACCEL_CONFIG1_OFFSET) << IMU_WORD) | (ACCEL_CONFIG_2G))
+	MOV		R0, #(((IMU_WRITE | ACCEL_CONFIG1_OFFSET) << IMU_WORD) | (ACCEL_FS_SEL_2))
 	BL		SerialSendData
 
 	; configure the gyroscope
-	MOV		R0, #(((IMU_WRITE | GYRO_CONFIG_OFFSET) << IMU_WORD) | (GYRO_CONFIG_250DPS))
+	MOV		R0, #(((IMU_WRITE | GYRO_CONFIG_OFFSET) << IMU_WORD) | (GYRO_FS_SEL_250))
 	BL		SerialSendData
 
 	; configure the magnetometer
-	MOV		R0, #MAG_CNTL2_OFFSET
-	MOV		R1, #MAG_SRST
-	BL		WriteMagnetReg		; write to the CNTL2 register
+	;MOV		R0, #MAG_CNTL2_OFFSET
+	;MOV		R1, #MAG_SRST
+	;BL		WriteMagnetReg		; write to the CNTL2 register
 
 	POP		{LR}			; restor return address
 	BX 		LR				; return
@@ -162,12 +171,16 @@ WriteMagnetReg:
 	ORR		R0, R4, #(((IMU_WRITE | I2C_SLV4_REG_OFFSET) << IMU_WORD))
 	BL		SerialSendData
 
+	MOV		R0, #I2C_SLV4_REG_OFFSET
+	BL		ReadAccelGyroReg
+
 	; set register value we want to write
 	ORR		R0, R5, #(((IMU_WRITE | I2C_SLV4_DO_OFFSET) << IMU_WORD))
 	BL		SerialSendData
 
 	; enable I2C slave 4 transfer
 	MOV		R0, #(((IMU_WRITE | I2C_SLV4_CTRL_OFFSET) << IMU_WORD) | (I2C_SLV4_EN))
+	BL		SerialSendData
 
 	; wait for transfer to complete by reading the I2C master status
 WriteMagnetRegWait:
@@ -177,7 +190,7 @@ WriteMagnetRegWait:
 	BEQ		WriteMagnetRegWait		; if not, wait
 	;B		WriteMagnetRegTransferDone		; if so, we're done
 
-ReadMagnetRegTransferDone:
+WriteMagnetRegTransferDone:
 WriteMagnetRegDone:	
 	POP		{LR, R4, R5}					; restore return address and used registers
 	BX		LR						; return
@@ -217,6 +230,7 @@ ReadMagnetReg:
 
 	; enable I2C slave 4 transfer
 	MOV		R0, #(((IMU_WRITE | I2C_SLV4_CTRL_OFFSET) << IMU_WORD) | (I2C_SLV4_EN))
+	BL		SerialSendData
 
 	; wait for transfer to complete by reading the I2C master status
 ReadMagnetRegWait:
@@ -269,9 +283,9 @@ ReadMagnetData:
 
 ; poll the status register
 ReadMagnetDataWait:
-	MOV		R0, #MAG_STATUS_OFFSET
+	MOV		R0, #MAG_ST1_OFFSET
 	BL		ReadMagnetReg
-	TST		R0, #MAG_DRDY
+	TST		R0, #MAG_ST1_DRDY
 	BEQ		ReadMagnetDataWait
 	;B		ReadMagnetDataMeasurementDone
 

@@ -51,7 +51,7 @@
 InitIMU:
 	PUSH	{LR}			; save return address
 
-	MOV		R0, #((USER_CTRL_OFFSET << IMU_WORD) | (IMU_WRITE | USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN))
+	MOV		R0, #((USER_CTRL_OFFSET << IMU_WORD) | (IMU_WRITE | USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN | USER_CTRL_SIG_COND_RST))
 	BL		SerialSendData
 
 	POP		{LR}			; restor return address

@@ -39,5 +39,6 @@ MAG_ZOUT_H_OFFSET .equ 			0x07		; magnetometer Z-axis high byte
 MAG_ZOUT_L_OFFSET .equ 			0x08		; magnetometer Z-axis low byte
 
 ; register values
-USER_CTRL_I2C_IF_DIS .equ          0x1 << 4    ; Reset I2C Slave module and put the serial interface in SPI mode only.
+USER_CTRL_I2C_IF_DIS .equ       0x1 << 4    ; Reset I2C Slave module and put the serial interface in SPI mode only.
 USER_CTRL_I2C_MST_EN .equ       0x1 << 5    ; Enable the I2C Master I/F module
+USER_CTRL_SIG_COND_RST .equ     0x1         ; Reset accelerometer, gyroscope, and temperature sensors

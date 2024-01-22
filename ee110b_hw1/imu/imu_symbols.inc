@@ -19,7 +19,7 @@ IMU_WAIT_CLOCKS .equ		4800000				; number of clocks to wait before initializing
 
 ; main register offsets
 GYRO_CONFIG_OFFSET .equ					0x1B		; gyroscope configuration register
-ACCEL_CONFIG1_OFFSET .equ					0x1C		; accelerometer configuration register 1
+ACCEL_CONFIG1_OFFSET .equ				0x1C		; accelerometer configuration register 1
 
 ACCEL_XOUT_H_OFFSET .equ 			0x3B		; accelerometer X-axis high byte
 ACCEL_XOUT_L_OFFSET .equ 			0x3C		; accelerometer X-axis low byte
@@ -69,12 +69,12 @@ I2C_MST_CLK_400 .equ   		13       ; 400kHz I2C master clock
 
 I2C_MST_P_NSR_STOP .equ		0x1 << 4 ; Stop between reads
 
-I2C_SLV4_EN					0x1 << 7 ; Enable slave 4
+I2C_SLV4_EN .equ					0x1 << 7 ; Enable slave 4
 
-I2C_SLV4_DONE				0x1 << 6 ; Slave 4 done
+I2C_SLV4_DONE .equ				0x1 << 6 ; Slave 4 done
 
-I2C_SLV4_READ				0x1 << 7 ; Read transfer
-I2C_SLV4_WRITE				0x0 << 7 ; Write transfer
+I2C_SLV4_READ .equ				0x1 << 7 ; Read transfer
+I2C_SLV4_WRITE .equ				0x0 << 7 ; Write transfer
 
 ; magnetometer
 ; MPU configurtion

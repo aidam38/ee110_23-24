@@ -52,7 +52,7 @@
 ; Description:			Initializes the IMU in 9 DoF mode.
 ;
 ; Arguments:			None.
-; Returns:				None.
+; Returns:				R0: FUNCTION_SUCCESS if the IMU was initialized successfully, FUNCTION_FAIL otherwise.
 ;
 ; Local Variables:      None.
 ; Shared Variables:     None.
@@ -68,36 +68,96 @@
 InitIMU:
 	PUSH	{LR}			; save return address
 
+	; wait 100 ms before initializing the IMU
+	MOV32		R0, #IMU_WAIT_CLOCKS
+InitIMUWait:
+	SUBS		R0, #1
+	BNE			InitIMUWait
+
 	; configure the IMU to 
 	;	- disable I2C slave interface (use SPI only instead)
 	;	- enable I2C master interface
 	;	- reset signal paths (clears all sensor registers)
-	MOV		R0, #(((IMU_WRITE | USER_CTRL_OFFSET) << IMU_WORD) | (USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN | USER_CTRL_SIG_COND_RST))
-	BL		SerialSendData
+	WriteIMUReg_MACRO USER_CTRL_OFFSET, (USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN | USER_CTRL_SIG_COND_RST)
 
-	; configure the I2C master interface
-	MOV		R0, #(((IMU_WRITE | I2C_MST_CTRL_OFFSET) << IMU_WORD) | (I2C_MST_CLK_348 | I2C_MST_P_NSR_STOP))
-	BL		SerialSendData
+	; check device ID
+	BL		CheckDeviceID
+	CMP		R0, #FUNCTION_FAIL
+	BEQ		InitIMUFail
+	;B	 	InitIMUConfigure
 
+InitIMUConfigure:
 	; configure the accelerometer
-	MOV		R0, #(((IMU_WRITE | ACCEL_CONFIG1_OFFSET) << IMU_WORD) | (ACCEL_CONFIG_2G))
-	BL		SerialSendData
+	WriteIMUReg_MACRO ACCEL_CONFIG_OFFSET, ACCEL_CONFIG_2G
 
 	; configure the gyroscope
-	MOV		R0, #(((IMU_WRITE | GYRO_CONFIG_OFFSET) << IMU_WORD) | (GYRO_CONFIG_250DPS))
-	BL		SerialSendData
+	WriteIMUReg_MACRO GYRO_CONFIG_OFFSET, GYRO_CONFIG_250DPS
 
 	; configure the magnetometer
 	MOV		R0, #MAG_CNTL2_OFFSET
 	MOV		R1, #MAG_SRST
 	BL		WriteMagnetReg		; write to the CNTL2 register
 
+InitIMUSuccess:
+	MOV		R0, #FUNCTION_SUCCESS
+	B		InitIMUDone
+
+InitIMUFail:
+	MOV		R0, #FUNCTION_FAIL
+	;B		InitIMUDone
+
+InitIMUDone:
 	POP		{LR}			; restor return address
 	BX 		LR				; return
 
-; ReadAccelGyroReg
+
+
+; CheckDeviceID
 ;
-; Description:			Reads a register from the accelerometer and gyroscope.
+; Description:			Checks the device ID of the IMU.
+;
+; Arguments:			None.
+; Returns:				FUNCTION_SUCCESS if the device ID is correct, FUNCTION_FAIL otherwise.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       If the device ID is incorrect, the function will return FUNCTION_FAIL.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          1
+;
+; Revision History:
+
+CheckDeviceID:
+	PUSH	{LR}			; save return address
+
+	; read the device ID
+	MOV		R0, #WHO_AM_I_OFFSET
+	BL		ReadIMUReg
+
+	; check the device ID
+	CMP		R0, #WHO_AM_I_ID
+	BEQ		CheckDeviceIDSuccess
+	;B
+CheckDeviceIDFail:
+	MOV		R0, #FUNCTION_FAIL
+	B		CheckDeviceIDDone
+
+CheckDeviceIDSuccess:
+	MOV		R0, #FUNCTION_SUCCESS
+	;B		CheckDeviceIDDone
+
+CheckDeviceIDDone:
+	POP		{LR}			; restore return address
+	BX		LR				; return
+
+
+
+; ReadIMUReg
+;
+; Description:			Reads a register on the IMU.
 ;						Registers are 8 bits wide. 
 ;
 ; Arguments:			R0 = register address
@@ -114,7 +174,7 @@ InitIMU:
 ;
 ; Revision History:
 
-ReadAccelGyroReg:
+ReadIMUReg:
 	PUSH	{LR}						; save return address and used registers
 
 	ORR		R0, #IMU_READ				; specify read operation
@@ -123,9 +183,38 @@ ReadAccelGyroReg:
 	BL		SerialSendData				; send the register address
 	BL		SerialGetData				; get the register value
 
+	ORR		R0, #IMU_MASK				; mask off the high byte
+
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
+
+
+; WriteIMUReg_MACRO
+;
+; Description:			Writes to a register on the IMU. IMPLEMENTED USING A MACRO!
+;						Registers are 8 bits wide. 
+;
+; Arguments:			reg - 8-bit register address
+;						value - 8-bit register value to be store
+; Returns:				None.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       None.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          1
+;
+; Revision History:
+
+WriteIMUReg_MACRO .macro reg value
+	MOV		R0, #(((IMU_WRITE | reg) << IMU_WORD) | value)
+	BL		SerialSendData				; write to register
+	BL		SerialGetData				; pop garbare value from Rx queue
+	.endm
 
 ; WriteMagnetReg
 ;
@@ -172,7 +261,7 @@ WriteMagnetReg:
 	; wait for transfer to complete by reading the I2C master status
 WriteMagnetRegWait:
 	MOV		R0, #I2C_MST_STATUS_OFFSET
-	BL		ReadAccelGyroReg
+	BL		ReadIMUReg
 	TST		R0, #I2C_SLV4_DONE		; check whether SLV4 bit is asserted
 	BEQ		WriteMagnetRegWait		; if not, wait
 	;B		WriteMagnetRegTransferDone		; if so, we're done
@@ -221,7 +310,7 @@ ReadMagnetReg:
 	; wait for transfer to complete by reading the I2C master status
 ReadMagnetRegWait:
 	MOV		R0, #I2C_MST_STATUS_OFFSET
-	BL		ReadAccelGyroReg
+	BL		ReadIMUReg
 	TST		R0, #I2C_SLV4_DONE		; check whether SLV4 bit is asserted
 	BEQ		ReadMagnetRegWait		; if not, wait
 	;B		ReadMagnetRegTransferDone		; if so, we're done
@@ -291,7 +380,7 @@ ReadMagnetDataMeasurementDone:
 	; wait for transfer to complete by reading the I2C master status
 ReadMagnetDataWait2:
 	MOV		R0, #I2C_MST_STATUS_OFFSET
-	BL		ReadAccelGyroReg
+	BL		ReadIMUReg
 	TST		R0, #I2C_SLV4_DONE		; check whether SLV4 bit is asserted
 	BEQ		ReadMagnetDataWait2		; if not, wait
 	;B		ReadMagnetDataTransferDone		; if so, we're done
@@ -326,42 +415,27 @@ ReadMagnetDataDone:
 ;
 ; Revision History:
 
-GetAccelX:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #ACCEL_XOUT_H_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
+GetAccel_MACRO .macro axis
+	PUSH	{LR, R4}					; save return address and used registers
+	MOV		R0, #ACCEL_:axis:_H_OFFSET	; set register address
+	BL		ReadIMUReg					; read register
 	MOV		R4, R0						; save high byte
 	LSL		R4, #8						
-	MOV		R0, #ACCEL_XOUT_L_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
+	MOV		R0, #ACCEL_:axis:_L_OFFSET	; set register address
+	BL		ReadIMUReg					; read register
 	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
+	POP		{LR, R4}					; restore return address and used registers
 	BX		LR							; return
+	.endm
+
+GetAccelX:
+	GetAccel_MACRO X
 
 GetAccelY:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #ACCEL_YOUT_H_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8						
-	MOV		R0, #ACCEL_YOUT_L_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
+	GetAccel_MACRO Y
 
 GetAccelZ:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #ACCEL_ZOUT_H_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8						
-	MOV		R0, #ACCEL_ZOUT_L_OFFSET	; set register address
-	BL		ReadAccelGyroReg			; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
-
+	GetAccel_MACRO Z
 
 ; GetGyroX, GetGyroY, GetGyroZ
 ;
@@ -381,41 +455,28 @@ GetAccelZ:
 ;
 ; Revision History:
 
-GetGyroX:
+GetGyro_MACRO .macro axis
 	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #GYRO_XOUT_H_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
+	MOV		R0, #GYRO_:axis:_H_OFFSET	; set register address
+	BL		ReadIMUReg					; read register
 	MOV		R4, R0						; save high byte
 	LSL		R4, #8
-	MOV		R0, #GYRO_XOUT_L_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
+	MOV		R0, #GYRO_:axis:_L_OFFSET	; set register address
+	BL		ReadIMUReg					; read register
 	ORR		R0, R4						; combine high and low bytes
 	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
+	.endm
+
+GetGyroX:
+	GetGyro_MACRO X
 
 GetGyroY:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #GYRO_YOUT_H_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8
-	MOV		R0, #GYRO_YOUT_L_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
+	GetGyro_MACRO Y
 
 GetGyroZ:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #GYRO_ZOUT_H_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8
-	MOV		R0, #GYRO_ZOUT_L_OFFSET		; set register address
-	BL		ReadAccelGyroReg			; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
+	GetGyro_MACRO Z
+
 
 
 ; GetMagX, GetMagY, GetMagZ
@@ -436,39 +497,24 @@ GetGyroZ:
 ;
 ; Revision History:
 
-GetMagX:
+GetMag_MACRO .macro axis
 	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #MAG_XOUT_H_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
+	MOV		R0, #MAG_:axis:_H_OFFSET	; set register address
+	BL		ReadMagnetReg				; read register
 	MOV		R4, R0						; save high byte
 	LSL		R4, #8
-	MOV		R0, #MAG_XOUT_L_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
+	MOV		R0, #MAG_:axis:_L_OFFSET	; set register address
+	BL		ReadMagnetReg				; read register
 	ORR		R0, R4						; combine high and low bytes
 	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return
+	.endm
+
+GetMagX:
+	GetMag_MACRO X
 
 GetMagY:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #MAG_YOUT_H_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8
-	MOV		R0, #MAG_YOUT_L_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
+	GetMag_MACRO Y
 
 GetMagZ:
-	PUSH	{LR, R4}						; save return address and used registers
-	MOV		R0, #MAG_ZOUT_H_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
-	MOV		R4, R0						; save high byte
-	LSL		R4, #8
-	MOV		R0, #MAG_ZOUT_L_OFFSET		; set register address
-	BL		ReadMagnetData				; read register
-	ORR		R0, R4						; combine high and low bytes
-	POP		{LR, R4}						; restore return address and used registers
-	BX		LR							; return
-
+	GetMag_MACRO Z

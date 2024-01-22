@@ -109,7 +109,7 @@ SerialSendRdyExit:
 
 ; SerialSendData
 ;
-; Description:          Sends a byte of data over the serial interface.
+; Description:          Sends data over the serial interface.
 ;
 ; Arguments:            R0 = data to send.
 ; Return Values:        None.
@@ -126,7 +126,7 @@ SerialSendRdyExit:
 ; Revision History:
 
 SerialSendData:
-	PUSH	{LR, R4}						; save return address and used registers
+	PUSH	{LR, R4}					; save return address and used registers
 
 	MOV		R4, R0						; save argument in variable
 
@@ -138,7 +138,7 @@ SerialSendData:
 	STR		R4, [R1, #DR_OFFSET]		; send data
 
 SerialSendDataExit:
-	POP		{LR, R4}						; restore return address and used registers
+	POP		{LR, R4}					; restore return address and used registers
 	BX		LR							; return
 
 
@@ -177,7 +177,7 @@ SerialGetRdyExit:
 
 ; SerialGetData
 ;
-; Description:          Reads a byte of data from the serial interface.
+; Description:          Reads data from the serial interface.
 ;
 ; Arguments:            None.
 ; Return Values:        R0 = data read from the serial interface.

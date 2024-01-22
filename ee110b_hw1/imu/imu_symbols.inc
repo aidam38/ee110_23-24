@@ -14,6 +14,8 @@
 IMU_WRITE .equ              00000000b           ; write bit
 IMU_READ .equ               10000000b           ; read bit
 IMU_WORD .equ               8                   ; length of IMU address or data
+IMU_MASK .equ				11111111b			; mask for IMU address or data
+IMU_WAIT_CLOCKS .equ		4800000				; number of clocks to wait before initializing
 
 ; main register offsets
 GYRO_CONFIG_OFFSET .equ					0x1B		; gyroscope configuration register
@@ -42,8 +44,12 @@ I2C_SLV4_DI_OFFSET .equ				0x35		; I2C slave 4 data in register
 
 I2C_MST_STATUS_OFFSET .equ			0x36		; I2C master status register
 
+WHO_AM_I_OFFSET .equ				0x75		; who am I register
+
 
 ; register values
+WHO_AM_I_ID .equ					0x71		; who am I register value
+
 GYRO_FS_SEL_250 .equ				0x00 << 3		; gyroscope full scale range 250 deg/s
 GYRO_FS_SEL_500 .equ				0x01 << 3		; gyroscope full scale range 500 deg/s
 GYRO_FS_SEL_1000 .equ				0x02 << 3		; gyroscope full scale range 1000 deg/s

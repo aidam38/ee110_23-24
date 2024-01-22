@@ -42,7 +42,8 @@ BYTES_PER_WORD  .equ   4       ; number of bytes in a word
 FUNCTION_SUCCESS .equ  0       ; return value for successful function call
 FUNCTION_FAIL .equ     -1      ; return value for failed function call
 
-
+TRUE .equ              1       ; true value
+FALSE .equ             0       ; false value
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; MACROS 

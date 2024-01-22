@@ -12,7 +12,8 @@
 ;		SerialSendRdy - returns true if the serial interface is ready to send
 ;		SerialSendData - sends a byte of data over the serial interface
 ;		SerialGetRdy - returns true if the serial interface has data to read
-;		SerialGetData - reads a byte of data from the serial interface
+;		SerialGetDataBlocking - reads a byte of data from the serial interface, 
+;								blocks until there is data
 ; 
 ; Revision History:
 
@@ -32,7 +33,7 @@
 	.def SerialSendRdy
 	.def SerialSendData
 	.def SerialGetRdy
-	.def SerialGetData
+	.def SerialGetDataBlocking
 
 
 
@@ -137,7 +138,17 @@ SerialSendData:
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
 	STR		R4, [R1, #DR_OFFSET]		; send data
 
-SerialSendDataExit:
+	;B		SerialSendDataSuccess
+
+SerialSendDataSuccess:
+	MOV		R0, #FUNCTION_SUCCESS		; return function success
+	B		SerialSendDataDone
+
+SerialSendDataFail:
+	MOV		R0, #FUNCTION_FAIL			; return function fail
+	;B		SerialSendDataDone
+
+SerialSendDataDone:
 	POP		{LR, R4}					; restore return address and used registers
 	BX		LR							; return
 
@@ -148,7 +159,7 @@ SerialSendDataExit:
 ; Description:          Returns true if the serial interface has data to read.
 ;
 ; Arguments:            None.
-; Return Values:        R0 = 1 if the serial interface has data to read, 0 otherwise.
+; Return Values:        R0 = TRUE if the serial interface has data to read, FALSE otherwise.
 ;
 ; Local Variables:      None.
 ; Shared Variables:     None.
@@ -168,14 +179,23 @@ SerialGetRdy:
 	LDR		R0, [R1, #SR_OFFSET]		; load status register
 	TST		R0, #SR_RNE_NOTEMPTY		; test if receive FIFO is not empty
 	BEQ		SerialGetRdyExit			; if receive FIFO is empty, return false
-	MOV		R0, #1						; otherwise, return true
+	;B		SerialGetRdyTrue
+
+SerialGetRdyTrue:
+	MOV		R0, #TRUE					; return true
+	B		SerialGetRdyExit
+
+SerialGetRdyFalse:
+	MOV		R0, #FALSE					; otherwise, return false
+	;B		SerialGetRdyExit
+
 SerialGetRdyExit:
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
 
 
-; SerialGetData
+; SerialGetDataBlocking
 ;
 ; Description:          Reads data from the serial interface.
 ;
@@ -193,17 +213,20 @@ SerialGetRdyExit:
 ;
 ; Revision History:
 
-SerialGetData:
+SerialGetDataBlocking:
 	PUSH	{LR}						; save return address and used registers
-
+	
+SerialGetDataBlockingBlock:
 	BL		SerialGetRdy				; check if the serial interface has data to read
-	CMP		R0, #0						; if the serial interface does not have data to read
-	BEQ		SerialGetDataExit			; return without reading data
+	CMP		R0, #FALSE					; if the serial interface does not have data to read
+	BEQ		SerialGetDataBlockingBlock			; return without reading data
+	;B		SerialGetDataBlockingRead
 
+SerialGetDataBlockingRead:
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
 	LDR		R0, [R1, #DR_OFFSET]		; read data
 
-SerialGetDataExit:
+SerialGetDataBlockingExit:
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 

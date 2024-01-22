@@ -31,7 +31,7 @@
 	.include "imu_symbols.inc"
 
 ; import functions from other files
-	.ref SerialGetData
+	.ref SerialGetDataBlocking
 	.ref SerialSendData
 
 ; export functions to other files
@@ -181,7 +181,7 @@ ReadIMUReg:
 	LSL		R0, #IMU_WORD				; move address to the first byte
 
 	BL		SerialSendData				; send the register address
-	BL		SerialGetData				; get the register value
+	BL		SerialGetDataBlocking				; get the register value
 
 	ORR		R0, #IMU_MASK				; mask off the high byte
 
@@ -213,7 +213,7 @@ ReadIMUReg:
 WriteIMUReg_MACRO .macro reg value
 	MOV		R0, #(((IMU_WRITE | reg) << IMU_WORD) | value)
 	BL		SerialSendData				; write to register
-	BL		SerialGetData				; pop garbare value from Rx queue
+	BL		SerialGetDataBlocking				; pop garbare value from Rx queue
 	.endm
 
 ; WriteMagnetReg

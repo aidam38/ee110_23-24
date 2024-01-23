@@ -87,8 +87,8 @@ main:
     BL      LCDInit						; initialize LCD
 
 ; test IMU
-    BL      TestIMUAccelGyro            ; test accelerometer and gyroscope
-;    BL      TestIMUMagnet               ; test magnetometer
+;    BL      TestIMUAccelGyro            ; test accelerometer and gyroscope
+    BL      TestIMUMagnet               ; test magnetometer
 
 ; infinite loop
 Loop:

@@ -91,7 +91,7 @@ InitIMUWait:
 InitIMUConfigure:
 	; configure the accelerometer
 	MOV		R0, #ACCEL_CONFIG1_OFFSET
-	MOV		R1, #ACCEL_FS_SEL_2
+	MOV		R1, #ACCEL_FS_SEL_4
 	BL		WriteIMUReg
 
 	; configure the gyroscope
@@ -99,10 +99,15 @@ InitIMUConfigure:
 	MOV		R1, #GYRO_FS_SEL_250
 	BL		WriteIMUReg
 
+	; configure I2C master interface
+	MOV		R0, #I2C_MST_CTRL_OFFSET
+	MOV		R1, #(I2C_MST_CLK_400 | I2C_MST_P_NSR_STOP)
+	BL		WriteIMUReg
+
 	; configure the magnetometer
-	;MOV		R0, #MAG_CNTL2_OFFSET
-	;MOV		R1, #MAG_SRST
-	;BL		WriteMagnetReg		; write to the CNTL2 register
+	MOV		R0, #MAG_CNTL2_OFFSET
+	MOV		R1, #MAG_SRST
+	BL		WriteMagnetReg		; write to the CNTL2 register
 
 InitIMUSuccess:
 	MOV		R0, #FUNCTION_SUCCESS

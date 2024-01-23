@@ -90,7 +90,7 @@ InitSSI:
 SSITransact:
 	PUSH	{LR}						; save return address 
 
-	MOV		R1, SSI_BASE_ADDR			; prepare SSI base address
+	MOV32		R1, SSI_BASE_ADDR			; prepare SSI base address
 
 	LDR		R2, [R1, #SR_OFFSET]		; load status register
 	TST		R2, #SR_TNF_NOTFULL			; test if transmit FIFO is not full

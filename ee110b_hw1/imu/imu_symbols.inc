@@ -92,7 +92,10 @@ MAG_CNTL1_OFFSET .equ			0x0A		; magnetometer control register
 MAG_CNTL2_OFFSET .equ			0x0B		; magnetometer control register
 MAG_ST1_OFFSET .equ				0x02		; magnetometer status register
 
+MAG_WHO_AM_I_OFFSET .equ		0x00		; magnetometer who am I register
+
 ; register values
+MAG_WHO_AM_I_ID .equ			0x48		; magnetometer who am I register value
 MAG_SINGLE_MEASUREMENT .equ		0x01		; single measurement mode
 
 MAG_SRST .equ					0x01		; soft reset bit

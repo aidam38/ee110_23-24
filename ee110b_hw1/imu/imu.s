@@ -82,11 +82,16 @@ InitIMUWait:
 	MOV		R1, #(USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN)
 	BL		WriteIMUReg
 
-	; check device ID
+	; check IMU device ID
 	BL		CheckDeviceID
 	CMP		R0, #FUNCTION_FAIL
 	BEQ		InitIMUFail
-	;B	 	InitIMUConfigure
+
+	; check magnetometer device ID
+	BL		CheckMagnetID
+	CMP		R0, #FUNCTION_FAIL
+	BEQ		InitIMUFail
+	;B		InitIMUConfigure
 
 InitIMUConfigure:
 	; configure the accelerometer
@@ -445,6 +450,49 @@ ReadMagnetDataDone:
 ; Stack Depth:          1
 ;
 ; Revision History:
+
+
+; CheckMagnetID
+;
+; Description:			Checks the device ID of the magnetometer.
+;
+; Arguments:			None.
+; Returns:				FUNCTION_SUCCESS if the device ID is correct, FUNCTION_FAIL otherwise.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       If the device ID is incorrect, the function will return FUNCTION_FAIL.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          1
+;
+; Revision History:
+
+CheckMagnetID:
+	PUSH	{LR}			; save return address
+
+	; read the device ID
+	MOV		R0, #MAG_WHO_AM_I_OFFSET
+	BL		ReadMagnetReg
+
+	; check the device ID
+	CMP		R0, #MAG_WHO_AM_I_ID
+	BEQ		CheckMagnetIDSuccess
+	;B		CheckMagnetIDFail
+
+CheckMagnetIDFail:
+	MOV		R0, #FUNCTION_FAIL
+	B		CheckMagnetIDDone
+
+CheckMagnetIDSuccess:
+	MOV		R0, #FUNCTION_SUCCESS
+	;B		CheckMagnetIDDone
+
+CheckMagnetIDDone:
+	POP		{LR}			; restore return address
+	BX		LR				; return
 
 GetAccel_MACRO .macro axis
 	PUSH	{LR, R4}					; save return address and used registers

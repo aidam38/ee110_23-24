@@ -33,7 +33,7 @@ debounce
 
 	.ref InitIMU
     .ref LCDInit
-    .ref InitSerial
+    .ref InitSSI
     .ref TestIMUAccelGyro
     .ref TestIMUMagnet
     .ref i16ToString
@@ -78,7 +78,7 @@ main:
 	BL		MoveVecTable				; move interrupt vector table
 
 ; initialize IMU
-	BL		InitSerial					; initialize Serial Interface
+	BL		InitSSI					    ; initialize Serial Interface
 
 	BL		InitIMU 					; initialize IMU
 	CMP		R0, #FUNCTION_FAIL			; check if initialization succeeded

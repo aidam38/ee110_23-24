@@ -31,8 +31,7 @@
 	.include "imu_symbols.inc"
 
 ; import functions from other files
-	.ref SerialGetDataBlocking
-	.ref SerialSendData
+	.ref SSITransact
 
 ; export functions to other files
 	.def InitIMU
@@ -70,16 +69,10 @@ InitIMU:
 	PUSH	{LR}			; save return address
 
 	; wait 100 ms before initializing the IMU
-;	MOV32		R0, IMU_WAIT_CLOCKS
-;InitIMUWait:
-;	SUBS		R0, #1
-;	BNE			InitIMUWait
-
-	MOV		R0, #1111000011110000b
-	BL		SerialSendData
-	MOV		R0, #0000111100001111b
-	BL		SerialSendData
-	BL		SerialGetDataBlocking
+	MOV32		R0, IMU_WAIT_CLOCKS
+InitIMUWait:
+	SUBS		R0, #1
+	BNE			InitIMUWait
 
 	; configure the IMU to 
 	;	- disable I2C slave interface (use SPI only instead)
@@ -92,7 +85,7 @@ InitIMU:
 	; check device ID
 	BL		CheckDeviceID
 	CMP		R0, #FUNCTION_FAIL
-	;BEQ		InitIMUFail
+	BEQ		InitIMUFail
 	;B	 	InitIMUConfigure
 
 InitIMUConfigure:
@@ -194,10 +187,7 @@ ReadIMUReg:
 	ORR		R0, #IMU_READ				; specify read operation
 	LSL		R0, #IMU_WORD				; move address to the first byte
 
-	BL		SerialSendData				; send the register address
-	BL		SerialGetDataBlocking		; get the register value
-
-	AND		R0, #IMU_MASK				; mask off the high byte
+	BL		SSITransact
 
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
@@ -230,10 +220,8 @@ WriteIMUReg:
 	LSL		R0, #IMU_WORD				; move address to the first byte
 	ORR		R0, R1						; combine address and value
 
-	BL		SerialSendData				; send the register address and value
-	BL		SerialGetDataBlocking		; pop garbage value from Rx FIFO
+	BL		SSITransact
 
-WriteIMURegDone:
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 
@@ -265,24 +253,29 @@ WriteMagnetReg:
 	MOV		R5, R1	; register value
 
 	; configure an I2C slave for the magnetometer
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_ADDR_OFFSET) << IMU_WORD) | (I2C_SLV4_WRITE | MAG_ADDR))
-	BL		SerialSendData
+	MOV		R0,	#I2C_SLV4_ADDR_OFFSET
+	MOV		R1,	#(I2C_SLV4_WRITE | MAG_ADDR)
+	BL		WriteIMUReg
 
 	; set register address we want to read
-	ORR		R0, R4, #(((IMU_WRITE | I2C_SLV4_REG_OFFSET) << IMU_WORD))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_REG_OFFSET
+	MOV		R1, R4
+	BL		WriteIMUReg
 
+	; TEST REMOVE
 	MOV		R0, #I2C_SLV4_REG_OFFSET
 	BL		ReadIMUReg
 
 	; set register value we want to write
-	ORR		R0, R5, #(((IMU_WRITE | I2C_SLV4_DO_OFFSET) << IMU_WORD))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_DO_OFFSET
+	MOV		R1, R5
+	BL		WriteIMUReg
 
 	; enable I2C slave 4 transfer
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_CTRL_OFFSET) << IMU_WORD) | (I2C_SLV4_EN))
-	BL		SerialSendData
-
+	MOV		R0, #I2C_SLV4_CTRL_OFFSET
+	MOV		R1, #I2C_SLV4_EN
+	BL		WriteIMUReg
+	
 	; wait for transfer to complete by reading the I2C master status
 WriteMagnetRegWait:
 	MOV		R0, #I2C_MST_STATUS_OFFSET
@@ -322,16 +315,19 @@ ReadMagnetReg:
 	MOV		R4, R0	; register address
 
 	; configure an I2C slave for the magnetometer for reading
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_ADDR_OFFSET) << IMU_WORD) | (I2C_SLV4_READ | MAG_ADDR))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_ADDR_OFFSET
+	MOV		R1, #((I2C_SLV4_READ | MAG_ADDR))
+	BL		WriteIMUReg
 
 	; set register address we want to read
-	ORR		R0, R4, #((IMU_WRITE | I2C_SLV4_REG_OFFSET) << IMU_WORD)
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_REG_OFFSET
+	MOV		R1, R4
+	BL		WriteIMUReg
 
 	; enable I2C slave 4 transfer
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_CTRL_OFFSET) << IMU_WORD) | (I2C_SLV4_EN))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_CTRL_OFFSET
+	MOV		R1, #I2C_SLV4_EN
+	BL		WriteIMUReg
 
 	; wait for transfer to complete by reading the I2C master status
 ReadMagnetRegWait:
@@ -343,8 +339,9 @@ ReadMagnetRegWait:
 
 ReadMagnetRegTransferDone:
 	; read the register value
-	MOV		R0, #((IMU_WRITE | I2C_SLV4_DI_OFFSET) << IMU_WORD)
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_DI_OFFSET
+	BL		ReadIMUReg
+
 	;B		ReadMagnetRegDone
 
 ReadMagnetRegDone:
@@ -392,16 +389,19 @@ ReadMagnetDataWait:
 
 ReadMagnetDataMeasurementDone:
 	; configure an I2C slave for the magnetometer for reading
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_ADDR_OFFSET) << IMU_WORD) | (I2C_SLV4_READ | MAG_ADDR))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_ADDR_OFFSET
+	MOV		R1, #((I2C_SLV4_READ | MAG_ADDR))
+	BL		WriteIMUReg
 
 	; set register address we want to read
-	ORR		R0, R4, #((IMU_WRITE | I2C_SLV4_REG_OFFSET) << IMU_WORD)
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_REG_OFFSET
+	MOV		R1, R4
+	BL		WriteIMUReg
 
 	; enable I2C slave 4 transfer
-	MOV		R0, #(((IMU_WRITE | I2C_SLV4_CTRL_OFFSET) << IMU_WORD) | (I2C_SLV4_EN))
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_CTRL_OFFSET
+	MOV		R1, #I2C_SLV4_EN
+	BL		WriteIMUReg
 
 	; wait for transfer to complete by reading the I2C master status
 ReadMagnetDataWait2:
@@ -413,8 +413,8 @@ ReadMagnetDataWait2:
 
 ReadMagnetDataTransferDone:
 	; read the register value
-	MOV		R0, #((IMU_WRITE | I2C_SLV4_DI_OFFSET) << IMU_WORD)
-	BL		SerialSendData
+	MOV		R0, #I2C_SLV4_DI_OFFSET
+	BL		ReadIMUReg
 	;B		ReadMagnetDataDone
 
 ReadMagnetDataDone:

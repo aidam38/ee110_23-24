@@ -41,3 +41,9 @@ SSI_CR0 .equ			CR0_DSS_16_BIT			; Serial Control Register 0
 SSI_CR1 .equ			CR1_SSE_ENABLE			; Serial Control Register 1
 SSI_CR1_DISABLE .equ    CR1_SSE_DISABLE
 SSI_CPSR .equ			48						; Serial Clock Prescale Register
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; OTHER
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SSI_MASK .equ			0x000000FF				; Serial Mask

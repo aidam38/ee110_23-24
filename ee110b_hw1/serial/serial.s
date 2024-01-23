@@ -67,8 +67,9 @@ InitSerial:
 
 	; configure SSI module
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
-	STREG	SSI_CR0, R1, CR0_OFFSET		; configure SSI0 CR0
+	STREG	SSI_CR1_DISABLE, R1, CR1_OFFSET
 	STREG	SSI_CPSR, R1, CPSR_OFFSET	; configure SSI0 CPSR
+	STREG	SSI_CR0, R1, CR0_OFFSET		; configure SSI0 CR0
 	STREG	SSI_CR1, R1, CR1_OFFSET		; configure SSI0 CR1
 
     POP     {LR}				        ; restore return address and used registers
@@ -133,7 +134,7 @@ SerialSendData:
 
 	BL		SerialSendRdy				; check if the serial interface is ready to send
 	CMP		R0, #0						; if the serial interface is not ready to send
-	BEQ		SerialSendDataExit			; return without sending data
+	BEQ		SerialSendDataDone			; return without sending data
 
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
 	STR		R4, [R1, #DR_OFFSET]		; send data
@@ -178,18 +179,19 @@ SerialGetRdy:
 	MOV32	R1, SSI_BASE_ADDR			; prepare SSI0 base address
 	LDR		R0, [R1, #SR_OFFSET]		; load status register
 	TST		R0, #SR_RNE_NOTEMPTY		; test if receive FIFO is not empty
-	BEQ		SerialGetRdyExit			; if receive FIFO is empty, return false
-	;B		SerialGetRdyTrue
-
-SerialGetRdyTrue:
-	MOV		R0, #TRUE					; return true
-	B		SerialGetRdyExit
+	BNE		SerialGetRdyTrue			; if true, return true
+	;B		SerialGetRdyFalse			; if false, return false
 
 SerialGetRdyFalse:
 	MOV		R0, #FALSE					; otherwise, return false
-	;B		SerialGetRdyExit
+	B		SerialGetRdyDone
 
-SerialGetRdyExit:
+SerialGetRdyTrue:
+	MOV		R0, #TRUE					; return true
+	;B		SerialGetRdyDone
+
+SerialGetRdyDone:
+	MOV		R0, #TRUE
 	POP		{LR}						; restore return address and used registers
 	BX		LR							; return
 

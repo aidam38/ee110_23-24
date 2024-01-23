@@ -39,6 +39,5 @@ CS_PIN_CFG .equ		IO_PORT_ID_SSI1_FSS	| IO_NOPUPD ; Serial Chip Select Pin Config
 SSI_BASE_ADDR .equ		SSI1_BASE_ADDR			; Serial Base Address
 SSI_CR0 .equ			CR0_DSS_16_BIT			; Serial Control Register 0
 SSI_CR1 .equ			CR1_SSE_ENABLE			; Serial Control Register 1
+SSI_CR1_DISABLE .equ    CR1_SSE_DISABLE
 SSI_CPSR .equ			48						; Serial Clock Prescale Register
-
-SERIAL_WORD .equ        8                       ; Length of word for this serial interface (size of address and data received)

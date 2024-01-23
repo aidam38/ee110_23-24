@@ -77,9 +77,13 @@ main:
     BL      StackInit					; initialize stack in SRAM
 	BL		MoveVecTable				; move interrupt vector table
 
-; initialize IMU and LCD
+; initialize IMU
 	BL		InitSerial					; initialize Serial Interface
+
 	BL		InitIMU 					; initialize IMU
+	CMP		R0, #FUNCTION_FAIL			; check if initialization succeeded
+	BEQ		Error
+
     BL      LCDInit						; initialize LCD
 
 ; test IMU
@@ -89,3 +93,5 @@ main:
 ; infinite loop
 Loop:
     B       Loop						; infinite loop
+
+Error:

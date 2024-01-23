@@ -48,34 +48,6 @@
 
 
 
-; WriteIMUReg_MACRO
-;
-; Description:			Writes to a register on the IMU. IMPLEMENTED USING A MACRO!
-;						Registers are 8 bits wide.
-;
-; Arguments:			reg - 8-bit register address
-;						value - 8-bit register value to be store
-; Returns:				None.
-;
-; Local Variables:      None.
-; Shared Variables:     None.
-; Global Variables:     None.
-;
-; Error Handling:       None.
-;
-; Registers Changed:    flags, R0, R1, R2, R3
-; Stack Depth:          1
-;
-; Revision History:
-
-WriteIMUReg_MACRO .macro reg, value
-	MOV		R0, #(((IMU_WRITE | reg) << IMU_WORD) | value)
-	BL		SerialSendData				; write to register
-	BL		SerialGetDataBlocking			; pop garbare value from Rx queue
-	.endm
-
-
-
 ; InitIMU
 ;
 ; Description:			Initializes the IMU in 9 DoF mode.
@@ -113,7 +85,9 @@ InitIMU:
 	;	- disable I2C slave interface (use SPI only instead)
 	;	- enable I2C master interface
 	;	- reset signal paths (clears all sensor registers)
-	WriteIMUReg_MACRO USER_CTRL_OFFSET, (USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN)
+	MOV		R0, #USER_CTRL_OFFSET
+	MOV		R1, #(USER_CTRL_I2C_IF_DIS | USER_CTRL_I2C_MST_EN)
+	BL		WriteIMUReg
 
 	; check device ID
 	BL		CheckDeviceID
@@ -123,10 +97,14 @@ InitIMU:
 
 InitIMUConfigure:
 	; configure the accelerometer
-	WriteIMUReg_MACRO ACCEL_CONFIG1_OFFSET, ACCEL_FS_SEL_2
+	MOV		R0, #ACCEL_CONFIG1_OFFSET
+	MOV		R1, #ACCEL_FS_SEL_2
+	BL		WriteIMUReg
 
 	; configure the gyroscope
-	WriteIMUReg_MACRO GYRO_CONFIG_OFFSET, GYRO_FS_SEL_250
+	MOV		R0, #GYRO_CONFIG_OFFSET
+	MOV		R1, #GYRO_FS_SEL_250
+	BL		WriteIMUReg
 
 	; configure the magnetometer
 	;MOV		R0, #MAG_CNTL2_OFFSET
@@ -225,6 +203,39 @@ ReadIMUReg:
 	BX		LR							; return
 
 
+; WriteIMUReg
+;
+; Description:			Writes to a register on the IMU.
+;						Registers are 8 bits wide.
+;
+; Arguments:			R0 = 8-bit register address
+;						R1 = 8-bit register value to be store
+; Returns:				None.
+;
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
+;
+; Error Handling:       None.
+;
+; Registers Changed:    flags, R0, R1, R2, R3
+; Stack Depth:          1
+;
+; Revision History:
+
+WriteIMUReg:
+	PUSH	{LR}						; save return address and used registers
+
+	ORR		R0, #IMU_WRITE				; specify write operation
+	LSL		R0, #IMU_WORD				; move address to the first byte
+	ORR		R0, R1						; combine address and value
+
+	BL		SerialSendData				; send the register address and value
+	BL		SerialGetDataBlocking		; pop garbage value from Rx FIFO
+
+WriteIMURegDone:
+	POP		{LR}						; restore return address and used registers
+	BX		LR							; return
 
 ; WriteMagnetReg
 ;

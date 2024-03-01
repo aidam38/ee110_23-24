@@ -579,11 +579,11 @@ GetGyroZ:
 GetMag_MACRO .macro axis
 	PUSH	{LR, R4}						; save return address and used registers
 	MOV		R0, #(MAG_:axis:OUT_H_OFFSET)	; set register address
-	BL		ReadMagnetReg				; read register
+	BL		ReadMagnetData				; read register
 	MOV		R4, R0						; save high byte
 	LSL		R4, #8
 	MOV		R0, #(MAG_:axis:OUT_L_OFFSET)	; set register address
-	BL		ReadMagnetReg				; read register
+	BL		ReadMagnetData				; read register
 	ORR		R0, R4						; combine high and low bytes
 	POP		{LR, R4}						; restore return address and used registers
 	BX		LR							; return

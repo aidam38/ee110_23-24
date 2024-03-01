@@ -81,12 +81,12 @@ I2C_SLV4_WRITE .equ				0x0 << 7 ; Write transfer
 MAG_ADDR .equ					0x0C		; magnetometer address
 
 ; register offsets
-MAG_XOUT_H_OFFSET .equ 			0x03		; magnetometer X-axis high byte
-MAG_XOUT_L_OFFSET .equ 			0x04		; magnetometer X-axis low byte
-MAG_YOUT_H_OFFSET .equ 			0x05		; magnetometer Y-axis high byte
-MAG_YOUT_L_OFFSET .equ 			0x06		; magnetometer Y-axis low byte
-MAG_ZOUT_H_OFFSET .equ 			0x07		; magnetometer Z-axis high byte
-MAG_ZOUT_L_OFFSET .equ 			0x08		; magnetometer Z-axis low byte
+MAG_XOUT_L_OFFSET .equ 			0x03		; magnetometer X-axis high byte
+MAG_XOUT_H_OFFSET .equ 			0x04		; magnetometer X-axis low byte
+MAG_YOUT_L_OFFSET .equ 			0x05		; magnetometer Y-axis high byte
+MAG_YOUT_H_OFFSET .equ 			0x06		; magnetometer Y-axis low byte
+MAG_ZOUT_L_OFFSET .equ 			0x07		; magnetometer Z-axis high byte
+MAG_ZOUT_H_OFFSET .equ 			0x08		; magnetometer Z-axis low byte
 
 MAG_CNTL1_OFFSET .equ			0x0A		; magnetometer control register
 MAG_CNTL2_OFFSET .equ			0x0B		; magnetometer control register

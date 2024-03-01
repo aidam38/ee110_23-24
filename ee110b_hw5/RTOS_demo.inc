@@ -26,6 +26,11 @@ LCD_TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR
 ; Keypad
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Keypad timer
+KEYPAD_TIMER_BASE_ADDR .equ GPT0_BASE_ADDR
+KEYPAD_TIMER_EXCEPTION_NUMBER .equ GPT0A_EXCEPTION_NUMBER
+KEYPAD_TIMER_IRQ_NUMBER .equ GPT0A_IRQ_NUMBER
+
 ; pins for selecting rows
 KEYPAD_ROWSEL_A_PIN .equ   8
 KEYPAD_ROWSEL_B_PIN .equ   9

@@ -86,6 +86,45 @@ PrevState: .byte 0
 KeypadInit:
     PUSH    {LR}            ; save return address
 
+; configure GPIO pins for keypad
+    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
+    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_A_PIN
+    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_B_PIN
+    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_0_PIN
+    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_1_PIN
+    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_2_PIN
+    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_3_PIN
+
+    ;enable output for pins 8,9
+    MOV32    R1, GPIO_BASE_ADDR
+    STREG    11b << ROWSEL_A_PIN, R1, GPIO_DOE_OFFSET
+
+; configure timer
+    ; configure timers
+    MOV32    R1, TIMER_BASE_ADDR
+    STREG    TIMER_CFG, R1, GPT_CFG_OFFSET
+    STREG    TIMER_IMR, R1, GPT_IMR_OFFSET
+    STREG    TIMER_TAMR, R1, GPT_TAMR_OFFSET
+    STREG    TIMER_TAILR, R1, GPT_TAILR_OFFSET
+    STREG    TIMER_TAPR, R1, GPT_TAPR_OFFSET
+    STREG    TIMER_CTL, R1, GPT_CTL_OFFSET
+
+; configure event handler
+    ; load VTOR
+    MOVW    R0, #(SCS_BASE_ADDR & 0xffff)
+    MOVT    R0, #((SCS_BASE_ADDR >> 16) & 0xffff)
+    LDR     R0, [R0, #SCS_VTOR_OFFSET]
+
+    ; store event handler in vector table
+    MOVW    R1, TimerEventHandler
+    MOVT    R1, TimerEventHandler
+    STR     R1, [R0, #(BYTES_PER_WORD * TIMER_EXCEPTION_NUMBER)]
+
+    ; enable timer time-out interrupt in the CPU
+    MOV32    R1, SCS_BASE_ADDR
+    STREG    (0x1 << TIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET
+
+; initialize variables
     ; initialize CurrentRow to 0
     MOVA    R0, CurrentRow
     MOV        R1, #0
@@ -104,6 +143,45 @@ KeypadInit:
     POP     {LR}            ; restore return address
     BX    LR
 
+
+; TimerEventHandler
+; 
+; Description:  This function is the interrupt handler for the Keypad timer.  
+;               It calls the KeypadScanAndDebounce function, which scans the
+;               keypad and debounces the keys. After KeypadScanAndDebounce, 
+;               the event handler clears the interrupt and returns.
+; 
+; Arguments:         None.
+; Return Value:      None.
+;
+; Local Variables:   None.
+; Shared Variables:  timeout interrupt clear bit
+; Global Variables:  None.
+;
+; Input:             None.
+; Output:            None.
+;
+; Error Handling:    None.
+;
+; Algorithms:        None.
+; Data Structures:   None.
+;
+; Registers Changed: None
+; Stack Depth:       1 word
+;
+; Revision History:
+;     11/7/23  Adam Krivka      initial revision
+
+TimerEventHandler:
+    PUSH    {LR}                    ; save LR
+    BL      KeypadScanAndDebounce
+
+    ; clear the GPT0 time-out interrupt
+    MOV32    R1, TIMER_BASE_ADDR
+    STREG    GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
+
+    POP       {LR}                    ; restore LR
+    BX        LR
 
 
 ; KeypadScanAndDebounce

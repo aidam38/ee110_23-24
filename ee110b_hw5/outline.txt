@@ -1,0 +1,76 @@
+###################
+# keypad/keypad.s #
+###################
+ 
+InitKeypad():
+      configure GPIOs
+      set up a 1ms hardware interrupt that calls KeypadScanAndDebounce
+ 
+KeypadScanAndDebounce():
+      ...calls EnqueueEvent defined elsewhere
+ 
+###############
+# lcd/LCD.s   #
+###############
+ 
+InitLCD():
+      configure GPIOs
+      configure timer
+      initialize LCD
+ 
+#################
+# event_queue.c #
+#################
+ 
+static Queue_Struct eventQueue;
+ 
+InitEventQueue():
+      initializes a queue using RTOS
+ 
+EnqueueEvent(event):
+      enqueues event to queue
+ 
+DequeueEvent():
+      dequeue event if there's any and return it
+
+###################
+# grid_countrer.c #
+###################
+
+##########
+# haik.c #
+##########
+
+
+###############
+# RTOS_demo.c #
+###############
+ 
+static uint16 state; // state of the LCD (which symbol is shown and which not)
+ 
+CheckAndDisplayTaskCreate():
+      create RTOS task with CheckAndDisplayTaskRun
+ 
+CheckAndDisplayTaskRun():
+      call DequeueEvent
+      if we have an event
+            update state appropriatelly (toggle corresponding bit)
+      display state
+            cycle through each bit and display a character or empty space
+      yield
+ 
+main():
+      /* initialization */
+      Initialize the system (power, clocks, gpio, timers)
+      InitKeypad() (GPT0 timer)
+    
+  InitLCD() (GPT1 timer)
+ 
+      /* creation of tasks */
+      CheckAndDisplayTaskCreate()
+ 
+      BIOS_start()
+ 
+Best,
+Adam
+

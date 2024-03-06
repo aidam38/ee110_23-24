@@ -164,6 +164,9 @@ DisplayLoop:
     MOV     R1, R6                  ; copy character
     BL      LCDWrite                ; write data to LCD
 
+	CMP		R7, #-1					; check if we need to worry about target length
+	BEQ		DisplayLoop
+
     SUB     R7, #1                  ; decrement target length
     CMP     R7, #0                  ; check if we've reached target length
     BEQ     DisplaySuccess          ; if yes, we're done printing the string
@@ -175,6 +178,9 @@ DisplayFail:
     B       DisplayDone
 
 DisplayPadRest:
+	CMP		R7, #-1					; check if we need to worry about target length
+	BEQ		DisplaySuccess
+
     BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD

@@ -50,7 +50,7 @@ TIMER_EXCEPTION_NUMBER .equ KEYPAD_TIMER_EXCEPTION_NUMBER
 TIMER_IRQ_NUMBER .equ       KEYPAD_TIMER_IRQ_NUMBER
 
 ; debouncing
-DEBOUNCE_TIME .equ              2      ; number of timer interrupts a key
+DEBOUNCE_TIME .equ              20      ; number of timer interrupts a key
                                         ; must be pressed down
 ; keypad row and column definitions
 CURRENT_ROW_MASK .equ           11b     ; mask for the current row (need just
@@ -69,5 +69,5 @@ COLUMN_2_PRESSED_BINARY .equ    0x2
 COLUMN_3_PRESSED_BINARY .equ    0x3
 
 ; event vector definitions 
-EVENT_INFO_SEGMENT_BITS .equ    8       ; number of bits in the event info
+EVENT_INFO_SEGMENT_BITS .equ    4       ; number of bits in the event info
 EVENT_KEYDOWN .equ              0xD     ; keydown event bit sequence

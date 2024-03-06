@@ -49,7 +49,7 @@ LCDInitTab:
     .word   00001000b,     -1      ; display off
     .word   00000001b,     -1      ; clear display
     .word   00000110b,     -1      ; entry mode set (increment cursor, no shift)
-    .word   00001111b,     -1      ; display/cursor on
+    .word   00001100b,     -1      ; display/cursor on
 
 EndLCDInitTab:
 

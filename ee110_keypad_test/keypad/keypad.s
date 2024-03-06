@@ -213,89 +213,6 @@ TimerEventHandler:
     BX        LR
 
 
-; TimerEventHandler_RTOSHwi
-;
-; Description:  This function is the interrupt handler for the Keypad timer.
-;               It calls the KeypadScanAndDebounce function, which scans the
-;               keypad and debounces the keys. After KeypadScanAndDebounce,
-;               the event handler clears the interrupt and returns.
-;
-; Arguments:         None.
-; Return Value:      None.
-;
-; Local Variables:   None.
-; Shared Variables:  timeout interrupt clear bit
-; Global Variables:  None.
-;
-; Input:             None.
-; Output:            None.
-;
-; Error Handling:    None.
-;
-; Algorithms:        None.
-; Data Structures:   None.
-;
-; Registers Changed: None
-; Stack Depth:       1 word
-;
-; Revision History:
-;     11/7/23  Adam Krivka      initial revision
-
-TimerEventHandler_RTOSHwi:
-	.def TimerEventHandler_RTOSHwi
-
-    PUSH    {LR}                    ; save LR
-
-; Swi_post(&swiTask)
-	.ref swiTask
-	.ref ti_sysbios_knl_Swi_post
-	MOVA 	R1, swiTask
-	LDR		R0, [R1]
-	BL		ti_sysbios_knl_Swi_post
-
-    ; clear the GPT0 time-out interrupt
-    MOV32    R1, TIMER_BASE_ADDR
-    STREG    GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
-
-    POP       {LR}                    ; restore LR
-    BX        LR
-
-; TimerEventHandler_RTOSSwi
-;
-; Description:  This function is the interrupt handler for the Keypad timer.
-;               It calls the KeypadScanAndDebounce function, which scans the
-;               keypad and debounces the keys. After KeypadScanAndDebounce,
-;               the event handler clears the interrupt and returns.
-;
-; Arguments:         None.
-; Return Value:      None.
-;
-; Local Variables:   None.
-; Shared Variables:  timeout interrupt clear bit
-; Global Variables:  None.
-;
-; Input:             None.
-; Output:            None.
-;
-; Error Handling:    None.
-;
-; Algorithms:        None.
-; Data Structures:   None.
-;
-; Registers Changed: None
-; Stack Depth:       1 word
-;
-; Revision History:
-;     11/7/23  Adam Krivka      initial revision
-
-TimerEventHandler_RTOSSwi:
-	.def TimerEventHandler_RTOSSwi
-    PUSH    {LR}                    ; save LR
-    MOV		R0, #3
-    BL        KeyPressed
-    ;BL      KeypadScanAndDebounce
-    POP       {LR}                    ; restore LR
-    BX        LR
 
 ; KeypadScanAndDebounce
 ;
@@ -364,28 +281,27 @@ KeypadScanAndDebounce:
 Scan:
     ; increment CurrentRow
     ADD     R7, #1
-    AND     R7, #CURRENT_ROW_MASK         ; take just lower two bits
+    AND        R7, #CURRENT_ROW_MASK         ; take just lower two bits
     STRB    R7, [R4]                     ; update CurrentRow in memory
     
     ; call SelectRow(CurrentRow)
-    MOV     R0, R7                         ;prepare argument
+    MOV        R0, R7                         ;prepare argument
 
-	AND     R0, #11b
-    LSL     R0, #ROWSEL_A_PIN ; prepare row
+	AND    R0, #11b
+    LSL    R0, #ROWSEL_A_PIN ; prepare row
 
     MOV32   R1, GPIO_BASE_ADDR
     STR     R0, [R1, #GPIO_DOUTSET_OFFSET] ;set pins
     MOV		R0, R7
     EOR		R0, #11b
     LSL		R0, #ROWSEL_A_PIN
-    STR     R0, [R1, #GPIO_DOUTCLR_OFFSET] ;clear pins
+    STR     R0, [R1, #GPIO_DOUTCLR_OFFSET] ;set pins
 
 Read:
     ; call ReadRow() to get the current state of the row (one-hot encoding)
 	MOV32   R1, GPIO_BASE_ADDR
     LDR     R0, [R1, #GPIO_DIN_OFFSET]
     LSR     R0, #COLUMN_0_PIN
-    AND		R0, #1111b
     ;B        Compare                        ; compare CurState to PrevState
 
 Compare:
@@ -463,6 +379,10 @@ JumpTableEnd:
     ; merge with row information    
     LSL        R7, #EVENT_INFO_SEGMENT_BITS ; we don't need R7 after this, so we can cobble it
     ORR        R0, R7
+
+    ; merge with EVENT_KEYDOWN
+    LSL        R0, #EVENT_INFO_SEGMENT_BITS    
+    ORR        R0, #EVENT_KEYDOWN
 
     ; Call Enqueue(EventVector) (R0)
     ; (no need to save R0, R1, R2, R3, because we're not using them 

@@ -38,6 +38,10 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdlib.h>
+
+#include <xdc/runtime/System.h>
+
 
 /* Driver Header files */
 #include <ti/drivers/GPIO.h>
@@ -46,6 +50,13 @@
 // #include <ti/drivers/Watchdog.h>
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Event.h>
+#include  <ti/sysbios/knl/Swi.h>
+#include  <ti/sysbios/runtime/Memory.h>
+
+#include "lcd/lcd_rtos_intf.h"
+#include "keypad/keypad_rtos_intf.h"
+
+
 
 /* Driver configuration */
 #include "ti_drivers_config.h"
@@ -60,12 +71,13 @@ static  Task_Struct  appTask;
 static  uint8_t  appTaskStack[APP_TASK_STACK_SIZE];
 
 /* queue object used for app messages */
-static  Queue_Handle  appMsgQueue;
+static Queue_Handle  appMsgQueue;
 
-void EnqueueEvent(uint32_t _evt) {
-    event_t evt;
-    evt.data = 0x1;
-    Queue_enqueue(appMsgQueue, &(evt.elem));
+void KeyPressed(uint32_t keyEvt) {
+    event_t *evt = Memory_alloc(NULL, sizeof(event_t), 0, NULL);
+    evt->data = keyEvt;
+    Queue_enqueue(appMsgQueue, &(evt->elem));
+    return;
 }
 
 /* create task */
@@ -89,6 +101,9 @@ void App_createTask(void) {
 void App_init(void) {
     /* create the app event queue */
     appMsgQueue = Queue_create(NULL, NULL);
+    if (appMsgQueue == NULL) {
+        System_abort("Queue create failed!");
+    }
 
     return;
 }
@@ -101,24 +116,69 @@ static void App_run(UArg a0, UArg a1) {
     /* initialize the app */
     App_init();
 
+    /* initialize hardware */
+    LCDInit();
+    KeypadInit_RTOS();
+
     /* main loop */
     while (true) {
-        if (Queue_empty(appMsgQueue)) {
-            Task_yield();
-        } else {
+        while (!Queue_empty(appMsgQueue)) {
             /* process the event */
             evt = Queue_dequeue(appMsgQueue);
             App_processEvent(evt);
+            Memory_free(NULL, evt, sizeof(event_t));
         }
     }
 }
 
 void App_processEvent(event_t* evt) {
     /* variables */
-        /* none */
+    uint8_t col = evt->data & 0b11111111;
+    uint8_t row = evt->data >> 8;
+    haiku_t haiku;
+    line_t line;
 
-    static char hello_world[] = "Hello, World!";
-    Display(0, 0, &hello_world, 16);
+    switch (row) {
+    case 0:
+        haiku = haiku1;
+        break;
+    case 1:
+        haiku = haiku2;
+        break;
+    case 2:
+        haiku = haiku3;
+        break;
+    case 3:
+        haiku = haiku4;
+        break;
+    default:
+        Display(0, 0, "row error", 16);
+        return;
+    }
+
+
+    switch (col) {
+        case 0:
+            line = haiku.lines[3];
+            break;
+        case 1:
+            line = haiku.lines[2];
+            break;
+        case 2:
+            line = haiku.lines[1];
+            break;
+        case 3:
+            line = haiku.lines[0];
+            break;
+        default:
+            Display(0, 0, "col error", 16);
+            return;
+    }
+
+    ClearDisplay();
+    for (int i = 0; i < 4; i++) {
+        Display(line.parts[i].row, line.parts[i].col, line.parts[i].text, -1);
+    }
 
     return;
 }

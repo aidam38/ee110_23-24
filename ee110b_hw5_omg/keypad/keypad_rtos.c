@@ -4,11 +4,17 @@
 #include  <ti/sysbios/knl/Swi.h>
 
 static Hwi_Struct   hwiTask;
-static Swi_Struct   swiTask;
+Swi_Handle   swiTask;
+
+
+void Display(UArg r, UArg c, char* str, UArg len);
+void KeyPressed(uint32_t evt);
+void TimerEventHandler_RTOSHwi();
+void TimerEventHandler_RTOSSwi();
 
 void KeypadHwiHandler() {
     /* call Swi */
-    Swi_post(&swiTask);
+    //Swi_post(swiTask);
 
     /* update clear flag */
     Hwi_clearInterrupt(TIMER_EXCEPTION_NUMBER);
@@ -17,6 +23,7 @@ void KeypadHwiHandler() {
 }
 
 void KeypadSwiHandler() {
+    //KeyPressed(3);
     KeypadScanAndDebounce();
 
     return;
@@ -33,11 +40,11 @@ void KeypadInit_RTOS() {
     /* set up Hwi */
     /* setup the parameters */
     Hwi_Params_init(&hwiParams);
-    hwiParams.eventId = 13;
+    hwiParams.eventId = TIMER_EXCEPTION_NUMBER;
     hwiParams.priority = HWI_PRIORITY;
 
     /* now create the Hwi task */
-    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, KeypadHwiHandler, &hwiParams, NULL);
+    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, TimerEventHandler_RTOSHwi, &hwiParams, NULL);
 
     /* set up Swi */
     /* setup the parameters */
@@ -45,8 +52,7 @@ void KeypadInit_RTOS() {
     swiParams.priority = SWI_PRIORITY;
 
     /* now create Swi task */
-    Swi_construct(&swiTask, KeypadSwiHandler, &swiParams, NULL);
-
+    swiTask = Swi_create(KeypadSwiHandler, &swiParams, NULL);
 
     return;
 }

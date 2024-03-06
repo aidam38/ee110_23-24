@@ -2,7 +2,7 @@
 <link_info>
    <banner>TI ARM Linker PC v20.2.7.LTS</banner>
    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>
-   <link_time>0x65af15e3</link_time>
+   <link_time>0x65e7a010</link_time>
    <link_errors>0x0</link_errors>
    <output_file>ee110a_hw1.out</output_file>
    <entry_point>
@@ -121,7 +121,7 @@
          <run_address>0x20013f00</run_address>
          <size>0x0</size>
       </object_component>
-      <object_component id="oc-1d">
+      <object_component id="oc-1c">
          <name>.debug_info</name>
          <load_address>0x0</load_address>
          <run_address>0x0</run_address>
@@ -196,7 +196,7 @@
          <run_address>0x6d</run_address>
          <size>0xf</size>
       </object_component>
-      <object_component id="oc-1c">
+      <object_component id="oc-1d">
          <name>.debug_aranges</name>
          <load_address>0x0</load_address>
          <run_address>0x0</run_address>
@@ -405,7 +405,7 @@
          <run_address>0x0</run_address>
          <size>0x2f0</size>
          <contents>
-            <object_component_ref idref="oc-1d"/>
+            <object_component_ref idref="oc-1c"/>
             <object_component_ref idref="oc-38"/>
             <object_component_ref idref="oc-2f"/>
             <object_component_ref idref="oc-b1"/>
@@ -440,7 +440,7 @@
          <run_address>0x0</run_address>
          <size>0x20</size>
          <contents>
-            <object_component_ref idref="oc-1c"/>
+            <object_component_ref idref="oc-1d"/>
          </contents>
       </logical_group>
       <logical_group id="lg-a2" display="never" color="cyan">

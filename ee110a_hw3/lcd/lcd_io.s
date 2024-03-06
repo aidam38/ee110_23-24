@@ -76,11 +76,11 @@ LCDConfigureForRead:
 
     ; disable output
     MOV32   R1, GPIO_BASE_ADDR
-    CPSID ; disable interrupts interrupted we could overwrite changed to DOE
+    CPSID 	i; disable interrupts interrupted we could overwrite changed to DOE
     LDR     R0, [R1, #GPIO_DOE_OFFSET]      ; load current state of DOE
     BIC     R0, #(11111111b << DATA_0_PIN)  ; clear bits for all the data pins
     STR     R0, [R1, #GPIO_DOE_OFFSET]      ; write it back
-    CPSIE ; enable interrupts
+    CPSIE 	i; enable interrupts
 
     POP     {LR}                ; restore return address
     BX      LR                  ;   return
@@ -124,11 +124,11 @@ LCDConfigureForWrite:
 
     ; disable output
     MOV32   R1, GPIO_BASE_ADDR
-    CPSID ; disable interrupts interrupted we could overwrite changed to DOE
+    CPSID 	i; disable interrupts interrupted we could overwrite changed to DOE
     LDR     R0, [R1, #GPIO_DOE_OFFSET]      ; load current state of DOE
     ORR     R0, #(11111111b << DATA_0_PIN)  ; set bits for all the data pins
     STR     R0, [R1, #GPIO_DOE_OFFSET]      ; write it back
-    CPSIE ; enable interrupts
+    CPSIE 	i; enable interrupts
 
     POP     {LR}                ; restore return address
     BX      LR                  ;   return
@@ -184,7 +184,7 @@ LCDWriteWaitTimeOut:
     STR     R2, [R5, #GPT_ICLR_OFFSET] ; write to interrupt clear register
 
     ; write RS based on argument and R/W low
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     BIC     R2, #(1 << RS_PIN)          ; clear RS
@@ -193,7 +193,7 @@ LCDWriteWaitTimeOut:
     BIC     R2, #(1 << RW_PIN)          ; merge R/W = 0 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
     ; wait for 140ns 
     MOV     R2, #LOOPS_IN_SETUP
@@ -202,7 +202,7 @@ LCDWriteWaitSetup:
     BNE     LCDWriteWaitSetup
 
     ; write E high and data
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     ORR     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
@@ -210,7 +210,7 @@ LCDWriteWaitSetup:
     BIC     R2, #(11111111b << DATA_0_PIN) ; clear data
     ORR     R2, R1, LSL #DATA_0_PIN     ; merge data into DOUT while
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
     ; start command timer
     STREG   TIMER_ENABLE, R5, GPT_CTL_OFFSET
@@ -225,13 +225,13 @@ LCDWriteWaitPulse:
     STREG   GPT_ICLR_TAMCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write E low
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     BIC     R2, #(1 << E_PIN)           ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
 LCDWriteDone:
     POP     {LR, R4, R5}        ; restor return address and used registers
@@ -290,7 +290,7 @@ LCDReadWaitTimeOut:
     STR     R2, [R5, #GPT_ICLR_OFFSET]; write to interrupt clear register
 
     ; write RS based on argument and R/W low
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; load DOUT register
     BIC        R2, #(1 << RS_PIN)            ; clear RS
@@ -299,7 +299,7 @@ LCDReadWaitTimeOut:
     ORR     R2, #(1 << RW_PIN)          ; merge R/W = 1 into DOUT while
                                         ; shifting to the R/W bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
     ; wait for 140ns 
     MOV     R2, #4
@@ -308,13 +308,13 @@ LCDReadWaitSetup:
     BNE     LCDReadWaitSetup
 
     ; write E high
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R2, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     ORR     R2, #(1 << E_PIN)           ; merge E = 1 into DOUT while
                                         ; shifting to the E bit position
     STR     R2, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
     STREG   TIMER_ENABLE, R5, GPT_CTL_OFFSET ; start timer
 
@@ -328,13 +328,13 @@ LCDReadWaitPulse:
     STREG   GPT_ICLR_TAMCINT_CLEAR, R5, GPT_ICLR_OFFSET; write to interrupt clear register
 
     ; write E low
-    CPSID   ; disable interrupts because if interrupted we could overwrite 
+    CPSID   i; disable interrupts because if interrupted we could overwrite
             ; changes to DOUT
     LDR     R0, [R4, #GPIO_DOUT_OFFSET] ; reload DOUT register
     BIC     R0, #(1 << E_PIN)           ; merge E = 0 into DOUT while
                                         ; shifting to the E bit position
     STR     R0, [R4, #GPIO_DOUT_OFFSET] ; write DOUT back to GPIO
-    CPSIE   ; enable interrupts
+    CPSIE   i; enable interrupts
 
     ; recover data
     LDR     R0, [R4, #GPIO_DIN_OFFSET]  ; read DIN

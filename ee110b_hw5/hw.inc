@@ -1,5 +1,17 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                            ;
+;                                  hw.inc                                    ;
+;                      Hardware configuraiton symbols                        ;
+;                                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; This file contains hardware configuration for the current project. 
+; It is included by the main application file and other files.
+; Modify as needed.
+
+; local includes 
     .include "cc26x2r/gpt_reg.inc"
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; LCD
@@ -28,16 +40,16 @@ LCD_TIMER_BASE_ADDR .equ    GPT1_BASE_ADDR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Keypad timer
-KEYPAD_TIMER_BASE_ADDR .equ GPT0_BASE_ADDR
-KEYPAD_TIMER_EXCEPTION_NUMBER .equ GPT0A_EXCEPTION_NUMBER
-KEYPAD_TIMER_IRQ_NUMBER .equ GPT0A_IRQ_NUMBER
+KEYPAD_TIMER_BASE_ADDR .equ         GPT0_BASE_ADDR
+KEYPAD_TIMER_EXCEPTION_NUMBER .equ  GPT0A_EXCEPTION_NUMBER
+KEYPAD_TIMER_IRQ_NUMBER .equ        GPT0A_IRQ_NUMBER
 
 ; pins for selecting rows
-KEYPAD_ROWSEL_A_PIN .equ   8
-KEYPAD_ROWSEL_B_PIN .equ   9
+KEYPAD_ROWSEL_A_PIN .equ    8
+KEYPAD_ROWSEL_B_PIN .equ    9
 
 ; pins for selecting columns
-KEYPAD_COLUMN_0_PIN .equ     11
-KEYPAD_COLUMN_1_PIN .equ     12
-KEYPAD_COLUMN_2_PIN .equ     13
-KEYPAD_COLUMN_3_PIN .equ     14
+KEYPAD_COLUMN_0_PIN .equ    11
+KEYPAD_COLUMN_1_PIN .equ    12
+KEYPAD_COLUMN_2_PIN .equ    13
+KEYPAD_COLUMN_3_PIN .equ    14

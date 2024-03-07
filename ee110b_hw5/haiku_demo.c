@@ -1,68 +1,49 @@
-/*
- * Copyright (c) 2016-2020, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+/****************************************************************************/
+/*                                                                          */
+/*                                haiku_demo.c                              */
+/*                              Haiku Demo Main Loop                        */
+/*                                                                          */
+/****************************************************************************/
 
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/* Haiku Demo Main Loop. Initializes the peripherals and starts the RTOS.
 
-/*
- *  ======== main_tirtos.c ========
- */
+   Revision History:
+       3/6/24  Adam Krivka      initial revision
+*/
+
+/* C includes */
 #include <stdint.h>
 
-
-/* RTOS header files */
+/* RTOS includes */
 #include <ti/sysbios/BIOS.h>
-#include <ti/drivers/Board.h>
-#include  <ti/sysbios/knl/Swi.h>
 
-
-/* local includes */
+/* interface includes */
 #include "haiku_app_intf.h"
 #include "cc26x2r/cc26x2r_rtos_intf.h"
-#include "lcd/lcd_rtos_intf.h"
-#include "keypad/keypad_rtos_intf.h"
 
-/*
- *  ======== main ========
- */
+
+/* 
+    main()
+    
+    Description:     This function initializes the peripherals and starts the RTOS.
+                     It initializes the peripheral power domain, GPIO clock, GPT 
+                     clock, and SSI clock. It then creates the main app task and 
+                     starts the RTOS.
+*/
 int main(void)
 {
     /* initialization */
     PeriphPowerInit();              // turn on peripheral power domain
-    GPIOClockInit();                // turn on GPIO clock
-    GPTClockInit();                 // turn on GPT clock
-    SSIClockInit();                 // turn on GPT clock
+    GPIOClockInit();                // turn on GPIO module clock gate
+    GPTClockInit();                 // turn on GPT module clock gate
+    SSIClockInit();                 // turn on Serial module clock gate
 
+    /* create app task */
     App_createTask();
 
+    /* start the RTOS */
     BIOS_start();
 
+    /* we should never get here */
     return (0);
 }

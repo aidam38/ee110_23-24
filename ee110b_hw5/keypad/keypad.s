@@ -11,15 +11,18 @@
 ;
 ; The functions implemented in this file are:
 ;   KeypadInit - initializes the keypad driver
+;   KeypadRegisterHwi - registers direct hardware interrupt for the keypad
+;                       (for use in assembly-only code)
 ;   KeypadScanAndDebounce - scans the keypad and debounces the keys
 ;
 ; The interface, expected to be implemented in a separate file for flexibility,
 ; is as follows:
-;  EnqueueEvent - enqueue an event
+;  KeyPressed - gets called with {uint8_t row, uint8_t column} when key pressed
 ; 
 ; Revision History:
 ;     11/7/23  Adam Krivka      initial revision
-;	  3/4/24	Adam Krivka		included GPIO init and timer init functionality in init function
+;     3/4/24    Adam Krivka     expanded KeypadInit and created KeypadRegisterHwi
+;     3/6/24    Adam Krivka     added comments and fixed formatting
 
 
 ; local include files
@@ -33,6 +36,7 @@
     .def KeypadInit
     .def KeypadRegisterHwi
     .def KeypadScanAndDebounce
+    .def KeypadRTOSHwiHandler
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -59,27 +63,29 @@ PrevState: .byte 0
 
 ; KeypadInit
 ;
-; Description:         Initializes the keypad driver by setting the current row to 0,
-;                        the debounce counter to DEBOUNCE_TIME, and the previous state
-;                        to 1111b (all keys up).
+; Description:          Initializes the keypad driver by setting the current row to 0,
+;                       the debounce counter to DEBOUNCE_TIME, and the previous state
+;                       to 1111b (all keys up).
 ;
-; Arguments:         None.
-; Return Values:     None.
+; Arguments:            None.
+; Return Values:        None.
 ;
-; Local Variables:     None.
-; Shared Variables: None.
-; Global Variables: None.
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
 ;
-; Inputs:             None.
-; Outputs:             None.
+; Inputs:               None.
+; Outputs:              None.
 ;
-; Error Handling: None.
+; Error Handling:       None.
 ;
-; Registers Changed: R0, R1
-; Stack Depth:        1
+; Registers Changed:    R0, R1
+; Stack Depth:          1
 ; 
 ; Revision History:
-;     11/7/23  Adam Krivka      initial revision
+;       11/7/23     Adam Krivka      initial revision
+;       3/4/24      Adam Krivka      included GPIO init and timer init functionality
+;       3/6/24      Adam Krivka      added comments and fixed formatting
 
 KeypadInit:
     PUSH    {LR}            ; save return address
@@ -88,71 +94,70 @@ KeypadInit:
 ; initialize variables
     ; initialize CurrentRow to 0
     MOVA    R0, CurrentRow
-    MOV        R1, #0
+    MOV     R1, #0
     STRB    R1, [R0]
 
     ; initialize DebounceCounter to DEBOUNCE_TIME
     MOVA    R0, DebounceCounter
-    MOV        R1, #DEBOUNCE_TIME
+    MOV     R1, #DEBOUNCE_TIME
     STRB    R1, [R0]
 
     ; initialize PrevState to 1111b
     MOVA    R0, PrevState
-    MOV        R1, #1111b
+    MOV     R1, #1111b
     STRB    R1, [R0]
 
 ; configure GPIO pins for keypad
-    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
-    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_A_PIN
-    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_B_PIN
-    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_0_PIN
-    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_1_PIN
-    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_2_PIN
-    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_3_PIN
+    MOV32   R1, IOC_BASE_ADDR   ; prepare IOC base address
+    STREG   ROWSEL_CFG, R1, IOCFG_REG_SIZE * ROWSEL_A_PIN
+    STREG   ROWSEL_CFG, R1, IOCFG_REG_SIZE * ROWSEL_B_PIN
+    STREG   COLUMN_CFG, R1, IOCFG_REG_SIZE * COLUMN_0_PIN
+    STREG   COLUMN_CFG, R1, IOCFG_REG_SIZE * COLUMN_1_PIN
+    STREG   COLUMN_CFG, R1, IOCFG_REG_SIZE * COLUMN_2_PIN
+    STREG   COLUMN_CFG, R1, IOCFG_REG_SIZE * COLUMN_3_PIN
 
-    ;enable output for pins 8,9
-    MOV32    R1, GPIO_BASE_ADDR
-	LDR      R0, [R1, #GPIO_DOE_OFFSET]
-	ORR	     R0, #(11b << ROWSEL_A_PIN)
-	STR      R0, [R1, #GPIO_DOE_OFFSET]
+    ; enable output for rowsel pins 
+    MOV32   R1, GPIO_BASE_ADDR
+    LDR     R0, [R1, #GPIO_DOE_OFFSET]
+    ORR     R0, #(11b << ROWSEL_A_PIN)
+    STR     R0, [R1, #GPIO_DOE_OFFSET]
 
  ; configure timer
-    MOV32    R1, TIMER_BASE_ADDR
-    STREG    TIMER_CFG, R1, GPT_CFG_OFFSET
-    STREG    TIMER_IMR, R1, GPT_IMR_OFFSET
-    STREG    TIMER_TAMR, R1, GPT_TAMR_OFFSET
-    STREG    TIMER_TAILR, R1, GPT_TAILR_OFFSET
-    STREG    TIMER_TAPR, R1, GPT_TAPR_OFFSET
-    STREG    TIMER_CTL, R1, GPT_CTL_OFFSET
+    MOV32   R1, TIMER_BASE_ADDR
+    STREG   TIMER_CFG, R1, GPT_CFG_OFFSET
+    STREG   TIMER_IMR, R1, GPT_IMR_OFFSET
+    STREG   TIMER_TAMR, R1, GPT_TAMR_OFFSET
+    STREG   TIMER_TAILR, R1, GPT_TAILR_OFFSET
+    STREG   TIMER_TAPR, R1, GPT_TAPR_OFFSET
+    STREG   TIMER_CTL, R1, GPT_CTL_OFFSET ; starts timer
 
     POP     {LR}            ; restore return address
-    BX    LR
+    BX      LR
 
 
 
 ; KeypadRegisterHwi
 ;
-; Description:         Registers hardware only interrupt for keypad (for
-;						outside RTOS)
+; Description:          Registers hardware only interrupt for keypad (for
+;                       outside RTOS)
 ;
-; Arguments:         None.
-; Return Values:     None.
+; Arguments:            None.
+; Return Values:        None.
 ;
-; Local Variables:     None.
-; Shared Variables: None.
-; Global Variables: None.
+; Local Variables:      None.
+; Shared Variables:     None.
+; Global Variables:     None.
 ;
-; Inputs:             None.
-; Outputs:             None.
+; Inputs:               None.
+; Outputs:              None.
 ;
-; Error Handling: None.
+; Error Handling:       None.
 ;
-; Registers Changed: R0, R1
-; Stack Depth:        1
+; Registers Changed:    R0, R1
+; Stack Depth:          1
 ;
 ; Revision History:
 ;     3/4/24  Adam Krivka      initial revision
-
 KeypadRegisterHwi:
     PUSH    {LR}            ; save return address
 
@@ -168,11 +173,12 @@ KeypadRegisterHwi:
     STR     R1, [R0, #(BYTES_PER_WORD * TIMER_EXCEPTION_NUMBER)]
 
     ; enable timer time-out interrupt in the CPU
-    MOV32    R1, SCS_BASE_ADDR
-    STREG    (0x1 << TIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET
+    MOV32   R1, SCS_BASE_ADDR
+    STREG   (0x1 << TIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET
 
     POP     {LR}            ; restore return address
-    BX    LR
+    BX      LR
+
 
 
 ; TimerEventHandler
@@ -208,19 +214,18 @@ TimerEventHandler:
     BL      KeypadScanAndDebounce
 
     ; clear the GPT0 time-out interrupt
-    MOV32    R1, TIMER_BASE_ADDR
-    STREG    GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
+    MOV32   R1, TIMER_BASE_ADDR
+    STREG   GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
 
-    POP       {LR}                    ; restore LR
-    BX        LR
+    POP     {LR}                    ; restore LR
+    BX      LR
 
 
-; TimerEventHandler_RTOSHwi
+; KeypadRTOSHwiHandler
 ;
-; Description:  This function is the interrupt handler for the Keypad timer.
-;               It calls the KeypadScanAndDebounce function, which scans the
-;               keypad and debounces the keys. After KeypadScanAndDebounce,
-;               the event handler clears the interrupt and returns.
+; Description:       This is the event handler for the RTOS-created hardware 
+;                    interrupt, which is used to post the software interrupt
+;                    so that we're scanning and debouncing in lower priority task.
 ;
 ; Arguments:         None.
 ; Return Value:      None.
@@ -241,52 +246,49 @@ TimerEventHandler:
 ; Stack Depth:       1 word
 ;
 ; Revision History:
-;     11/7/23  Adam Krivka      initial revision
+;     3/6/24  Adam Krivka      initial revision
 
-TimerEventHandler_RTOSHwi:
-	.def TimerEventHandler_RTOSHwi
+; pull necessary symbols 
+    .ref    swiTask
+    .ref    ti_sysbios_knl_Swi_post
+KeypadRTOSHwiHandler:
+    PUSH    {LR}                ; save LR
 
-    PUSH    {LR}                    ; save LR
+; Swi_post(swiTask)
+    MOVA    R1, swiTask
+    LDR     R0, [R1]
+    BL      ti_sysbios_knl_Swi_post
 
-; Swi_post(&swiTask)
-	.ref swiTask
-	.ref ti_sysbios_knl_Swi_post
-	MOVA 	R1, swiTask
-	LDR		R0, [R1]
-	BL		ti_sysbios_knl_Swi_post
+; clear the timer time-out interrupt
+    MOV32   R1, TIMER_BASE_ADDR
+    STREG   GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
 
-    ; clear the GPT0 time-out interrupt
-    MOV32    R1, TIMER_BASE_ADDR
-    STREG    GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
-
-    POP       {LR}                    ; restore LR
-    BX        LR
+    POP     {LR}                ; restore LR
+    BX      LR                  ; return
 
 
 
 ; KeypadScanAndDebounce
 ;
-; Description:         Scans the keypad and debounces the keys. If a key is pressed,
-;                     for DEBOUNCE_TIME an event is generated and enqueued. The 
-;                    format of the enqueued event vector is as follows:
-;                         [ROW][COLUMN][EVENT_KEYDOWN]
-;                    where
-;                        ROW is the row of the key pressed (4-bit binary)
-;                        COLUMN is the column of the key pressed (4-bit binary)
-;                        EVENT_KEYDOWN is the event type (4-bit binary)
+; Description:      Scans the keypad and debounces the keys. If a key is pressed,
+;                   for DEBOUNCE_TIME, the KeyPressed function is call with
+;                         [ROW][COLUMN]
+;                   where
+;                        ROW is the row of the key pressed (8-bit binary)
+;                        COLUMN is the column of the key pressed (8-bit binary)
 ;
-; Operation:         This function is called periodically by the timer. Each
-;                     time it is called, it checks whether the debounce counter
-;                     is not its maximum value (DEBOUNCE_TIME), which indicates
-;                     that a key is being debounced, in which case it checks
-;                     whether that key is still being pressed, and if yes decrements
-;                     the debounce counter further, and if not resets it to 
-;                     its maximum value. If the debounce counter is zero, it enqueus
-;                     an event as described above. If no key is pressed, the curent
-;                     row is incremented and the function returns.
+; Operation:        This function is called periodically by the timer. Each
+;                   time it is called, it checks whether the debounce counter
+;                   is not its maximum value (DEBOUNCE_TIME), which indicates
+;                   that a key is being debounced, in which case it checks
+;                   whether that key is still being pressed, and if yes decrements
+;                   the debounce counter further, and if not resets it to 
+;                   its maximum value. If the debounce counter is zero, it enqueus
+;                   an event as described above. If no key is pressed, the curent
+;                   row is incremented and the function returns.
 ;
 ; Arguments:        None.
-; Return Values:     None.
+; Return Values:    None.
 ;
 ; Local Variables:     
 ;         R4 = CurrentRow address
@@ -297,16 +299,18 @@ TimerEventHandler_RTOSHwi:
 ; Shared Variables: None.
 ; Global Variables: None.
 ;
-; Inputs:             Keypad.
-; Outputs:             Queueing to Event Queue.
+; Inputs:           Keypad.
+; Outputs:          Calling KeyPressed function.
 ;
-; Error Handling:     None.
+; Error Handling:   None.
 ;
 ; Registers Changed: flags, R0, R1
 ; Stack Depth:        6
 ;
 ; Revision History:
 ;     11/7/23  Adam Krivka      initial revision
+;     3/6/24   Adam Krivka      change from EnqueueEvent to KeyPressed
+
 
 KeypadScanAndDebounce:
     PUSH    {LR, R4, R5, R6, R7, R8}        ; save return address and registers
@@ -320,40 +324,40 @@ KeypadScanAndDebounce:
     LDRB    R8, [R5]
 
     ; compare DebounceCounter to DEBOUNCE_TIME
-    CMP        R8, #DEBOUNCE_TIME ; 
-    BNE        Read                        ; if DebounceCounter != DEBOUNCE_TIME, 
-                                        ; don't scan, skip to reading the current row
-    ;B        Scan                         ; if DebounceCounter == DEBOUNCE_TIME), 
-                                        ; scan the keypad (advance to the next row)
+    CMP     R8, #DEBOUNCE_TIME ; 
+    BNE     Read                ; if DebounceCounter != DEBOUNCE_TIME, 
+                                ; don't scan, skip to reading the current row
+    ;B      Scan                ; if DebounceCounter == DEBOUNCE_TIME), 
+                                ; scan the keypad (advance to the next row)
 
 
 
 Scan:
     ; increment CurrentRow
     ADD     R7, #1
-    AND     R7, #CURRENT_ROW_MASK         ; take just lower two bits
+    AND     R7, #CURRENT_ROW_MASK        ; take just lower two bits
     STRB    R7, [R4]                     ; update CurrentRow in memory
     
-    ; call SelectRow(CurrentRow)
-    MOV     R0, R7                         ;prepare argument
+    ; select the current row
+    MOV     R0, R7                      ; copy current row value
 
-	AND     R0, #11b
-    LSL     R0, #ROWSEL_A_PIN ; prepare row
+    AND     R0, #11b                    ; clear upper bits
+    LSL     R0, #ROWSEL_A_PIN           ; move to position in gpio
 
-    MOV32   R1, GPIO_BASE_ADDR
-    STR     R0, [R1, #GPIO_DOUTSET_OFFSET] ;set pins
-    MOV		R0, R7
-    EOR		R0, #11b
-    LSL		R0, #ROWSEL_A_PIN
-    STR     R0, [R1, #GPIO_DOUTCLR_OFFSET] ;clear pins
+    MOV32   R1, GPIO_BASE_ADDR          ; prepare GPIO base address
+    STR     R0, [R1, #GPIO_DOUTSET_OFFSET] ; set pins
+    MOV     R0, R7                      ; copy current row value again
+    EOR     R0, #11b                    ; negate because we'll be clearing bits
+    LSL     R0, #ROWSEL_A_PIN           ; move to position in gpio
+    STR     R0, [R1, #GPIO_DOUTCLR_OFFSET] ; clear pins
 
 Read:
-    ; call ReadRow() to get the current state of the row (one-hot encoding)
-	MOV32   R1, GPIO_BASE_ADDR
+    ; read the current state of the keypad
+    MOV32   R1, GPIO_BASE_ADDR
     LDR     R0, [R1, #GPIO_DIN_OFFSET]
-    LSR     R0, #COLUMN_0_PIN
-    AND		R0, #1111b
-    ;B        Compare                        ; compare CurState to PrevState
+    LSR     R0, #COLUMN_0_PIN       ; shift to the right to get the column bits
+    AND     R0, #1111b              ; mask off the upper bits
+    ;B      Compare               ; compare CurState to PrevState
 
 Compare:
     ; load PrevState address and value
@@ -361,32 +365,32 @@ Compare:
     LDRB    R1, [R6]
 
     ; if PrevState != CurState, reset debounce state
-    CMP        R0, R1
-    BNE        ResetDebounce
+    CMP     R0, R1
+    BNE     ResetDebounce
 
     ; if PrevState == CurState AND CurState == 1111, no key is pressed
     ; nor was it pressed last time, so we can just end the function
-    CMP        R0, #COLUMN_ALL_KEYS_UP
-    BEQ        KeypadScanAndDebounceEnd
+    CMP     R0, #COLUMN_ALL_KEYS_UP
+    BEQ     KeypadScanAndDebounceEnd
 
     ; if PrevState == CurState AND CurState != 1111 (meaning key is continuously
     ; being pressed), debounce
-    ;B        Debounce
+    ;B      Debounce
 
 
 
 ; Debounce current keypress using DebounceCounter
 Debounce:
-    SUBS    R8, #1                         ; decrement DebounceCounter value
+    SUBS    R8, #1               ; decrement DebounceCounter value
 
     ; if DebounceCounter < 0
-    BMI        DebounceCounterNegative 
+    BMI     DebounceCounterNegative 
 
     ; if DebounceCounter > 0
-    BNE        DebounceEnd 
+    BNE     DebounceEnd 
 
     ; if DebounceCounter == 0
-    ;B        DebounceCounterZero 
+    ;B      DebounceCounterZero 
 
 DebounceCounterZero:
     ; We have successfully registered a key press!
@@ -397,80 +401,78 @@ DebounceCounterZero:
 
     ; Use jump table convert from one-hot encoding to binary
 JumpTable:
-    CMP        R0, #COLUMN_0_PRESSED_ONE_HOT
-    BEQ        COLUMN_0_PRESSED
+    CMP     R0, #COLUMN_0_PRESSED_ONE_HOT
+    BEQ     COLUMN_0_PRESSED
 
-    CMP        R0, #COLUMN_1_PRESSED_ONE_HOT
-    BEQ        COLUMN_1_PRESSED
+    CMP     R0, #COLUMN_1_PRESSED_ONE_HOT
+    BEQ     COLUMN_1_PRESSED
 
-    CMP        R0, #COLUMN_2_PRESSED_ONE_HOT
-    BEQ        COLUMN_2_PRESSED
+    CMP     R0, #COLUMN_2_PRESSED_ONE_HOT
+    BEQ     COLUMN_2_PRESSED
 
-    CMP        R0, #COLUMN_3_PRESSED_ONE_HOT
-    BEQ        COLUMN_3_PRESSED
+    CMP     R0, #COLUMN_3_PRESSED_ONE_HOT
+    BEQ     COLUMN_3_PRESSED
 
 COLUMN_0_PRESSED:
-    MOV        R0, #COLUMN_0_PRESSED_BINARY
-    B        JumpTableEnd
+    MOV     R0, #COLUMN_0_PRESSED_BINARY
+    B       JumpTableEnd
 
 COLUMN_1_PRESSED:
-    MOV        R0, #COLUMN_1_PRESSED_BINARY
-    B        JumpTableEnd
+    MOV     R0, #COLUMN_1_PRESSED_BINARY
+    B       JumpTableEnd
 
 COLUMN_2_PRESSED:
-    MOV        R0, #COLUMN_2_PRESSED_BINARY
-    B        JumpTableEnd
+    MOV     R0, #COLUMN_2_PRESSED_BINARY
+    B       JumpTableEnd
 
 COLUMN_3_PRESSED:
-    MOV        R0, #COLUMN_3_PRESSED_BINARY
-    B        JumpTableEnd
+    MOV     R0, #COLUMN_3_PRESSED_BINARY
+    B       JumpTableEnd
 
 JumpTableEnd:
 
     ; merge with row information    
-    LSL        R7, #EVENT_INFO_SEGMENT_BITS ; we don't need R7 after this, so we can cobble it
-    ORR        R0, R7
+    LSL     R7, #KEY_INFO_SEGMENT_BITS ; we don't need R7 after this, so we can cobble it
+    ORR     R0, R7
 
     ; Call Enqueue(EventVector) (R0)
     ; (no need to save R0, R1, R2, R3, because we're not using them 
     ;  in the rest of the function)
-    BL        KeyPressed
-    B        DebounceEnd
+    BL      KeyPressed
+    B       DebounceEnd
 
 DebounceCounterNegative:
     ; We need to reset DebounceCounter to zero so we don't overflow in the negatives
-    MOV        R8, #0 
-    ;B        DebounceEnd
+    MOV     R8, #0 
+    ;B      DebounceEnd
 
 DebounceEnd:
     ; store new DebounceCounter value (always done regardless of DebounceCounter
     ; value)
     STRB    R8, [R5] 
-    B        KeypadScanAndDebounceEnd        ; end function
-
-
+    B       KeypadScanAndDebounceEnd        ; end function
 
 ; Reset DebounceCounter
 ResetDebounce:
-    STRB    R0, [R6]                         ; update PrevState, because in this 
+    STRB    R0, [R6]                        ; update PrevState, because in this 
                                             ; clause we know that PrevState != CurState
 
     ; Reset Debounce Counter
-    MOV        R8, #DEBOUNCE_TIME
+    MOV     R8, #DEBOUNCE_TIME
 
     ; If a key is pressed, decrement DebounceCounter to start 
     ; debouncing in the next call
-    CMP        R0, #COLUMN_ALL_KEYS_UP
-    BEQ        ResetDebounceEnd
+    CMP     R0, #COLUMN_ALL_KEYS_UP
+    BEQ     ResetDebounceEnd
     ;B        KeyStartPressed
 
 KeyStartPressed:
-    SUB        R8, #1
+    SUB     R8, #1          ; decrement DebounceCounter so we start debouncing next time
 
 ResetDebounceEnd:
-    STRB    R8, [R5]                         ; store new DebounceCounter value in memory
-    ;B        KeypadScanAndDebounceEnd        ; end function
+    STRB    R8, [R5]                        ; store new DebounceCounter value in memory
+    ;B        KeypadScanAndDebounceEnd      ; end function
 
 KeypadScanAndDebounceEnd:
     POP     {LR, R4, R5, R6, R7, R8}        ; restore return address and registers
-    BX         LR
+    BX      LR

@@ -1,42 +1,87 @@
-#include "keypad_rtos.h"
-#include "../haiku_app_intf.h"
+/****************************************************************************/
+/*                                                                          */
+/*                                keypad_rtos.c                             */
+/*                        Keypad RTOS C wrapper code                        */
+/*                                                                          */
+/****************************************************************************/
 
+/* 4x4 Keypad RTOS C wrapper code. Functions included:
+        KeypadInit_RTOS() - initialize the keypad using RTOS hardware and 
+                            software interrupts
+
+   Revision History:
+       3/6/24  Adam Krivka      initial revision
+*/
+
+
+
+/* library includes */
 #include  <ti/sysbios/hal/Hwi.h>
 #include  <ti/sysbios/knl/Swi.h>
 
-static Hwi_Struct   hwiTask;
-Swi_Handle   swiTask;
+
+/* local includes */
+#include "keypad_rtos.h"
+#include "../haiku_app_intf.h"
 
 
-void KeypadSwiHandler() {
-    KeypadScanAndDebounce();
 
-    return;
-}
+/* global variables */
 
+/* swi interrupt task (needs to be global to be exposed to keypad.s)*/
+Swi_Handle swiTask;
+
+
+
+/* shared variables */
+
+/* hwi interrupt task */
+static Hwi_Struct hwiTask;
+
+/*
+   KeypadInit_RTOS()
+
+   Description:     This function initializes the keypad using RTOS hardware and
+                    software interrupts. It sets up the hardware and software 
+                    interrupts and initializes the keypad hardware and software. 
+                    It is called once at the start of the program.
+
+   Operation:       Initializes the hardware and software interrupts, and then
+                    calls the KeypadInit function which configures the GPIOs
+                    , variables, and timer (it also starts it).
+
+   Arguments:        None.
+   Return Value:     None.
+   Exceptions:       None.
+
+   Inputs:           None.
+   Outputs:          None.
+
+   Error Handling:   None. Hwi and Swi functions are called with no error
+                     checking, but they should not fail.
+
+   Algorithms:       None.
+   Data Structures:  None.
+
+   Revision History: 3/6/24  Adam Krivka        initial revision
+*/
 void KeypadInit_RTOS() {
     /* variables */
-    Hwi_Params          hwiParams;
-    Swi_Params          swiParams;
+    Hwi_Params hwiParams;
+    Swi_Params swiParams;
 
-    /* set up Swi */
-    /* setup the parameters */
+    /* set up and create Swi */
     Swi_Params_init(&swiParams);
     swiParams.priority = SWI_PRIORITY;
+    swiTask = Swi_create(KeypadScanAndDebounce, &swiParams, NULL);
 
-    /* now create Swi task */
-    swiTask = Swi_create(KeypadSwiHandler, &swiParams, NULL);
-
-    /* set up Hwi */
-    /* setup the parameters */
+    /* set up and create Hwi */
     Hwi_Params_init(&hwiParams);
     hwiParams.eventId = TIMER_EXCEPTION_NUMBER;
     hwiParams.priority = HWI_PRIORITY;
+    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, KeypadRTOSHwiHandler, &hwiParams, NULL);
 
-    /* now create the Hwi task */
-    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, TimerEventHandler_RTOSHwi, &hwiParams, NULL);
-
-    /* call assembly init function (inits GPIOs and variables) */
+    /* call assembly init function (inits GPIOs, variables, and starts timer) */
     KeypadInit();
 
     return;

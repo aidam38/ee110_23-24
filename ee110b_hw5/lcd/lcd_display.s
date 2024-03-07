@@ -13,7 +13,8 @@
 ;   ClearDisplay
 ; 
 ; Revision History:
-;     11/22/23  Adam Krivka      initial revision
+;     11/22/23  Adam Krivka     initial revision
+;     3/6/24   Adam Krivka      added target-length functionality
 
 
 
@@ -108,12 +109,16 @@ SetCursorPosDone:
 ;
 ; Description:          Displays a string starting at the given row and column.
 ;                       Uses whatever cursor incrementing mode is currently
-;                       set on the LCD. 
+;                       set on the LCD. If the string is longer than the
+;                       row, it will be truncated and an error will be returned.
+;                       If the string is shorter than the row, the rest of the
+;                       row will be padded with spaces, up to target length.
+;                       If the target length is -1, no padding will be done.
 ;
 ; Arguments:            R0: row,
 ;                       R1: column
 ;                       R2: str pointer
-;                       R3: target length (must be non-zero)
+;                       R3: target length (or -1 for no target length)
 ;
 ; Return Values:        success/fail in R0.
 ;
@@ -128,9 +133,9 @@ SetCursorPosDone:
 ; Stack Depth:          4
 ; 
 ; Revision History:
-;     11/22/23  Adam Krivka      initial revision
-;     1/16/24   Adam Krivka      added target-length functionality
-;	  3/4/24	Adam Krivka		 fixed bug with target-length argument being 0
+;   11/22/23    Adam Krivka     initial revision
+;   1/16/24     Adam Krivka     added target-length functionality
+;   3/4/        Adam Krivka     fixed bug with target-length argument being 0
 
 
 Display:
@@ -164,8 +169,8 @@ DisplayLoop:
     MOV     R1, R6                  ; copy character
     BL      LCDWrite                ; write data to LCD
 
-	CMP		R7, #-1					; check if we need to worry about target length
-	BEQ		DisplayLoop
+    CMP     R7, #-1                 ; check if we need to worry about target length
+    BEQ     DisplayLoop
 
     SUB     R7, #1                  ; decrement target length
     CMP     R7, #0                  ; check if we've reached target length
@@ -178,14 +183,14 @@ DisplayFail:
     B       DisplayDone
 
 DisplayPadRest:
-	CMP		R7, #-1					; check if we need to worry about target length
-	BEQ		DisplaySuccess
+    CMP     R7, #-1                 ; check if we need to worry about target length
+    BEQ     DisplaySuccess
 
     BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD
     MOV32   R0, 1                   ; RS = 1
-    MOV     R1, #ASCII_SPACE         ; copy space character
+    MOV     R1, #ASCII_SPACE        ; copy space character
     BL      LCDWrite                ; write data to LCD
 
     SUB     R7, #1                  ; decrement target length
@@ -222,7 +227,7 @@ DisplayDone:
 ; Stack Depth:          3
 ; 
 ; Revision History:
-;     
+;   11/22/23    Adam Krivka     initial revision
 
 DisplayChar:
     PUSH    {LR, R4, R5}        ; save return address and used registers

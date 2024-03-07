@@ -1,5 +1,22 @@
-#ifndef  __APP_H__
-    #define  __APP_H__
+/****************************************************************************/
+/*                                                                          */
+/*                              haiku_app.h                                 */
+/*                       Haiku Application Header                           */
+/*                                                                          */
+/****************************************************************************/
+
+/* Haiku Application Header. Functions declared are:
+        App_init() - initialize the application
+        App_run() - main application task
+        App_processEvent() - process events from the event queue
+        haiku1, haiku2, haiku3, haiku4 - haiku data to display
+
+   Revision History:
+       3/6/24  Adam Krivka      initial revision
+*/
+
+#ifndef  __HAIKU_APP_H__
+    #define  __HAIKU_APP_H__
 
 /* local include files */
 #include  "haiku_app_intf.h"
@@ -7,29 +24,39 @@
 #define APP_TASK_PRIORITY          	2
 #define APP_TASK_STACK_SIZE 		1024
 
+/* structs */
+
+/* event struct */
 typedef struct event {
     Queue_Elem elem;
     uint32_t data;
 } event_t;
 
+/* line part struct */
+typedef struct part {
+    uint32_t row;   // row where to display
+    uint32_t col;   // column where to display
+    char *text;     // text to display
+} part_t;
+
+/* line sturct */
+typedef struct line {
+    part_t parts[4]; // each line is expected to have 4 parts
+} line_t;
+
+/* haiku struct */
+typedef struct haiku {
+    line_t lines[4]; // each haiku is expected to have 4 lines (3 verses and 1 source)
+} haiku_t;
+
+
+/* internal function declarations */
 void App_init(void);
 static void App_run(UArg a0, UArg a1);
 void App_processEvent(event_t* evt);
 
-typedef struct part {
-    uint32_t row;
-    uint32_t col;
-    char *text;
-} part_t;
 
-typedef struct line {
-    part_t parts[4];
-} line_t;
-
-typedef struct haiku {
-    line_t lines[4];
-} haiku_t;
-
+/* haiku data */
 const haiku_t haiku1 = {{
                         {{ { 0, 0, "Tiny" }, { 1, 4, "chips" }, { 2, 7, "hum" }, { 3, 10, "softly" } }},
                         {{ { 0, 0, "Logic" }, { 1, 1, "weaves through" }, { 2, 5, "circuits" }, { 3, 11, "tight" } }},

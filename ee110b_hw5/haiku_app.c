@@ -1,86 +1,76 @@
-/*
- * Copyright (c) 2015-2019, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/****************************************************************************/
+/*                                                                          */
+/*                                haiku_app.c                               */
+/*                            Haiku Application                             */
+/*                                                                          */
+/****************************************************************************/
 
-/*
- *  ======== empty.c ========
- */
+/* Displays AI-generated haikus about embedded systems on the LCD 
+    based on keypad input - each row of 4x4 keypad contains one haiku
+    and pressing keys left to right displays each line (last line is which
+    AI was used to generate it). 
 
-/* For usleep() */
+   Revision History:
+       3/6/24  Adam Krivka      initial revision
+*/
+
+
+/* C library */
 #include <unistd.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
 
+/* RTOS includes */
 #include <xdc/runtime/System.h>
-
-
-/* Driver Header files */
-#include <ti/drivers/GPIO.h>
-// #include <ti/drivers/I2C.h>
-// #include <ti/drivers/SPI.h>
-// #include <ti/drivers/Watchdog.h>
 #include <ti/sysbios/knl/Task.h>
-#include <ti/sysbios/knl/Event.h>
 #include  <ti/sysbios/knl/Swi.h>
 #include  <ti/sysbios/runtime/Memory.h>
 
+/* interface includes */
 #include "lcd/lcd_rtos_intf.h"
 #include "keypad/keypad_rtos_intf.h"
-
-
-
-/* Driver configuration */
-#include "ti_drivers_config.h"
 
 /* local includes */
 #include "haiku_app.h"
 
+
+/* shared variables */
+
 /* task structure and task stack */
 static  Task_Struct  appTask;
 
+/* app stack */
 #pragma DATA_ALIGN(appTaskStack, 8)
 static  uint8_t  appTaskStack[APP_TASK_STACK_SIZE];
 
 /* queue object used for app messages */
 static Queue_Handle  appMsgQueue;
 
+/* 
+    KeyPressed(uint32_t keyEvt)
+    
+    Description:    This function is called by the keypad interrupt handler
+                    when a key is pressed. It creates an event and enqueues
+                    it to the app message queue.
+*/
 void KeyPressed(uint32_t keyEvt) {
+    /* create event struct */
     event_t *evt = Memory_alloc(NULL, sizeof(event_t), 0, NULL);
     evt->data = keyEvt;
+
+    /* enqueue to the app message queue */
     Queue_enqueue(appMsgQueue, &(evt->elem));
+
     return;
 }
 
-/* create task */
+/* 
+    App_createTask()
+    
+    Description:    This function creates the app task. It sets up the task
+                    parameters and creates the task.
+*/
 void App_createTask(void) {
     /* variables */
     Task_Params  taskParams;            /* parameters for setting up task */
@@ -98,6 +88,12 @@ void App_createTask(void) {
     return;
 }
 
+/*
+    App_init()
+    
+    Description:    This function initializes the app. It creates the app
+                    message queue.
+*/
 void App_init(void) {
     /* create the app event queue */
     appMsgQueue = Queue_create(NULL, NULL);
@@ -108,7 +104,12 @@ void App_init(void) {
     return;
 }
 
-/* run the app */
+/*
+    App_run()
+    
+    Description:    This function is the main loop of the app. It processes
+                    events from the app message queue.
+*/
 static void App_run(UArg a0, UArg a1) {
     /* variables */
     event_t* evt;
@@ -122,15 +123,28 @@ static void App_run(UArg a0, UArg a1) {
 
     /* main loop */
     while (true) {
+        /* process events while there are any */
         while (!Queue_empty(appMsgQueue)) {
-            /* process the event */
+            /* dequeue the event */
             evt = Queue_dequeue(appMsgQueue);
+
+            /* process the event */
             App_processEvent(evt);
+
+            /* free because we shouldn't need event struct anymore */
             Memory_free(NULL, evt, sizeof(event_t));
         }
     }
 }
 
+
+/*
+    App_processEvent(event_t* evt)
+    
+    Description:    This function processes an event from the app message
+                    queue. It displays the haiku on the LCD based on the
+                    keypad input.
+*/
 void App_processEvent(event_t* evt) {
     /* variables */
     uint8_t col = evt->data & 0b11111111;
@@ -138,25 +152,26 @@ void App_processEvent(event_t* evt) {
     haiku_t haiku;
     line_t line;
 
+    /* choose haiku */
     switch (row) {
-    case 0:
-        haiku = haiku1;
-        break;
-    case 1:
-        haiku = haiku2;
-        break;
-    case 2:
-        haiku = haiku3;
-        break;
-    case 3:
-        haiku = haiku4;
-        break;
-    default:
-        Display(0, 0, "row error", 16);
-        return;
+        case 0:
+            haiku = haiku1;
+            break;
+        case 1:
+            haiku = haiku2;
+            break;
+        case 2:
+            haiku = haiku3;
+            break;
+        case 3:
+            haiku = haiku4;
+            break;
+        default:
+            Display(0, 0, "row error", 16);
+            return;
     }
 
-
+    /* choose line */
     switch (col) {
         case 0:
             line = haiku.lines[3];
@@ -175,7 +190,10 @@ void App_processEvent(event_t* evt) {
             return;
     }
 
+    /* clear whole display before displaying new line*/
     ClearDisplay();
+
+    /* for each line part, display it at the given row and col position*/
     for (int i = 0; i < 4; i++) {
         Display(line.parts[i].row, line.parts[i].col, line.parts[i].text, -1);
     }

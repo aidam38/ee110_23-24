@@ -3,6 +3,7 @@
 /* assembly imports */
 void KeypadInit();
 void KeypadScanAndDebounce();
+void TimerEventHandler_RTOSHwi();
 
 
 /* interrupt constants */

@@ -1,4 +1,5 @@
 #include "keypad_rtos.h"
+#include "../haiku_app_intf.h"
 
 #include  <ti/sysbios/hal/Hwi.h>
 #include  <ti/sysbios/knl/Swi.h>
@@ -6,21 +7,6 @@
 static Hwi_Struct   hwiTask;
 Swi_Handle   swiTask;
 
-
-void Display(UArg r, UArg c, char* str, UArg len);
-void KeyPressed(uint32_t evt);
-void TimerEventHandler_RTOSHwi();
-void TimerEventHandler_RTOSSwi();
-
-void KeypadHwiHandler() {
-    /* update clear flag */
-    Hwi_clearInterrupt(TIMER_EXCEPTION_NUMBER);
-
-    /* call Swi */
-    Swi_post(swiTask);
-
-    return;
-}
 
 void KeypadSwiHandler() {
     KeypadScanAndDebounce();
@@ -48,7 +34,7 @@ void KeypadInit_RTOS() {
     hwiParams.priority = HWI_PRIORITY;
 
     /* now create the Hwi task */
-    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, KeypadHwiHandler, &hwiParams, NULL);
+    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, TimerEventHandler_RTOSHwi, &hwiParams, NULL);
 
     /* call assembly init function (inits GPIOs and variables) */
     KeypadInit();

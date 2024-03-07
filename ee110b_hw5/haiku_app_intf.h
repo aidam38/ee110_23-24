@@ -1,3 +1,4 @@
+#include <stdint.h>
 
 void KeyPressed(uint32_t _evt);        /* enqueue events to application event queue */
 

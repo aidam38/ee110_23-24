@@ -16,19 +16,19 @@
     .include "../cc26x2r/gpt_reg.inc"
     .include "../cc26x2r/gpio_reg.inc"
     .include "../cc26x2r/cpu_scs_reg.inc"
-    .include "../RTOS_demo.inc"
+    .include "../hw.inc"
 
 ; pin definitions
 
 ; pins for selecting rows
-ROWSEL_A_PIN .equ   8
-ROWSEL_B_PIN .equ   9
+ROWSEL_A_PIN .equ   KEYPAD_ROWSEL_A_PIN
+ROWSEL_B_PIN .equ   KEYPAD_ROWSEL_B_PIN
 
 ; pins for selecting columns
-COLUMN_0_PIN .equ     11
-COLUMN_1_PIN .equ     12
-COLUMN_2_PIN .equ     13
-COLUMN_3_PIN .equ     14
+COLUMN_0_PIN .equ     KEYPAD_COLUMN_0_PIN
+COLUMN_1_PIN .equ     KEYPAD_COLUMN_1_PIN
+COLUMN_2_PIN .equ     KEYPAD_COLUMN_2_PIN
+COLUMN_3_PIN .equ     KEYPAD_COLUMN_3_PIN
 
 ; timer configuration:
 ;  32-bit mode
@@ -50,7 +50,7 @@ TIMER_EXCEPTION_NUMBER .equ KEYPAD_TIMER_EXCEPTION_NUMBER
 TIMER_IRQ_NUMBER .equ       KEYPAD_TIMER_IRQ_NUMBER
 
 ; debouncing
-DEBOUNCE_TIME .equ              20      ; number of timer interrupts a key
+DEBOUNCE_TIME .equ              2      ; number of timer interrupts a key
                                         ; must be pressed down
 ; keypad row and column definitions
 CURRENT_ROW_MASK .equ           11b     ; mask for the current row (need just
@@ -69,5 +69,5 @@ COLUMN_2_PRESSED_BINARY .equ    0x2
 COLUMN_3_PRESSED_BINARY .equ    0x3
 
 ; event vector definitions 
-EVENT_INFO_SEGMENT_BITS .equ    4       ; number of bits in the event info
+EVENT_INFO_SEGMENT_BITS .equ    8       ; number of bits in the event info
 EVENT_KEYDOWN .equ              0xD     ; keydown event bit sequence

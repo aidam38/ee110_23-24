@@ -15,12 +15,11 @@
 ;
 ; The interface, expected to be implemented in a separate file for flexibility,
 ; is as follows:
-;  SelectRow - selects a row of the keypad
-;  ReadRow - read the currently selected row of the keypad
 ;  EnqueueEvent - enqueue an event
 ; 
 ; Revision History:
 ;     11/7/23  Adam Krivka      initial revision
+;	  3/4/24	Adam Krivka		included GPIO init and timer init functionality in init function
 
 
 ; local include files
@@ -28,12 +27,11 @@
     .include "../std.inc"
 
 ; import functions defined in other files
-    .ref EnqueueEvent
-    .ref SelectRow
-    .ref ReadRow
+    .ref KeyPressed
 
 ; export functions defined in this file
     .def KeypadInit
+    .def KeypadRegisterHwi
     .def KeypadScanAndDebounce
 
 
@@ -86,43 +84,6 @@ PrevState: .byte 0
 KeypadInit:
     PUSH    {LR}            ; save return address
 
-; configure GPIO pins for keypad
-    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
-    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_A_PIN
-    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_B_PIN
-    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_0_PIN
-    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_1_PIN
-    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_2_PIN
-    STREG    IOCFG_GENERIC_INPUT, R1,   IOCFG_REG_SIZE * COLUMN_3_PIN
-
-    ;enable output for pins 8,9
-    MOV32    R1, GPIO_BASE_ADDR
-    STREG    11b << ROWSEL_A_PIN, R1, GPIO_DOE_OFFSET
-
-; configure timer
-    ; configure timers
-    MOV32    R1, TIMER_BASE_ADDR
-    STREG    TIMER_CFG, R1, GPT_CFG_OFFSET
-    STREG    TIMER_IMR, R1, GPT_IMR_OFFSET
-    STREG    TIMER_TAMR, R1, GPT_TAMR_OFFSET
-    STREG    TIMER_TAILR, R1, GPT_TAILR_OFFSET
-    STREG    TIMER_TAPR, R1, GPT_TAPR_OFFSET
-    STREG    TIMER_CTL, R1, GPT_CTL_OFFSET
-
-; configure event handler
-    ; load VTOR
-    MOVW    R0, #(SCS_BASE_ADDR & 0xffff)
-    MOVT    R0, #((SCS_BASE_ADDR >> 16) & 0xffff)
-    LDR     R0, [R0, #SCS_VTOR_OFFSET]
-
-    ; store event handler in vector table
-    MOVW    R1, TimerEventHandler
-    MOVT    R1, TimerEventHandler
-    STR     R1, [R0, #(BYTES_PER_WORD * TIMER_EXCEPTION_NUMBER)]
-
-    ; enable timer time-out interrupt in the CPU
-    MOV32    R1, SCS_BASE_ADDR
-    STREG    (0x1 << TIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET
 
 ; initialize variables
     ; initialize CurrentRow to 0
@@ -139,6 +100,76 @@ KeypadInit:
     MOVA    R0, PrevState
     MOV        R1, #1111b
     STRB    R1, [R0]
+
+; configure GPIO pins for keypad
+    MOV32       R1, IOC_BASE_ADDR   ; prepare IOC base address
+    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_A_PIN
+    STREG    IOCFG_GENERIC_OUTPUT, R1,  IOCFG_REG_SIZE * ROWSEL_B_PIN
+    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_0_PIN
+    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_1_PIN
+    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_2_PIN
+    STREG    (IO_INPUT | IO_PU), R1,   IOCFG_REG_SIZE * COLUMN_3_PIN
+
+    ;enable output for pins 8,9
+    MOV32    R1, GPIO_BASE_ADDR
+	LDR      R0, [R1, #GPIO_DOE_OFFSET]
+	ORR	     R0, #(11b << ROWSEL_A_PIN)
+	STR      R0, [R1, #GPIO_DOE_OFFSET]
+
+ ; configure timer
+    MOV32    R1, TIMER_BASE_ADDR
+    STREG    TIMER_CFG, R1, GPT_CFG_OFFSET
+    STREG    TIMER_IMR, R1, GPT_IMR_OFFSET
+    STREG    TIMER_TAMR, R1, GPT_TAMR_OFFSET
+    STREG    TIMER_TAILR, R1, GPT_TAILR_OFFSET
+    STREG    TIMER_TAPR, R1, GPT_TAPR_OFFSET
+    STREG    TIMER_CTL, R1, GPT_CTL_OFFSET
+
+    POP     {LR}            ; restore return address
+    BX    LR
+
+
+
+; KeypadRegisterHwi
+;
+; Description:         Registers hardware only interrupt for keypad (for
+;						outside RTOS)
+;
+; Arguments:         None.
+; Return Values:     None.
+;
+; Local Variables:     None.
+; Shared Variables: None.
+; Global Variables: None.
+;
+; Inputs:             None.
+; Outputs:             None.
+;
+; Error Handling: None.
+;
+; Registers Changed: R0, R1
+; Stack Depth:        1
+;
+; Revision History:
+;     3/4/24  Adam Krivka      initial revision
+
+KeypadRegisterHwi:
+    PUSH    {LR}            ; save return address
+
+; configure event handler
+    ; load VTOR
+    MOVW    R0, #(SCS_BASE_ADDR & 0xffff)
+    MOVT    R0, #((SCS_BASE_ADDR >> 16) & 0xffff)
+    LDR     R0, [R0, #SCS_VTOR_OFFSET]
+
+    ; store event handler in vector table
+    MOVW    R1, TimerEventHandler
+    MOVT    R1, TimerEventHandler
+    STR     R1, [R0, #(BYTES_PER_WORD * TIMER_EXCEPTION_NUMBER)]
+
+    ; enable timer time-out interrupt in the CPU
+    MOV32    R1, SCS_BASE_ADDR
+    STREG    (0x1 << TIMER_IRQ_NUMBER), R1, SCS_NVIC_ISER0_OFFSET
 
     POP     {LR}            ; restore return address
     BX    LR
@@ -182,6 +213,55 @@ TimerEventHandler:
 
     POP       {LR}                    ; restore LR
     BX        LR
+
+
+; TimerEventHandler_RTOSHwi
+;
+; Description:  This function is the interrupt handler for the Keypad timer.
+;               It calls the KeypadScanAndDebounce function, which scans the
+;               keypad and debounces the keys. After KeypadScanAndDebounce,
+;               the event handler clears the interrupt and returns.
+;
+; Arguments:         None.
+; Return Value:      None.
+;
+; Local Variables:   None.
+; Shared Variables:  timeout interrupt clear bit
+; Global Variables:  None.
+;
+; Input:             None.
+; Output:            None.
+;
+; Error Handling:    None.
+;
+; Algorithms:        None.
+; Data Structures:   None.
+;
+; Registers Changed: None
+; Stack Depth:       1 word
+;
+; Revision History:
+;     11/7/23  Adam Krivka      initial revision
+
+TimerEventHandler_RTOSHwi:
+	.def TimerEventHandler_RTOSHwi
+
+    PUSH    {LR}                    ; save LR
+
+; Swi_post(&swiTask)
+	.ref swiTask
+	.ref ti_sysbios_knl_Swi_post
+	MOVA 	R1, swiTask
+	LDR		R0, [R1]
+	BL		ti_sysbios_knl_Swi_post
+
+    ; clear the GPT0 time-out interrupt
+    MOV32    R1, TIMER_BASE_ADDR
+    STREG    GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
+
+    POP       {LR}                    ; restore LR
+    BX        LR
+
 
 
 ; KeypadScanAndDebounce
@@ -251,18 +331,28 @@ KeypadScanAndDebounce:
 Scan:
     ; increment CurrentRow
     ADD     R7, #1
-    AND        R7, #CURRENT_ROW_MASK         ; take just lower two bits
+    AND     R7, #CURRENT_ROW_MASK         ; take just lower two bits
     STRB    R7, [R4]                     ; update CurrentRow in memory
     
     ; call SelectRow(CurrentRow)
-    MOV        R0, R7                         ;prepare argument
-    BL      SelectRow                     ;SelectRow(CurrentRow)
+    MOV     R0, R7                         ;prepare argument
 
+	AND     R0, #11b
+    LSL     R0, #ROWSEL_A_PIN ; prepare row
 
+    MOV32   R1, GPIO_BASE_ADDR
+    STR     R0, [R1, #GPIO_DOUTSET_OFFSET] ;set pins
+    MOV		R0, R7
+    EOR		R0, #11b
+    LSL		R0, #ROWSEL_A_PIN
+    STR     R0, [R1, #GPIO_DOUTCLR_OFFSET] ;clear pins
 
 Read:
     ; call ReadRow() to get the current state of the row (one-hot encoding)
-    BL      ReadRow                     ; returns CurState in R0
+	MOV32   R1, GPIO_BASE_ADDR
+    LDR     R0, [R1, #GPIO_DIN_OFFSET]
+    LSR     R0, #COLUMN_0_PIN
+    AND		R0, #1111b
     ;B        Compare                        ; compare CurState to PrevState
 
 Compare:
@@ -341,14 +431,10 @@ JumpTableEnd:
     LSL        R7, #EVENT_INFO_SEGMENT_BITS ; we don't need R7 after this, so we can cobble it
     ORR        R0, R7
 
-    ; merge with EVENT_KEYDOWN
-    LSL        R0, #EVENT_INFO_SEGMENT_BITS    
-    ORR        R0, #EVENT_KEYDOWN
-
     ; Call Enqueue(EventVector) (R0)
     ; (no need to save R0, R1, R2, R3, because we're not using them 
     ;  in the rest of the function)
-    BL        EnqueueEvent
+    BL        KeyPressed
     B        DebounceEnd
 
 DebounceCounterNegative:
@@ -376,9 +462,9 @@ ResetDebounce:
     ; debouncing in the next call
     CMP        R0, #COLUMN_ALL_KEYS_UP
     BEQ        ResetDebounceEnd
-    ;B        KeyPressed
+    ;B        KeyStartPressed
 
-KeyPressed:
+KeyStartPressed:
     SUB        R8, #1
 
 ResetDebounceEnd:

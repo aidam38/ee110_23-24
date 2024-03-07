@@ -49,7 +49,7 @@ LCDInitTab:
     .word   00001000b,     -1      ; display off
     .word   00000001b,     -1      ; clear display
     .word   00000110b,     -1      ; entry mode set (increment cursor, no shift)
-    .word   00001111b,     -1      ; display/cursor on
+    .word   00001100b,     -1      ; display/cursor on
 
 EndLCDInitTab:
 
@@ -111,7 +111,7 @@ LCDInit:
     ; start init loop
     ; get address of initialization table
     ADR     R4, LCDInitTab
-    ADR        R5, EndLCDInitTab
+    ADR     R5, EndLCDInitTab
 LCDInitLoop:
     LDR     R6, [R4], #4    ; load command (DATA)
     LDR     R7, [R4], #4    ; load delay count

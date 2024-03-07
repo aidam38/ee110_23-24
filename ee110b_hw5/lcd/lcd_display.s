@@ -113,7 +113,7 @@ SetCursorPosDone:
 ; Arguments:            R0: row,
 ;                       R1: column
 ;                       R2: str pointer
-;                       R3: target length (0 for default length of string)
+;                       R3: target length (must be non-zero)
 ;
 ; Return Values:        success/fail in R0.
 ;
@@ -130,6 +130,7 @@ SetCursorPosDone:
 ; Revision History:
 ;     11/22/23  Adam Krivka      initial revision
 ;     1/16/24   Adam Krivka      added target-length functionality
+;	  3/4/24	Adam Krivka		 fixed bug with target-length argument being 0
 
 
 Display:
@@ -163,6 +164,9 @@ DisplayLoop:
     MOV     R1, R6                  ; copy character
     BL      LCDWrite                ; write data to LCD
 
+	CMP		R7, #-1					; check if we need to worry about target length
+	BEQ		DisplayLoop
+
     SUB     R7, #1                  ; decrement target length
     CMP     R7, #0                  ; check if we've reached target length
     BEQ     DisplaySuccess          ; if yes, we're done printing the string
@@ -174,6 +178,9 @@ DisplayFail:
     B       DisplayDone
 
 DisplayPadRest:
+	CMP		R7, #-1					; check if we need to worry about target length
+	BEQ		DisplaySuccess
+
     BL      LCDWaitForNotBusy       ; wait for LCD to be ready
 
     ; prepare arguments for writing to LCD

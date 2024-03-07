@@ -15,7 +15,7 @@
 
 ; local includes 
     .include "../cc26x2r/gpt_reg.inc"
-    .include "../RTOS_demo.inc"
+    .include "../hw.inc"
 
 
 

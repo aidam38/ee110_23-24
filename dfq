@@ -1,394 +1,0 @@
-[1mdiff --git a/ee110a_hw1/Debug/ee110a_hw1.map b/ee110a_hw1/Debug/ee110a_hw1.map[m
-[1mindex d3d4b3e..fdac02f 100644[m
-[1m--- a/ee110a_hw1/Debug/ee110a_hw1.map[m
-[1m+++ b/ee110a_hw1/Debug/ee110a_hw1.map[m
-[36m@@ -1,7 +1,7 @@[m
- ******************************************************************************[m
-                   TI ARM Linker PC v20.2.7                     [m
- ******************************************************************************[m
-[31m->> Linked Tue Nov 14 17:33:14 2023[m
-[32m+[m[32m>> Linked Mon Dec  4 21:16:52 2023[m[41m[m
- [m
- OUTPUT FILE NAME:   <ee110a_hw1.out>[m
- ENTRY POINT SYMBOL: "ResetISR"  address: 00000001[m
-[1mdiff --git a/ee110a_hw1/Debug/ee110a_hw1_linkInfo.xml b/ee110a_hw1/Debug/ee110a_hw1_linkInfo.xml[m
-[1mindex 7097e97..bdca4c4 100644[m
-[1m--- a/ee110a_hw1/Debug/ee110a_hw1_linkInfo.xml[m
-[1m+++ b/ee110a_hw1/Debug/ee110a_hw1_linkInfo.xml[m
-[36m@@ -2,7 +2,7 @@[m
- <link_info>[m
-    <banner>TI ARM Linker PC v20.2.7.LTS</banner>[m
-    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>[m
-[31m-   <link_time>0x65541fda</link_time>[m
-[32m+[m[32m   <link_time>0x656eb244</link_time>[m[41m[m
-    <link_errors>0x0</link_errors>[m
-    <output_file>ee110a_hw1.out</output_file>[m
-    <entry_point>[m
-[36m@@ -121,7 +121,7 @@[m
-          <run_address>0x20013f00</run_address>[m
-          <size>0x0</size>[m
-       </object_component>[m
-[31m-      <object_component id="oc-1c">[m
-[32m+[m[32m      <object_component id="oc-1d">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x0</load_address>[m
-          <run_address>0x0</run_address>[m
-[36m@@ -196,7 +196,7 @@[m
-          <run_address>0x6d</run_address>[m
-          <size>0xf</size>[m
-       </object_component>[m
-[31m-      <object_component id="oc-1d">[m
-[32m+[m[32m      <object_component id="oc-1c">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0x0</load_address>[m
-          <run_address>0x0</run_address>[m
-[36m@@ -405,7 +405,7 @@[m
-          <run_address>0x0</run_address>[m
-          <size>0x2f0</size>[m
-          <contents>[m
-[31m-            <object_component_ref idref="oc-1c"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-1d"/>[m[41m[m
-             <object_component_ref idref="oc-38"/>[m
-             <object_component_ref idref="oc-2f"/>[m
-             <object_component_ref idref="oc-b1"/>[m
-[36m@@ -440,7 +440,7 @@[m
-          <run_address>0x0</run_address>[m
-          <size>0x20</size>[m
-          <contents>[m
-[31m-            <object_component_ref idref="oc-1d"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-1c"/>[m[41m[m
-          </contents>[m
-       </logical_group>[m
-       <logical_group id="lg-a2" display="never" color="cyan">[m
-[1mdiff --git a/ee110a_hw2/Debug/ee110a_hw2.map b/ee110a_hw2/Debug/ee110a_hw2.map[m
-[1mindex c8c8325..39c25d0 100644[m
-[1m--- a/ee110a_hw2/Debug/ee110a_hw2.map[m
-[1m+++ b/ee110a_hw2/Debug/ee110a_hw2.map[m
-[36m@@ -1,7 +1,7 @@[m
- ******************************************************************************[m
-                   TI ARM Linker PC v20.2.7                     [m
- ******************************************************************************[m
-[31m->> Linked Tue Nov 14 17:33:15 2023[m
-[32m+[m[32m>> Linked Mon Dec  4 21:16:54 2023[m[41m[m
- [m
- OUTPUT FILE NAME:   <ee110a_hw2.out>[m
- ENTRY POINT SYMBOL: "ResetISR"  address: 0000001f[m
-[1mdiff --git a/ee110a_hw2/Debug/ee110a_hw2_linkInfo.xml b/ee110a_hw2/Debug/ee110a_hw2_linkInfo.xml[m
-[1mindex 51c2c60..1241f19 100644[m
-[1m--- a/ee110a_hw2/Debug/ee110a_hw2_linkInfo.xml[m
-[1m+++ b/ee110a_hw2/Debug/ee110a_hw2_linkInfo.xml[m
-[36m@@ -2,7 +2,7 @@[m
- <link_info>[m
-    <banner>TI ARM Linker PC v20.2.7.LTS</banner>[m
-    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>[m
-[31m-   <link_time>0x65541fdb</link_time>[m
-[32m+[m[32m   <link_time>0x656eb246</link_time>[m[41m[m
-    <link_errors>0x0</link_errors>[m
-    <output_file>ee110a_hw2.out</output_file>[m
-    <entry_point>[m
-[36m@@ -280,35 +280,35 @@[m
-          <size>0x16e</size>[m
-          <input_file_ref idref="fl-3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-6e">[m
-[32m+[m[32m      <object_component id="oc-6f">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x24e</load_address>[m
-          <run_address>0x24e</run_address>[m
-          <size>0xf3</size>[m
-          <input_file_ref idref="fl-4"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-42">[m
-[32m+[m[32m      <object_component id="oc-43">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x341</load_address>[m
-          <run_address>0x341</run_address>[m
-          <size>0xf6</size>[m
-          <input_file_ref idref="fl-5"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-39">[m
-[32m+[m[32m      <object_component id="oc-38">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x437</load_address>[m
-          <run_address>0x437</run_address>[m
-          <size>0xff</size>[m
-          <input_file_ref idref="fl-6"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-3c">[m
-[32m+[m[32m      <object_component id="oc-3d">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x536</load_address>[m
-          <run_address>0x536</run_address>[m
-          <size>0xe0</size>[m
-          <input_file_ref idref="fl-7"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-34">[m
-[32m+[m[32m      <object_component id="oc-33">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0x616</load_address>[m
-          <run_address>0x616</run_address>[m
-[36m@@ -357,7 +357,7 @@[m
-          <size>0x29e</size>[m
-          <input_file_ref idref="fl-c4"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-22">[m
-[32m+[m[32m      <object_component id="oc-21">[m[41m[m
-          <name>.debug_info</name>[m
-          <load_address>0xf5b</load_address>[m
-          <run_address>0xf5b</run_address>[m
-[36m@@ -419,7 +419,7 @@[m
-          <size>0x89</size>[m
-          <input_file_ref idref="fl-3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-6d">[m
-[32m+[m[32m      <object_component id="oc-6e">[m[41m[m
-          <name>.debug_line</name>[m
-          <load_address>0xd7</load_address>[m
-          <run_address>0xd7</run_address>[m
-[36m@@ -447,7 +447,7 @@[m
-          <size>0x4a</size>[m
-          <input_file_ref idref="fl-7"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-32">[m
-[32m+[m[32m      <object_component id="oc-35">[m[41m[m
-          <name>.debug_line</name>[m
-          <load_address>0x22c</load_address>[m
-          <run_address>0x22c</run_address>[m
-[36m@@ -691,49 +691,49 @@[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-70">[m
-[32m+[m[32m      <object_component id="oc-6d">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0x40</load_address>[m
-          <run_address>0x40</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-4"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-44">[m
-[32m+[m[32m      <object_component id="oc-42">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0x60</load_address>[m
-          <run_address>0x60</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-5"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-38">[m
-[32m+[m[32m      <object_component id="oc-3a">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0x80</load_address>[m
-          <run_address>0x80</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-6"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-3e">[m
-[32m+[m[32m      <object_component id="oc-3c">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0xa0</load_address>[m
-          <run_address>0xa0</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-7"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-33">[m
-[32m+[m[32m      <object_component id="oc-32">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0xc0</load_address>[m
-          <run_address>0xc0</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-8"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-2a">[m
-[32m+[m[32m      <object_component id="oc-27">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0xe0</load_address>[m
-          <run_address>0xe0</run_address>[m
-          <size>0x20</size>[m
-          <input_file_ref idref="fl-c3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-23">[m
-[32m+[m[32m      <object_component id="oc-22">[m[41m[m
-          <name>.debug_aranges</name>[m
-          <load_address>0x100</load_address>[m
-          <run_address>0x100</run_address>[m
-[36m@@ -761,35 +761,35 @@[m
-          <size>0x30</size>[m
-          <input_file_ref idref="fl-3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-6f">[m
-[32m+[m[32m      <object_component id="oc-70">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0x5f</load_address>[m
-          <run_address>0x5f</run_address>[m
-          <size>0x34</size>[m
-          <input_file_ref idref="fl-4"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-43">[m
-[32m+[m[32m      <object_component id="oc-44">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0x93</load_address>[m
-          <run_address>0x93</run_address>[m
-          <size>0x3a</size>[m
-          <input_file_ref idref="fl-5"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-3a">[m
-[32m+[m[32m      <object_component id="oc-39">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0xcd</load_address>[m
-          <run_address>0xcd</run_address>[m
-          <size>0x36</size>[m
-          <input_file_ref idref="fl-6"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-3d">[m
-[32m+[m[32m      <object_component id="oc-3e">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0x103</load_address>[m
-          <run_address>0x103</run_address>[m
-          <size>0x36</size>[m
-          <input_file_ref idref="fl-7"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-35">[m
-[32m+[m[32m      <object_component id="oc-34">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0x139</load_address>[m
-          <run_address>0x139</run_address>[m
-[36m@@ -803,7 +803,7 @@[m
-          <size>0x2b</size>[m
-          <input_file_ref idref="fl-c3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-24">[m
-[32m+[m[32m      <object_component id="oc-23">[m[41m[m
-          <name>.debug_pubnames</name>[m
-          <load_address>0x196</load_address>[m
-          <run_address>0x196</run_address>[m
-[36m@@ -824,14 +824,14 @@[m
-          <size>0x1d</size>[m
-          <input_file_ref idref="fl-c6"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-27">[m
-[32m+[m[32m      <object_component id="oc-2a">[m[41m[m
-          <name>.debug_frame</name>[m
-          <load_address>0x0</load_address>[m
-          <run_address>0x0</run_address>[m
-          <size>0x54</size>[m
-          <input_file_ref idref="fl-c3"/>[m
-       </object_component>[m
-[31m-      <object_component id="oc-21">[m
-[32m+[m[32m      <object_component id="oc-24">[m[41m[m
-          <name>.debug_frame</name>[m
-          <load_address>0x54</load_address>[m
-          <run_address>0x54</run_address>[m
-[36m@@ -1115,18 +1115,18 @@[m
-          <contents>[m
-             <object_component_ref idref="oc-72"/>[m
-             <object_component_ref idref="oc-1c"/>[m
-[31m-            <object_component_ref idref="oc-6e"/>[m
-[31m-            <object_component_ref idref="oc-42"/>[m
-[31m-            <object_component_ref idref="oc-39"/>[m
-[31m-            <object_component_ref idref="oc-3c"/>[m
-[31m-            <object_component_ref idref="oc-34"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-6f"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-43"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-38"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-3d"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-33"/>[m[41m[m
-             <object_component_ref idref="oc-4c"/>[m
-             <object_component_ref idref="oc-5c"/>[m
-             <object_component_ref idref="oc-28"/>[m
-             <object_component_ref idref="oc-57"/>[m
-             <object_component_ref idref="oc-83"/>[m
-             <object_component_ref idref="oc-81"/>[m
-[31m-            <object_component_ref idref="oc-22"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-21"/>[m[41m[m
-             <object_component_ref idref="oc-47"/>[m
-             <object_component_ref idref="oc-9a"/>[m
-             <object_component_ref idref="oc-7c"/>[m
-[36m@@ -1143,11 +1143,11 @@[m
-          <contents>[m
-             <object_component_ref idref="oc-75"/>[m
-             <object_component_ref idref="oc-1f"/>[m
-[31m-            <object_component_ref idref="oc-6d"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-6e"/>[m[41m[m
-             <object_component_ref idref="oc-41"/>[m
-             <object_component_ref idref="oc-37"/>[m
-             <object_component_ref idref="oc-3f"/>[m
-[31m-            <object_component_ref idref="oc-32"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-35"/>[m[41m[m
-             <object_component_ref idref="oc-4f"/>[m
-             <object_component_ref idref="oc-89"/>[m
-             <object_component_ref idref="oc-2b"/>[m
-[36m@@ -1198,13 +1198,13 @@[m
-          <contents>[m
-             <object_component_ref idref="oc-73"/>[m
-             <object_component_ref idref="oc-1d"/>[m
-[31m-            <object_component_ref idref="oc-70"/>[m
-[31m-            <object_component_ref idref="oc-44"/>[m
-[31m-            <object_component_ref idref="oc-38"/>[m
-[31m-            <object_component_ref idref="oc-3e"/>[m
-[31m-            <object_component_ref idref="oc-33"/>[m
-[31m-            <object_component_ref idref="oc-2a"/>[m
-[31m-            <object_component_ref idref="oc-23"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-6d"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-42"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-3a"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-3c"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-32"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-27"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-22"/>[m[41m[m
-             <object_component_ref idref="oc-54"/>[m
-          </contents>[m
-       </logical_group>[m
-[36m@@ -1216,13 +1216,13 @@[m
-          <contents>[m
-             <object_component_ref idref="oc-74"/>[m
-             <object_component_ref idref="oc-1e"/>[m
-[31m-            <object_component_ref idref="oc-6f"/>[m
-[31m-            <object_component_ref idref="oc-43"/>[m
-[31m-            <object_component_ref idref="oc-3a"/>[m
-[31m-            <object_component_ref idref="oc-3d"/>[m
-[31m-            <object_component_ref idref="oc-35"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-70"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-44"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-39"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-3e"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-34"/>[m[41m[m
-             <object_component_ref idref="oc-29"/>[m
-[31m-            <object_component_ref idref="oc-24"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-23"/>[m[41m[m
-             <object_component_ref idref="oc-30"/>[m
-             <object_component_ref idref="oc-53"/>[m
-          </contents>[m
-[36m@@ -1233,8 +1233,8 @@[m
-          <run_address>0x0</run_address>[m
-          <size>0xb4</size>[m
-          <contents>[m
-[31m-            <object_component_ref idref="oc-27"/>[m
-[31m-            <object_component_ref idref="oc-21"/>[m
-[32m+[m[32m            <object_component_ref idref="oc-2a"/>[m[41m[m
-[32m+[m[32m            <object_component_ref idref="oc-24"/>[m[41m[m
-          </contents>[m
-       </logical_group>[m
-       <logical_group id="lg-ce" display="never" color="cyan">[m
-[1mdiff --git a/ee110a_hw5/servo/servo.s b/ee110a_hw5/servo/servo.s[m
-[1mindex 2de406b..d77f82a 100644[m
-[1m--- a/ee110a_hw5/servo/servo.s[m
-[1m+++ b/ee110a_hw5/servo/servo.s[m
-[36m@@ -186,4 +186,4 @@[m [mReleaseServo:[m
- GetServo:[m
- 	PUSH	{LR}					; save return address and used registers[m
- 	POP		{LR}					; restore return address[m
-[31m-	BX		LR						; return[m
-\ No newline at end of file[m
-[32m+[m	[32mBX		LR						; return[m
-[1mdiff --git a/ee110a_hw5/servo/servo_test.s b/ee110a_hw5/servo/servo_test.s[m
-[1mindex 70f8019..b0ee82c 100644[m
-[1m--- a/ee110a_hw5/servo/servo_test.s[m
-[1m+++ b/ee110a_hw5/servo/servo_test.s[m
-[36m@@ -25,6 +25,7 @@[m
- ; export symbols to other files[m
-     .def TestServo[m
- [m
-[32m+[m	[32m.align 4		; needs to be word aligned to be read from[m
- TestServoTab:[m
- 	.byte 0, -90, -89, -85, 90, 89, 58, -45, 45, -10, 10, -91, 255[m
- EndTestServoTab:[m

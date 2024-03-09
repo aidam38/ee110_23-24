@@ -13,7 +13,7 @@
 ;       3/6/24   Adam Krivka      fixed formatting
 
 
-/* local includes */ 
+; local includes
     .include "../cc26x2r/ioc_reg.inc"
     .include "../cc26x2r/gpt_reg.inc"
     .include "../cc26x2r/gpio_reg.inc"

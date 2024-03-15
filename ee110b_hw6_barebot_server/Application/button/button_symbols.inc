@@ -31,28 +31,6 @@ BUTTON_1_PIN .equ       14
 BUTTON_CFG .equ (IO_PU | IO_INPUT)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TIMER
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; timer redefinitions
-TIMER_BASE_ADDR .equ        BUTTON_TIMER_BASE_ADDR
-TIMER_EXCEPTION_NUMBER .equ BUTTON_TIMER_EXCEPTION_NUMBER
-TIMER_IRQ_NUMBER .equ       BUTTON_TIMER_IRQ_NUMBER
-
-; timer configuration:
-;  32-bit mode
-;  time-out interrupt enabled
-;  periodic mode, count down
-;  load value of 47999 (for 1ms interrupt assuming 48MHz clock)
-;  no prescale
-TIMER_CFG .equ    GPT_CFG_32BIT
-TIMER_IMR .equ    GPT_IMR_TATOIM_ENABLED
-TIMER_TAMR .equ   GPT_TXMR_PERIODIC | GPT_TXMR_TXCDIR_DOWN
-TIMER_CTL .equ    GPT_CTL_TAEN_ENABLED
-TIMER_TAILR .equ  47999
-TIMER_TAPR .equ   0x0
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER CONSTANS 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

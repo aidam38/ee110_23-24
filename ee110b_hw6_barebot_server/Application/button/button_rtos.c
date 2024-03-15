@@ -1,59 +1,56 @@
 /****************************************************************************/
 /*                                                                          */
-/*                                keypad_rtos.c                             */
-/*                        Keypad RTOS C wrapper code                        */
+/*                                button_rtos.c                             */
+/*                        Button RTOS C wrapper code                        */
 /*                                                                          */
 /****************************************************************************/
 
-/* 4x4 Keypad RTOS C wrapper code. Functions included:
-        KeypadInit_RTOS() - initialize the keypad using RTOS hardware and 
+/* 4x4 Button RTOS C wrapper code. Functions included:
+        ButtonInit_RTOS() - initialize the button using RTOS hardware and
                             software interrupts
 
    Revision History:
        3/6/24  Adam Krivka      initial revision
+       3/14/24 Adam Krivka      switched to using Clock
 */
 
 
 
 /* library includes */
-#include  <ti/sysbios/hal/Hwi.h>
-#include  <ti/sysbios/knl/Swi.h>
-#include <button/button_rtos.h>
-#include <button/button_rtos_intf.h>
+#include  "util.h"
 
 
 /* local includes */
+#include "button_rtos_intf.h"
+
+/* declarations */
+void ButtonInit();
+void ButtonDebounce();
+
+#define PERIOD_MILISECONDS 1
 
 
-/* global variables */
+/* local variables */
 
-/* swi interrupt task (needs to be global to be exposed to keypad.s)*/
-Swi_Handle swiTask;
+/* clock task */
+static Clock_Struct clock;
+static Clock_Handle clockHandle;
 
 
-/* shared variables */
-
-/* hwi interrupt task */
-static Hwi_Struct hwiTask;
-
-void ButtonSwi_wrapper() {
+void ButtonClockCB(){
     ButtonDebounce();
 }
 
-void ButtonHwi_wrapper() {
-    ButtonRTOSHwiHandler();
-}
-
 /*
-   KeypadInit_RTOS()
+   ButtonInit_RTOS()
 
-   Description:     This function initializes the keypad using RTOS hardware and
+   Description:     This function initializes the button using RTOS hardware and
                     software interrupts. It sets up the hardware and software 
-                    interrupts and initializes the keypad hardware and software. 
+                    interrupts and initializes the button hardware and software.
                     It is called once at the start of the program.
 
    Operation:       Initializes the hardware and software interrupts, and then
-                    calls the KeypadInit function which configures the GPIOs
+                    calls the ButtonInit function which configures the GPIOs
                     , variables, and timer (it also starts it).
 
    Arguments:        None.
@@ -73,22 +70,15 @@ void ButtonHwi_wrapper() {
 */
 void ButtonInit_RTOS() {
     /* variables */
-    Hwi_Params hwiParams;
-    Swi_Params swiParams;
 
-    /* set up and create Swi */
-    Swi_Params_init(&swiParams);
-    swiParams.priority = SWI_PRIORITY;
-    swiTask = Swi_create(ButtonSwi_wrapper, &swiParams, NULL);
-
-    /* set up and create Hwi */
-    Hwi_Params_init(&hwiParams);
-    hwiParams.eventId = TIMER_EXCEPTION_NUMBER;
-    hwiParams.priority = HWI_PRIORITY;
-    Hwi_construct(&hwiTask, TIMER_EXCEPTION_NUMBER, ButtonHwi_wrapper, &hwiParams, NULL);
-
-    /* call assembly init function (inits GPIOs, variables, and starts timer) */
+    /* call assembly init function (inits GPIOs, variables) */
     ButtonInit();
+
+    /* set up clock */
+    clockHandle = Util_constructClock(&clock, ButtonClockCB, PERIOD_MILISECONDS, PERIOD_MILISECONDS, false, 0);
+
+    /* start clock */
+    Util_startClock(clockHandle);
 
     return;
 }

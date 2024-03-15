@@ -80,8 +80,12 @@ static uint8 advHandleLongRange; /* handle for BLE long range advertising */
 /* text buffer for one line of the display to use with sprintf */
 char textBuf[17]; /* text buffer for printing to Display */
 
-/* characteristic handles */
+/* GATT handles */
+uint16_t barebotProfileServiceStartHandle;
+uint16_t barebotProfileServiceEndHandle;
 uint16_t speedCharHandle;
+uint16_t turnCharHandle;
+uint16_t thoughtsCharHandle;
 
 /* functions */
 
@@ -428,7 +432,8 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
         GapScan_registerCb(BarebotCentral_scanCb, NULL);
 
         /* we only need advertising reports */
-        GapScan_setEventMask(GAP_EVT_ADV_REPORT);
+        GapScan_setEventMask(
+                GAP_EVT_ADV_REPORT | GAP_EVT_SCAN_DUR_ENDED | GAP_EVT_SCAN_PRD_ENDED);
 
         /* set default scan PHY parameters*/
         GapScan_setPhyParams(DEFAULT_SCAN_PHY, DEFAULT_SCAN_TYPE,
@@ -460,7 +465,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
         /* === at this point all scanning and initiating parameters are set up === */
 
         /* start scanning */
-        GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+        GapScan_enable(BC_SCAN_PERIOD, DEFAULT_SCAN_DURATION, 0);
 
         /* show message on Display */
         Display(0, 0, "Scanning...", -1);
@@ -481,19 +486,15 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
             /* display message that we've successfully connected */
             Display(0, 0, "Connected", 16);
 
-            /* discover handles */
-            attReadByTypeReq_t req;
-            req.startHandle = 0x0001;
-            req.endHandle = 0xFFFF;
-            attAttrType_t type;
-            type.len = 2;
-            type.uuid[0] = LO_UINT16(BAREBOTPROFILE_SPEED_UUID);
-            type.uuid[1] = HI_UINT16(BAREBOTPROFILE_SPEED_UUID);
-            req.type = type;
-            GATT_DiscCharsByUUID(curr_conn_handle, &req, selfEntity);
-            Display(0, 0, "Discovering", 16);
+            //GATT_DiscPrimaryServiceByUUID(curr_conn_handle,
+            //                              &barebotProfileServUUID, 2,
+            //                              selfEntity);
+            //Display(0, 0, "Disc service", 16);
 
-            //GATT_DiscAllChars(curr_conn_handle, 0x0001, 0xFFFF, selfEntity);
+            GATT_DiscAllChars(curr_conn_handle, 0x020, 0xFFFF, selfEntity);
+            Display(0, 0, "Disc chars", 16);
+
+            break;
         }
         break;
 
@@ -507,7 +508,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
             curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
 
             /* start scanning again */
-            GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+            GapScan_enable(BC_SCAN_PERIOD, DEFAULT_SCAN_DURATION, 0);
 
             /* display message */
             Display(0, 0, "Terminated", 16);
@@ -590,8 +591,16 @@ static void BarebotCentral_processAppMsg(bpEvt_t *pMsg)
             ICall_free(pAdvRpt->pData);
         }
         break;
-    case BC_EVT_SCAN_DISABLED:
-        Display(0, 0, "Scanning done", 16);
+    case BC_EVT_SCAN_DUR_ENDED:
+        Display(0, 0, "Idle", 16);
+        break;
+    case BC_EVT_SCAN_PRD_ENDED:
+        Display(0, 0, "Scanning (ret)", 16);
+        break;
+    case BC_EVT_SVC_DISCOVERED:
+        GATT_DiscAllChars(curr_conn_handle, barebotProfileServiceStartHandle,
+                          barebotProfileServiceEndHandle, selfEntity);
+        Display(0, 0, "Disc chars", 16);
         break;
     default:
         /* unknown application event - do nothing, but deallocate message */
@@ -634,11 +643,12 @@ static void BarebotCentral_processAppMsg(bpEvt_t *pMsg)
 static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
 {
     /* variables */
-    bpAttReadByTypeHandlePair_t* handle_pair;
-    uint16_t speed;
+    bpAttReadByTypeHandlePair_t *handle_pair;
+    uint8_t speed;
 
     // need to refine this condition
-    if (pMsg->hdr.status != SUCCESS) {
+    if (pMsg->hdr.status != SUCCESS)
+    {
         // TODO
     }
 
@@ -650,19 +660,57 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
         Display(1, 0, textBuf, 16);
         break;
     case ATT_READ_RSP:
-        speed = BUILD_UINT16(pMsg->msg.readRsp.pValue[0], pMsg->msg.readRsp.pValue[1]);
+        speed = pMsg->msg.readRsp.pValue[0];
         System_sprintf(textBuf, "%x", speed);
         Display(1, 9, textBuf, 8);
         break;
+    case ATT_FIND_BY_TYPE_VALUE_RSP:
+        if (pMsg->msg.findByTypeValueRsp.numInfo == 0)
+        {
+            /* handle error */
+            break;
+        }
+        barebotProfileServiceStartHandle =
+                ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->startHandle;
+        barebotProfileServiceEndHandle =
+                ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->endHandle;
+
+        BarebotCentral_enqueueMsg(BC_EVT_SVC_DISCOVERED,
+                                  (bpEvtData_t) (void*) 0);
+        break;
     case ATT_READ_BY_TYPE_RSP:
-        for (int i = 0; i < pMsg->msg.readByTypeRsp.numPairs; i++) {
-            handle_pair = (bpAttReadByTypeHandlePair_t *) &(pMsg->msg.readByTypeRsp.pDataList[i * pMsg->msg.readByTypeRsp.len]);
-            switch (handle_pair->uuid) {
+        /* if we've already discovered all characteristics, ignore these responses */
+        if (speedCharHandle != 0 && turnCharHandle != 0
+                && thoughtsCharHandle != 0)
+        {
+            return;
+        }
+
+        /* loop over the response and find UUID<>handle pairs */
+        for (int i = 0; i < pMsg->msg.readByTypeRsp.numPairs; i++)
+        {
+            handle_pair =
+                    (bpAttReadByTypeHandlePair_t*) &(pMsg->msg.readByTypeRsp.pDataList[i
+                            * pMsg->msg.readByTypeRsp.len]);
+            switch (handle_pair->uuid)
+            {
             case BAREBOTPROFILE_SPEED_UUID:
                 speedCharHandle = handle_pair->handle;
-                Display(0, 0, "Found chars", 16);
+                break;
+            case BAREBOTPROFILE_TURN_UUID:
+                turnCharHandle = handle_pair->handle;
+                break;
+            case BAREBOTPROFILE_THOUGHTS_UUID:
+                thoughtsCharHandle = handle_pair->handle;
                 break;
             }
+        }
+
+        /* if all handles discovered, display ready */
+        if (speedCharHandle != 0 && turnCharHandle != 0
+                && thoughtsCharHandle != 0)
+        {
+            Display(0, 0, "Ready", 16);
         }
         break;
     }
@@ -692,13 +740,17 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
  */
 void BarebotCentral_handleKey(uint8_t row, uint8_t col)
 {
-    if (row == 3) {
+    if (row == 3)
+    {
         /* menu */
-        if (col == 3) {
+        if (col == 3)
+        {
             /* control screen */
             BarebotCentral_doGattRead(speedCharHandle);
             Display(1, 0, "Speed:", 8);
-        } else if (col == 2) {
+        }
+        else if (col == 2)
+        {
             /* thoughts screen */
         }
     }
@@ -782,13 +834,13 @@ static void BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
     {
         event = BC_EVT_ADV_REPORT;
     }
-    else if (evt & GAP_EVT_SCAN_ENABLED)
+    else if (evt & GAP_EVT_SCAN_DUR_ENDED)
     {
-        event = BC_EVT_SCAN_ENABLED;
+        event = BC_EVT_SCAN_DUR_ENDED;
     }
-    else if (evt & GAP_EVT_SCAN_DISABLED)
+    else if (evt & GAP_EVT_SCAN_PRD_ENDED)
     {
-        event = BC_EVT_SCAN_DISABLED;
+        event = BC_EVT_SCAN_PRD_ENDED;
     }
     else if (evt & GAP_EVT_INSUFFICIENT_MEMORY)
     {

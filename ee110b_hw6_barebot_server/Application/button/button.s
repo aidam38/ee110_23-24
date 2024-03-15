@@ -35,7 +35,6 @@
 ; export functions defined in this file
     .def ButtonInit
     .def ButtonDebounce
-    .def ButtonRTOSHwiHandler
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,68 +102,8 @@ ButtonInit:
     STREG   BUTTON_CFG, R1, IOCFG_REG_SIZE * BUTTON_0_PIN
     STREG   BUTTON_CFG, R1, IOCFG_REG_SIZE * BUTTON_1_PIN
 
-
- ; configure timer
-    MOV32   R1, TIMER_BASE_ADDR
-    STREG   TIMER_CFG, R1, GPT_CFG_OFFSET
-    STREG   TIMER_IMR, R1, GPT_IMR_OFFSET
-    STREG   TIMER_TAMR, R1, GPT_TAMR_OFFSET
-    STREG   TIMER_TAILR, R1, GPT_TAILR_OFFSET
-    STREG   TIMER_TAPR, R1, GPT_TAPR_OFFSET
-    STREG   TIMER_CTL, R1, GPT_CTL_OFFSET ; starts timer
-
     POP     {LR}            ; restore return address
     BX      LR
-
-
-
-
-
-
-; ButtonRTOSHwiHandler
-;
-; Description:       This is the event handler for the RTOS-created hardware 
-;                    interrupt, which is used to post the software interrupt
-;                    so that we're scanning and debouncing in lower priority task.
-;
-; Arguments:         None.
-; Return Value:      None.
-;
-; Local Variables:   None.
-; Shared Variables:  timeout interrupt clear bit
-; Global Variables:  None.
-;
-; Input:             None.
-; Output:            None.
-;
-; Error Handling:    None.
-;
-; Algorithms:        None.
-; Data Structures:   None.
-;
-; Registers Changed: None
-; Stack Depth:       1 word
-;
-; Revision History:
-;     3/6/24  Adam Krivka      initial revision
-
-; pull necessary symbols 
-    .ref    swiTask
-    .ref    ti_sysbios_knl_Swi_post
-ButtonRTOSHwiHandler:
-    PUSH    {LR}                ; save LR
-
-; clear the timer time-out interrupt
-    MOV32   R1, TIMER_BASE_ADDR
-    STREG   GPT_ICLR_TATOCINT_CLEAR, R1, GPT_ICLR_OFFSET
-
-; Swi_post(swiTask)
-    MOVA    R1, swiTask
-    LDR     R0, [R1]
-    BL      ti_sysbios_knl_Swi_post
-
-    POP     {LR}                ; restore LR
-    BX      LR                  ; return
 
 
 

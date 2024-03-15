@@ -116,8 +116,8 @@ ble.services[0].characteristics[3].description            = "Barebot Error Messa
 ble.services[0].characteristics[3].uuid                   = system.utils.bigInt("FFF4",16);
 ble.services[0].characteristics[3].properties             = ["GATT_PROP_NOTIFY","GATT_PROP_READ"];
 ble.services[0].characteristics[3].permissions            = ["GATT_PERMIT_READ","GATT_PERMIT_WRITE"];
-ble.services[0].characteristics[3].bytes                  = 64;
 ble.services[0].characteristics[3].value                  = "0";
+ble.services[0].characteristics[3].bytes                  = 1;
 
 CCFG.enableBootloader         = true;
 CCFG.enableBootloaderBackdoor = true;

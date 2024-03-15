@@ -166,7 +166,7 @@ static void BarebotPeripheral_init(void)
     ICall_registerApp(&selfEntity, &syncEvent);
 
     /* init hardware */
-    //ButtonInit_RTOS();
+    ButtonInit_RTOS();
 
     /* create an RTOS queue for message from profile to be sent to app */
     appMsgQueueHandle = Util_constructQueue(&appMsgQueue);
@@ -476,8 +476,7 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
 static void BarebotPeripheral_handleButton(uint8_t buttonId)
 {
     /* variables */
-    char error[BAREBOTPROFILE_ERROR_LEN];
-    osal_memset(error, 0, BAREBOTPROFILE_ERROR_LEN);
+    uint8_t error;
 
     if (!(buttonId == 1 || buttonId == 2))
     {
@@ -488,17 +487,17 @@ static void BarebotPeripheral_handleButton(uint8_t buttonId)
     {
     case 1:
         /* create a new error message */
-        osal_memcpy(error, error1, sizeof(error1));
+        error = ERROR_1;
         break;
     case 2:
         /* clear error message, should already be clear, do nothing*/
-        osal_memcpy(error, error1, sizeof(error1));
+        error = ERROR_2;
         break;
     }
 
     /* set the characteristic, should trigger a notification */
     BarebotProfile_SetParameter(BAREBOTPROFILE_ERROR, BAREBOTPROFILE_ERROR_LEN,
-                                error);
+                                &error);
     return;
 }
 

@@ -38,6 +38,11 @@
 /* constants */
 const char* BAREBOT_SERVER_LOCAL_NAME = "BP";
 
+// Profile Parameters
+// Service UUID
+#define BAREBOTPROFILE_SERV_UUID 0xFFF0
+const uint16_t barebotProfileServUUID = BAREBOTPROFILE_SERV_UUID;
+// Characteristic defines
 #define BAREBOTPROFILE_THOUGHTS   0
 #define BAREBOTPROFILE_THOUGHTS_UUID 0xFFF1
 #define BAREBOTPROFILE_THOUGHTS_LEN  100
@@ -52,8 +57,7 @@ const char* BAREBOT_SERVER_LOCAL_NAME = "BP";
 // Characteristic defines
 #define BAREBOTPROFILE_ERROR   3
 #define BAREBOTPROFILE_ERROR_UUID 0xFFF4
-#define BAREBOTPROFILE_ERROR_LEN  64
-
+#define BAREBOTPROFILE_ERROR_LEN  1
 
 /* task configuration */
 #define  BC_TASK_PRIORITY          2
@@ -65,10 +69,11 @@ const char* BAREBOT_SERVER_LOCAL_NAME = "BP";
 
 /* application events */
 #define  BC_EVT_KEY_PRESSED         1
-#define  BC_EVT_SCAN_ENABLED        2
-#define  BC_EVT_SCAN_DISABLED       3
-#define  BC_EVT_ADV_REPORT          4
+#define  BC_EVT_ADV_REPORT          2
+#define  BC_EVT_SCAN_DUR_ENDED      3
+#define  BC_EVT_SCAN_PRD_ENDED      4
 #define  BC_EVT_INSUFFICIENT_MEM    5
+#define  BC_EVT_SVC_DISCOVERED      6
 
 /* only system events are the ICALL message and queue events */
 #define  BC_ALL_EVENTS            ( ICALL_MSG_EVENT_ID  |  UTIL_QUEUE_EVENT_ID )
@@ -77,7 +82,7 @@ const char* BAREBOT_SERVER_LOCAL_NAME = "BP";
 #define  BC_SUGGESTED_PDU_SIZE      251
 #define  BC_SUGGESTED_TX_TIME       2120
 
-
+#define BC_SCAN_PERIOD                 2
 
 
 /* macros */
@@ -126,6 +131,23 @@ typedef struct {
             uint16_t    uuid;
 
 } bpAttReadByTypeHandlePair_t;
+
+typedef struct {
+            uint8_t     unsure[3];            /* i'm not sure what this data stands for
+                                                    i think one of the is the first byte of the value */
+            uint16_t    startHandle;
+            uint16_t    endHandle;
+            uint16_t    uuid;
+
+} bpAttReadByGrpTypePair_t;
+
+typedef struct {
+            uint16_t    startHandle;
+            uint16_t    endHandle;
+
+} bpAttFindByTypeValueInfo_t;
+
+
 
 #pragma options align=reset
 

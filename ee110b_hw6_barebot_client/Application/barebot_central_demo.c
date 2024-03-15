@@ -60,8 +60,7 @@ icall_userCfg_t  user0Cfg = BLE_USER_CFG;
 
 
 
-int  main()
-{
+int  main(){
     /* variables */
 
 

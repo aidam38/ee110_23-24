@@ -58,8 +58,9 @@
 #define  BS_SUGGESTED_TX_TIME       2120
 
 
-/* error messages */
-const char error1[] = "Button error";
+/* errors */
+#define ERROR_1     1
+#define ERROR_2     2
 
 
 /* macros */

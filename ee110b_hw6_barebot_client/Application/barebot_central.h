@@ -36,7 +36,23 @@
 
 
 /* constants */
-const uint8_t BAREBOT_SERVER_ADDR[6] = {0xcb, 0x45, 0x2c, 0x98, 0x97, 0x77};
+const char* BAREBOT_SERVER_LOCAL_NAME = "BP";
+
+#define BAREBOTPROFILE_THOUGHTS   0
+#define BAREBOTPROFILE_THOUGHTS_UUID 0xFFF1
+#define BAREBOTPROFILE_THOUGHTS_LEN  100
+// Characteristic defines
+#define BAREBOTPROFILE_SPEED   1
+#define BAREBOTPROFILE_SPEED_UUID 0xFFF2
+#define BAREBOTPROFILE_SPEED_LEN  2
+// Characteristic defines
+#define BAREBOTPROFILE_TURN   2
+#define BAREBOTPROFILE_TURN_UUID 0xFFF3
+#define BAREBOTPROFILE_TURN_LEN  2
+// Characteristic defines
+#define BAREBOTPROFILE_ERROR   3
+#define BAREBOTPROFILE_ERROR_UUID 0xFFF4
+#define BAREBOTPROFILE_ERROR_LEN  64
 
 
 /* task configuration */
@@ -49,7 +65,10 @@ const uint8_t BAREBOT_SERVER_ADDR[6] = {0xcb, 0x45, 0x2c, 0x98, 0x97, 0x77};
 
 /* application events */
 #define  BC_EVT_KEY_PRESSED         1
+#define  BC_EVT_SCAN_ENABLED        2
+#define  BC_EVT_SCAN_DISABLED       3
 #define  BC_EVT_ADV_REPORT          4
+#define  BC_EVT_INSUFFICIENT_MEM    5
 
 /* only system events are the ICALL message and queue events */
 #define  BC_ALL_EVENTS            ( ICALL_MSG_EVENT_ID  |  UTIL_QUEUE_EVENT_ID )
@@ -77,8 +96,8 @@ const uint8_t BAREBOT_SERVER_ADDR[6] = {0xcb, 0x45, 0x2c, 0x98, 0x97, 0x77};
 /*    union to avoid unnecessary dynamic memory allocation */
 typedef  union  {     /* data associated with the message */
              uint8_t   byte;    /* data is a byte (1 octet) */
-             uint8_t   hword;   /* data is a half word (2 octets)*/
-             uint8_t   word;    /* data is a word (4 octets) */
+             uint16_t  hword;   /* data is a half word (2 octets)*/
+             uint32_t  word;    /* data is a word (4 octets) */
              void     *pData;   /* pointer to longer types of data */
          }  bpEvtData_t;
 
@@ -97,6 +116,18 @@ typedef  struct  {
          }  bpGapAdvEventData_t;
 
 
+/* read by type response handle pair */
+#pragma pack(1)
+
+typedef struct {
+            uint8_t     unsure[3];            /* i'm not sure what this data stands for
+                                                    i think one of the is the first byte of the value */
+            uint16_t    handle;
+            uint16_t    uuid;
+
+} bpAttReadByTypeHandlePair_t;
+
+#pragma options align=reset
 
 
 /* function declarations */
@@ -110,12 +141,15 @@ static uint8_t   BarebotCentral_processStackMsg(ICall_Hdr *);
 static void      BarebotCentral_processGapMessage(gapEventHdr_t *);
 static void      BarebotCentral_processGattMessage(gattMsgEvent_t *);
 static void      BarebotCentral_processAppMsg(bpEvt_t *);
+void BarebotCentral_handleKey(uint8_t row, uint8_t col);
 
 /* local functions - callbacks */
 static void      BarebotCentral_scanCb(uint32_t, void *, uintptr_t);
 
 /* local funtions - utility */
 static bool BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t);
+bool BarebotCentral_doGattRead(uint16_t uuid);
+// write
 static status_t  BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t);
 static void      BarebotCentral_spin(void);
 

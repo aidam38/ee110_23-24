@@ -177,7 +177,7 @@ Client Code (keypad+LCD board):
 						if row is 1, GATT write to SPEED_UP characteristic
 						if row is 0, GATT write to SPEED_DOWN characteristic
 						
-						GATT read SPEED
+						GATT notify SPEED
 						Display(...)
 					1:
 						ditto but with TURN
@@ -222,3 +222,16 @@ Client Code (keypad+LCD board):
 	
 	enable hardware interrupts
 	BIOS_start()
+	
+Plan
+	1. Get central code to read and display SPEED
+		a. get central code to compile
+		b. write scanning code
+		c. do a gatt read on connection and display result
+		
+		
+finishing up:
+1. switch to using clock
+2. give notifications another try
+3. ditch thoughts
+4. GATT writing instead

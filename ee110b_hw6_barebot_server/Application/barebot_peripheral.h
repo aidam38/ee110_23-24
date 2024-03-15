@@ -46,7 +46,8 @@
 
 
 /* application events */
-#define  BS_CHAR_CHANGE_EVT         1
+#define  BS_BUTTON_PRESSED          1
+#define  BS_CHAR_CHANGE_EVT         2
 #define  BS_ADV_EVT                 3
 
 /* only system events are the ICALL message and queue events */
@@ -57,6 +58,8 @@
 #define  BS_SUGGESTED_TX_TIME       2120
 
 
+/* error messages */
+const char error1[] = "Button error";
 
 
 /* macros */
@@ -107,6 +110,7 @@ static void      BarebotPeripheral_taskFxn(UArg, UArg);
 static uint8_t   BarebotPeripheral_processStackMsg(ICall_Hdr *);
 static void      BarebotPeripheral_processGapMessage(gapEventHdr_t *);
 static void      BarebotPeripheral_processAppMsg(bpEvt_t *);
+static void      BarebotPeripheral_handleButton(uint8_t buttonId);
 static bool      BarebotPeripheral_processAdvEvent(bpEvtData_t);
 static bool      BarebotPeripheral_processCharValueChangeEvt(bpEvtData_t);
 

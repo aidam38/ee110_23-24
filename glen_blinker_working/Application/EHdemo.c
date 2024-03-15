@@ -96,7 +96,7 @@ int  main()
 
 
     /* create tasks */
-    RedLEDTaskCreate();                 /* create the task for the red LED */
+    //RedLEDTaskCreate();                 /* create the task for the red LED */
     GreenLEDTaskCreate();               /* create the task for the green LED */
     BlinkerPeripheral_createTask();  /* create task for blinker BLE peripheral */
 
@@ -109,7 +109,7 @@ int  main()
     GPT0A_Params.priority = GPT0A_PRIORITY;
 
     /* now create the task */
-    Hwi_construct(&GPT0A_Task, GPT0A_EX_NUM, GPT0AEventHandler, &GPT0A_Params, NULL);
+    //Hwi_construct(&GPT0A_Task, GPT0A_EX_NUM, GPT0AEventHandler, &GPT0A_Params, NULL);
 
 
     /* finally ready to start the RTOS and get everything running */

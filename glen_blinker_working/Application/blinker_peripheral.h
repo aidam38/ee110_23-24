@@ -38,7 +38,7 @@
 /* constants */
 
 /* task configuration */
-#define  BP_TASK_PRIORITY          2
+#define  BP_TASK_PRIORITY          3
 
 #ifndef BP_TASK_STACK_SIZE
     #define  BP_TASK_STACK_SIZE    1024
@@ -48,6 +48,7 @@
 /* application events */
 #define  BP_CHAR_CHANGE_EVT         1
 #define  BP_ADV_EVT                 3
+#define  BP_GREEN_TOGGLE            4
 
 /* only system events are the ICALL message and queue events */
 #define  BP_ALL_EVENTS            ( ICALL_MSG_EVENT_ID  |  UTIL_QUEUE_EVENT_ID )

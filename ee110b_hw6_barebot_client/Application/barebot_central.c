@@ -7,28 +7,26 @@
 /****************************************************************************/
 
 /*
-   This file contains the tasks and support code for implementing the barebot
-   central device for the Bluetooth demo.  The global functions included
-   are:
-      BarebotCentral_createTask  - create the barebot central task
-      BarebotCentral_updateRed   - want to update the red LED
-      BarebotCentral_updateGreen - want to update the green LED
+ This file contains the tasks and support code for implementing the barebot
+ central device for the Bluetooth demo.  The global functions included
+ are:
+ BarebotCentral_createTask  - create the barebot central task
+ BarebotCentral_updateRed   - want to update the red LED
+ BarebotCentral_updateGreen - want to update the green LED
 
-   The local functions included are:
-      BarebotCentral_enqueueMsg        - enqueue a message for the task
-      BarebotCentral_init              - initialize barebot central task
-      BarebotCentral_processAppMsg     - process messages from the task
-      BarebotCentral_processGapMessage - process GAP messages
-      BarebotCentral_processStackMsg   - process BLE stack messages
-      BarebotCentral_spin              - infinite loop (for debugging)
-      BarebotCentral_taskFxn           - run the barebot central task
-
-
-   Revision History:
-       3/10/22  Glen George      initial revision
-*/
+ The local functions included are:
+ BarebotCentral_enqueueMsg        - enqueue a message for the task
+ BarebotCentral_init              - initialize barebot central task
+ BarebotCentral_processAppMsg     - process messages from the task
+ BarebotCentral_processGapMessage - process GAP messages
+ BarebotCentral_processStackMsg   - process BLE stack messages
+ BarebotCentral_spin              - infinite loop (for debugging)
+ BarebotCentral_taskFxn           - run the barebot central task
 
 
+ Revision History:
+ 3/10/22  Glen George      initial revision
+ */
 
 /* RTOS include files */
 #include  <ti/sysbios/knl/Task.h>
@@ -52,135 +50,133 @@
 /* local include files */
 #include "barebot_central.h"
 #include "lcd/lcd_rtos_intf.h"
-
-
+#include "keypad/keypad_rtos_intf.h"
 
 /* shared variables */
 
 /* task structure and task stack */
-static  Task_Struct  bpTask;
+static Task_Struct bpTask;
 
 #pragma DATA_ALIGN(bpTaskStack, 8)
-static  uint8_t  bpTaskStack[BC_TASK_STACK_SIZE];
+static uint8_t bpTaskStack[BC_TASK_STACK_SIZE];
 
 /* handle for current connection */
-static   uint16_t  curr_conn_handle;
+static uint16_t curr_conn_handle;
 
 /* entity ID used to check for source and/or destination of messages */
-static  ICall_EntityID  selfEntity;
+static ICall_EntityID selfEntity;
 
 /* event used to post local events and pend on system and local events */
-static  ICall_SyncHandle  syncEvent;
+static ICall_SyncHandle syncEvent;
 
 /* queue object used for app messages */
-static  Queue_Struct  appMsgQueue;
-static  Queue_Handle  appMsgQueueHandle;
+static Queue_Struct appMsgQueue;
+static Queue_Handle appMsgQueueHandle;
 
 /* advertising handles */
-static  uint8  advHandleLegacy;         /* handle for legacy advertising */
-static  uint8  advHandleLongRange;      /* handle for BLE long range advertising */
+static uint8 advHandleLegacy; /* handle for legacy advertising */
+static uint8 advHandleLongRange; /* handle for BLE long range advertising */
 
 /* text buffer for one line of the display to use with sprintf */
-char textBuf[17];    /* text buffer for printing to Display */
+char textBuf[17]; /* text buffer for printing to Display */
 
+/* characteristic handles */
+uint16_t speedCharHandle;
+
+/* functions */
 
 /*
-   BarebotCentral_createTask()
+ BarebotCentral_createTask()
 
-   Description:      This function creates the task for running the barebot
-                     central.
+ Description:      This function creates the task for running the barebot
+ central.
 
-   Operation:        The function creates the parameter structure and then
-                     fills in the appropriate values for the barebot central
-                     task.  It then creates the task using the shared task
-                     structure variable bpTask.
+ Operation:        The function creates the parameter structure and then
+ fills in the appropriate values for the barebot central
+ task.  It then creates the task using the shared task
+ structure variable bpTask.
 
-   Arguments:        None.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:        None.
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   None.
+ Error Handling:   None.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-void  BarebotCentral_createTask(void)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+void BarebotCentral_createTask(void)
 {
     /* variables */
-    Task_Params  taskParams;            /* parameters for setting up task */
-
-
+    Task_Params taskParams; /* parameters for setting up task */
 
     /* configure task */
     Task_Params_init(&taskParams);
-    taskParams.stack     = bpTaskStack;
+    taskParams.stack = bpTaskStack;
     taskParams.stackSize = BC_TASK_STACK_SIZE;
-    taskParams.priority  = BC_TASK_PRIORITY;
+    taskParams.priority = BC_TASK_PRIORITY;
 
     /* and create the task */
     Task_construct(&bpTask, BarebotCentral_taskFxn, &taskParams, NULL);
-
 
     /* done creating the task, return */
     return;
 }
 
-
-
-
 /*
-   BarebotCentral_init()
+ BarebotCentral_init()
 
-   Description:      This function initializes the barebot central task.  It
-                     is expected to be called when the task starts.
+ Description:      This function initializes the barebot central task.  It
+ is expected to be called when the task starts.
 
-   Operation:        The function registers the task with ICall and creates a
-                     queue for the task.  It then configures the GAP, GATT,
-                     and GAP/GATT modules.  Following this it registers the
-                     callbacks and message reception.  Finally it sets up the
-                     link layer and turns on the GAP layer.
+ Operation:        The function registers the task with ICall and creates a
+ queue for the task.  It then configures the GAP, GATT,
+ and GAP/GATT modules.  Following this it registers the
+ callbacks and message reception.  Finally it sets up the
+ link layer and turns on the GAP layer.
 
-   Arguments:        None.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:        None.
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   None.
+ Error Handling:   None.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-static  void  BarebotCentral_init(void)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static void BarebotCentral_init(void)
 {
     /* variables */
-      /* none */
-
-
+    /* none */
 
     /* register the current thread as an ICall dispatcher application */
     /* so that the application can send and receive messages */
     ICall_registerApp(&selfEntity, &syncEvent);
 
+    /* initialize hardware */
+    LCDInit();
+    ClearDisplay();
+    KeypadInit_RTOS();
+
     /* create an RTOS queue for message from profile to be sent to app */
     appMsgQueueHandle = Util_constructQueue(&appMsgQueue);
-
 
     /* set the Device Name characteristic in the GAP GATT Service */
     GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
 
     /* configure GAP - let link take care of all parameter updates */
-    GAP_SetParamValue(GAP_PARAM_LINK_UPDATE_DECISION, GAP_UPDATE_REQ_ACCEPT_ALL);
+    GAP_SetParamValue(GAP_PARAM_LINK_UPDATE_DECISION,
+                      GAP_UPDATE_REQ_ACCEPT_ALL);
 
     /* Initialize GATT Client */
     GATT_InitClient();
@@ -189,8 +185,8 @@ static  void  BarebotCentral_init(void)
     GATT_RegisterForInd(selfEntity);
 
     /* initialize GATT attributes */
-    GGS_AddService(GAP_SERVICE);                    /* GAP GATT Service */
-    GATTServApp_AddService(GATT_ALL_SERVICES);      /* GATT Service */
+    GGS_AddService(GAP_SERVICE); /* GAP GATT Service */
+    GATTServApp_AddService(GATT_ALL_SERVICES); /* GATT Service */
 
     /* register with GAP for HCI/Host messages - needed to receive HCI events */
     GAP_RegisterForMsgs(selfEntity);
@@ -198,68 +194,61 @@ static  void  BarebotCentral_init(void)
     /* register for GATT local events and ATT Responses pending for transmission */
     GATT_RegisterForMsgs(selfEntity);
 
-
     /* set default values for Data Length Extension (enabled by default) */
-    HCI_LE_WriteSuggestedDefaultDataLenCmd(BC_SUGGESTED_PDU_SIZE, BC_SUGGESTED_TX_TIME);
-
+    HCI_LE_WriteSuggestedDefaultDataLenCmd(BC_SUGGESTED_PDU_SIZE,
+                                           BC_SUGGESTED_TX_TIME);
 
     /* initialize GAP layer for Central role and register to receive GAP events */
-    GAP_DeviceInit(GAP_PROFILE_CENTRAL, selfEntity, DEFAULT_ADDRESS_MODE, &pRandomAddress);
-
+    GAP_DeviceInit(GAP_PROFILE_CENTRAL, selfEntity, DEFAULT_ADDRESS_MODE,
+                   &pRandomAddress);
 
     /* done initializing the barebot central task, return */
     return;
 }
 
-
-
-
 /*
-   BarebotCentral_taskFxn(UArg, UArg)
+ BarebotCentral_taskFxn(UArg, UArg)
 
-   Description:      This function runs the task that implements the Bluetooth
-                     barebot central device.
+ Description:      This function runs the task that implements the Bluetooth
+ barebot central device.
 
-   Operation:        The function loops forever processing messages and events
-                     from the application and Bluetooth stack.  The messages
-                     and events are processed using helper functions.
+ Operation:        The function loops forever processing messages and events
+ from the application and Bluetooth stack.  The messages
+ and events are processed using helper functions.
 
-   Arguments:        a1 (UArg) - first argument (unused).
-                     a2 (UArg) - second argument (unused).
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:        a1 (UArg) - first argument (unused).
+ a2 (UArg) - second argument (unused).
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   None.
+ Error Handling:   None.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-static  void  BarebotCentral_taskFxn(UArg a0, UArg a1)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static void BarebotCentral_taskFxn(UArg a0, UArg a1)
 {
     /* variables */
-    uint32_t            events;         /* task event flags */
+    uint32_t events; /* task event flags */
 
-    ICall_ServiceEnum   src;            /* source and destination for BLE */
-    ICall_EntityID      dest;           /*    stack messages */
-    ICall_HciExtEvt    *pMsg = NULL;    /* HCI event message pointer */
+    ICall_ServiceEnum src; /* source and destination for BLE */
+    ICall_EntityID dest; /*    stack messages */
+    ICall_HciExtEvt *pMsg = NULL; /* HCI event message pointer */
 
-    bpEvt_t            *pEvtMsg;        /* internal task event/message */
+    bpEvt_t *pEvtMsg; /* internal task event/message */
 
-    uint8_t             safeToDealloc = TRUE;  /* whether or not to deallocate message */
-
+    uint8_t safeToDealloc = TRUE; /* whether or not to deallocate message */
 
     /* initialize the task */
     BarebotCentral_init();
 
     /* dislay initialization message */
     Display(0, 0, "Initialized", -1);
-
 
     /* main task loop just loops forever */
     for (;;)
@@ -268,20 +257,26 @@ static  void  BarebotCentral_taskFxn(UArg a0, UArg a1)
         /* wait for event to be posted associated with the calling thread */
         /*    this includes events that are posted when a message is queued */
         /*    to the message receive queue of the thread */
-        events = Event_pend(syncEvent, Event_Id_NONE, BC_ALL_EVENTS, ICALL_TIMEOUT_FOREVER);
+        events = Event_pend(syncEvent, Event_Id_NONE, BC_ALL_EVENTS,
+        ICALL_TIMEOUT_FOREVER);
         /* if there is an event, process it */
-        if (events)  {
+        if (events)
+        {
 
             /* have an event, get any available messages from the stack */
-            if (ICall_fetchServiceMsg(&src, &dest, (void **)&pMsg) == ICALL_ERRNO_SUCCESS)  {
+            if (ICall_fetchServiceMsg(&src, &dest,
+                                      (void**) &pMsg) == ICALL_ERRNO_SUCCESS)
+            {
 
                 /* check if it is a BLE message for this task */
-                if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity))  {
+                if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity))
+                {
 
                     /* check for BLE stack events first */
-                    if (((ICall_Stack_Event *) pMsg)->signature != 0xffff)
+                    if (((ICall_Stack_Event*) pMsg)->signature != 0xffff)
                         /* have an inter-task message, process it */
-                        safeToDealloc = BarebotCentral_processStackMsg((ICall_Hdr *)pMsg);
+                        safeToDealloc = BarebotCentral_processStackMsg(
+                                (ICall_Hdr*) pMsg);
                 }
 
                 /* if there is a message and it can be deallocated, do so */
@@ -290,16 +285,19 @@ static  void  BarebotCentral_taskFxn(UArg a0, UArg a1)
             }
 
             /* next check if got an RTOS queue event */
-            if (events & UTIL_QUEUE_EVENT_ID)  {
+            if (events & UTIL_QUEUE_EVENT_ID)
+            {
 
                 /* process all RTOS queue entries until queue is empty */
-                while (!Queue_empty(appMsgQueueHandle))  {
+                while (!Queue_empty(appMsgQueueHandle))
+                {
 
                     /* dequeue the message */
-                    pEvtMsg = (bpEvt_t *)Util_dequeueMsg(appMsgQueueHandle);
+                    pEvtMsg = (bpEvt_t*) Util_dequeueMsg(appMsgQueueHandle);
 
                     /* check if got a message */
-                    if (pEvtMsg != NULL)  {
+                    if (pEvtMsg != NULL)
+                    {
 
                         /* got a message so process the message */
                         BarebotCentral_processAppMsg(pEvtMsg);
@@ -311,432 +309,556 @@ static  void  BarebotCentral_taskFxn(UArg a0, UArg a1)
         }
     }
 
-
     /* done with the task (should never get here) */
     return;
 }
 
-
-
+/* message processing */
 
 /*
-   BarebotCentral_processStackMsg(ICall_Hdr *)
+ BarebotCentral_processStackMsg(ICall_Hdr *)
 
-   Description:      This function processes messages from the BLE stack.
+ Description:      This function processes messages from the BLE stack.
 
-   Operation:        The message is processed based on the type of message.
-                     GAP and GATT messages have their own processing functions.
-                     HCI messages are ignored unless it is an error, in which
-                     case an infinite loop is entered.  All messages can be
-                     deallocated after this function processes them so TRUE is
-                     always returned.
+ Operation:        The message is processed based on the type of message.
+ GAP and GATT messages have their own processing functions.
+ HCI messages are ignored unless it is an error, in which
+ case an infinite loop is entered.  All messages can be
+ deallocated after this function processes them so TRUE is
+ always returned.
 
-   Arguments:        pMsg (ICall_Hdr *) - pointer to the message to process.
-   Return Value:     (uint8_t) - TRUE if the passed message should be
-                        deallocated on return an FALSE if not (always TRUE).
-   Exceptions:       None.
+ Arguments:        pMsg (ICall_Hdr *) - pointer to the message to process.
+ Return Value:     (uint8_t) - TRUE if the passed message should be
+ deallocated on return an FALSE if not (always TRUE).
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   HCI errors cause the function to enter an infinite loop
-                     for debugging purposes.  Unknown message types are
-                     silently ignored.
+ Error Handling:   HCI errors cause the function to enter an infinite loop
+ for debugging purposes.  Unknown message types are
+ silently ignored.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-static  uint8_t  BarebotCentral_processStackMsg(ICall_Hdr *pMsg)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static uint8_t BarebotCentral_processStackMsg(ICall_Hdr *pMsg)
 {
     /* variables */
-      /* none */
-
-
+    /* none */
 
     /* message processing is based on the type of message */
-    switch (pMsg->event)  {
+    switch (pMsg->event)
+    {
 
-        case GAP_MSG_EVENT:
-                /* process GAP message */
-                BarebotCentral_processGapMessage((gapEventHdr_t*) pMsg);
-                break;
+    case GAP_MSG_EVENT:
+        /* process GAP message */
+        BarebotCentral_processGapMessage((gapEventHdr_t*) pMsg);
+        break;
 
-        case GATT_MSG_EVENT:
-                /* process GATT message - nothing to process */
-                BarebotCentral_processGattMessage((gattMsgEvent_t *) pMsg);
-                break;
+    case GATT_MSG_EVENT:
+        /* process GATT message - nothing to process */
+        BarebotCentral_processGattMessage((gattMsgEvent_t*) pMsg);
+        break;
 
-        case HCI_GAP_EVENT_EVENT:
-                /* if got an error, spin, otherwise ignore the message */
-                if (pMsg->status == HCI_BLE_HARDWARE_ERROR_EVENT_CODE)
-                        BarebotCentral_spin();
-                break;
+    case HCI_GAP_EVENT_EVENT:
+        /* if got an error, spin, otherwise ignore the message */
+        if (pMsg->status == HCI_BLE_HARDWARE_ERROR_EVENT_CODE)
+            BarebotCentral_spin();
+        break;
 
-        default:
-                /* unknown event type - do nothing */
-                break;
+    default:
+        /* unknown event type - do nothing */
+        break;
     }
 
-
     /* done processing the BLE stack message, return */
-    return  TRUE;
+    return TRUE;
 }
 
-
-
-
 /*
-   BarebotCentral_processAppMsg(bpEvt_t *)
+ BarebotCentral_processGapMessage(gapEventHdr_t *)
 
-   Description:      This function processes the task messages received by this
-                     task (in other words, messages sent by the task itself).
-                     These messages are generally due to callback functions
-                     being called by the BLE stack.
+ Description:      This function processes the GAP event messages received
+ by this task from the BLE stack.
 
-   Operation:        The function processes the messages based on the type of
-                     event that generated the message.  Unknown event types are
-                     ignored.
+ Operation:        The function processes the messages based on the opcode
+ that generated the message. Initialization done events
+ cause the system ID to be set and advertising to start.
+ Link established events cause the connection handle to be
+ stored and advertising to stop.  Link termination events
+ forget the saved connection handle and start advertising
+ again.  Unknown opcodes/event types are ignored.
 
-   Arguments:        pMsg (bpEvt_t *) - pointer to the task message to process.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:        pMsg (gapEventHdr_t *) - pointer to the GAP event message
+ to process.
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   Unknown event types are silently ignored.
+ Error Handling:   Unknown event opcodes are silently ignored.  In the debug
+ version if a BLE function fails the system goes into an
+ infinite loop.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-int n = 0;
-static  void  BarebotCentral_processAppMsg(bpEvt_t *pMsg)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
 {
     /* variables */
-    bool  dealloc;      /* whether should deallocate message data */
-    static GapScan_Evt_AdvRpt_t* pAdvRpt; /* event advertising report data */
+    uint8_t temp8; /* 8-bit buffer to hold configuration values */
+    uint16_t temp16; /* 16-bit buffer to hold configuration values */
 
+    /* process the message based on the opcode that generated it */
+    switch (pMsg->opcode)
+    {
+
+    case GAP_DEVICE_INIT_DONE_EVENT:
+        /* GAP is done with intitialization, check if successful */
+        if (((gapDeviceInitDoneEvent_t*) pMsg)->hdr.status != SUCCESS)
+            break;
+
+        /* register callback to process Scanner events */
+        GapScan_registerCb(BarebotCentral_scanCb, NULL);
+
+        /* we only need advertising reports */
+        GapScan_setEventMask(GAP_EVT_ADV_REPORT);
+
+        /* set default scan PHY parameters*/
+        GapScan_setPhyParams(DEFAULT_SCAN_PHY, DEFAULT_SCAN_TYPE,
+                             DEFAULT_SCAN_INTERVAL, DEFAULT_SCAN_WINDOW);
+
+        /* Set Advertising report fields to keep (address and address type) */
+        temp16 = ADV_RPT_FIELDS;
+        GapScan_setParam(SCAN_PARAM_RPT_FIELDS, &temp16);
+
+        /* Set Scanning Primary PHY */
+        temp8 = DEFAULT_SCAN_PHY;
+        GapScan_setParam(SCAN_PARAM_PRIM_PHYS, &temp8);
+
+        /* Set LL Duplicate Filter (enable duplicate packet filtering) */
+        temp8 = SCANNER_DUPLICATE_FILTER;
+        GapScan_setParam(SCAN_PARAM_FLT_DUP, &temp8);
+
+        /* Only 'Connectable' and 'Complete' packets are desired. */
+        //temp16 = 0;
+        temp16 = SCAN_FLT_PDU_CONNECTABLE_ONLY | SCAN_FLT_PDU_COMPLETE_ONLY;
+        GapScan_setParam(SCAN_PARAM_FLT_PDU_TYPE, &temp16);
+
+        /* Set initiating PHY parameters */
+        GapInit_setPhyParam(DEFAULT_INIT_PHY, INIT_PHYPARAM_CONN_INT_MIN,
+                            INIT_PHYPARAM_MIN_CONN_INT);
+        GapInit_setPhyParam(DEFAULT_INIT_PHY, INIT_PHYPARAM_CONN_INT_MAX,
+                            INIT_PHYPARAM_MAX_CONN_INT);
+
+        /* === at this point all scanning and initiating parameters are set up === */
+
+        /* start scanning */
+        GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+
+        /* show message on Display */
+        Display(0, 0, "Scanning...", -1);
+
+        break;
+
+    case GAP_LINK_ESTABLISHED_EVENT:
+        /* link was established, make sure it was successful */
+        if (((gapEstLinkReqEvent_t*) pMsg)->hdr.status == SUCCESS)
+        {
+
+            /* have a connection - remember it (only 1 allowed) */
+            curr_conn_handle = ((gapEstLinkReqEvent_t*) pMsg)->connectionHandle;
+
+            /* stop scanning */
+            GapScan_disable();
+
+            /* display message that we've successfully connected */
+            Display(0, 0, "Connected", 16);
+
+            /* discover handles */
+            attReadByTypeReq_t req;
+            req.startHandle = 0x0001;
+            req.endHandle = 0xFFFF;
+            attAttrType_t type;
+            type.len = 2;
+            type.uuid[0] = LO_UINT16(BAREBOTPROFILE_SPEED_UUID);
+            type.uuid[1] = HI_UINT16(BAREBOTPROFILE_SPEED_UUID);
+            req.type = type;
+            GATT_DiscCharsByUUID(curr_conn_handle, &req, selfEntity);
+            Display(0, 0, "Discovering", 16);
+
+            //GATT_DiscAllChars(curr_conn_handle, 0x0001, 0xFFFF, selfEntity);
+        }
+        break;
+
+    case GAP_LINK_TERMINATED_EVENT:
+        /* link was terminated, be sure it was this link */
+        if (curr_conn_handle
+                == ((gapTerminateLinkEvent_t*) pMsg)->connectionHandle)
+        {
+
+            /* indicate there is no connected handle */
+            curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
+
+            /* start scanning again */
+            GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+
+            /* display message */
+            Display(0, 0, "Terminated", 16);
+        }
+        break;
+
+    default:
+        /* unknown opcode/event - just ignore it */
+        break;
+    }
+
+    /* done processing the GAP message, return */
+    return;
+}
+
+/*
+ BarebotCentral_processAppMsg(bpEvt_t *)
+
+ Description:      This function processes the task messages received by this
+ task (in other words, messages sent by the task itself).
+ These messages are generally due to callback functions
+ being called by the BLE stack.
+
+ Operation:        The function processes the messages based on the type of
+ event that generated the message.  Unknown event types are
+ ignored.
+
+ Arguments:        pMsg (bpEvt_t *) - pointer to the task message to process.
+ Return Value:     None.
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:   Unknown event types are silently ignored.
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static void BarebotCentral_processAppMsg(bpEvt_t *pMsg)
+{
+    /* variables */
+    bool dealloc; /* whether should deallocate message data */
+    static GapScan_Evt_AdvRpt_t *pAdvRpt; /* event advertising report data */
 
     /* figure out what to do based on the message/event type */
-    switch (pMsg->event)  {
-        case BC_EVT_KEY_PRESSED:
+    switch (pMsg->event)
+    {
+    case BC_EVT_KEY_PRESSED:
+        //                       row                   col
+        BarebotCentral_handleKey(pMsg->data.word >> 8,
+                                 pMsg->data.word & 0b11111111);
+        dealloc = FALSE;
+        break;
+    case BC_EVT_ADV_REPORT:
+        /* get report data */
+        pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->data.pData);
 
-            break;
-        case BC_EVT_ADV_REPORT:
-            /* debug */
-            n += 1;
-            System_sprintf((char *)textBuf, "%d", n);
-            Display(3, 13, textBuf, -1);
+        /* get name */
+        osal_memset(textBuf, 0, 16);
+        BarebotCentral_findDeviceName((uint8_t*) pAdvRpt->pData,
+                                      pAdvRpt->dataLen, (char*) textBuf, 16);
 
-            /* get report data */
-            pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->data.pData);
+        /* check if name matches the server board */
+        if (osal_memcmp(textBuf, BAREBOT_SERVER_LOCAL_NAME, 2))
+        {
+            /* display message that we're connecting */
+            Display(0, 0, "Connecting...", 16);
 
-            /* display name */
-            BarebotCentral_findDeviceName((uint8_t *)pAdvRpt->pData, pAdvRpt->dataLen, (char *)textBuf, 16);
-            Display(0, 0, (char *)textBuf, -1);
+            /* connect to it */
+            GapInit_connect(pAdvRpt->addrType, pAdvRpt->addr, DEFAULT_INIT_PHY,
+                            0);
+        }
 
-            /* display address */
-            char *addr = Util_convertBdAddr2Str(pAdvRpt->addr);
-            Display(1, 0, addr, -1);
-
-            if (osal_memcmp((uint8_t *)pAdvRpt->addr, BAREBOT_SERVER_ADDR, 12)) {
-                Display(2, 0, "barebot server!", -1);
-            }
-
-            /* check for address of the server board */
-            if (true) {
-                /* connect to it */
-            }
-
-            /* Free report payload data */
-            if (pAdvRpt->pData != NULL) {
-                ICall_free(pAdvRpt->pData);
-            }
-            break;
-        default:
-                /* unknown application event - do nothing, but deallocate message */
-                dealloc = TRUE;
-                break;
+        /* Free report payload data */
+        if (pAdvRpt->pData != NULL)
+        {
+            ICall_free(pAdvRpt->pData);
+        }
+        break;
+    case BC_EVT_SCAN_DISABLED:
+        Display(0, 0, "Scanning done", 16);
+        break;
+    default:
+        /* unknown application event - do nothing, but deallocate message */
+        dealloc = TRUE;
+        break;
     }
 
     /* free message data if it exists and we are supposed to dealloc it */
     if ((pMsg->data.pData != NULL) && (dealloc == TRUE))
         ICall_free(pMsg->data.pData);
 
-
     /* done processing the message/event, return */
     return;
 }
 
-
-
-
 /*
-   BarebotCentral_processGapMessage(gapEventHdr_t *)
+ BarebotCentral_processGattMessage(gattMsgEvent_t *)
 
-   Description:      This function processes the GAP event messages received
-                     by this task from the BLE stack.
+ Description:
 
-   Operation:        The function processes the messages based on the opcode
-                     that generated the message. Initialization done events
-                     cause the system ID to be set and advertising to start.
-                     Link established events cause the connection handle to be
-                     stored and advertising to stop.  Link termination events
-                     forget the saved connection handle and start advertising
-                     again.  Unknown opcodes/event types are ignored.
+ Operation:
 
-   Arguments:        pMsg (gapEventHdr_t *) - pointer to the GAP event message
-                                              to process.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:        pMsg (gattMsgEvent_t *) - pointer to the GATT event message
+ to process.
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   Unknown event opcodes are silently ignored.  In the debug
-                     version if a BLE function fails the system goes into an
-                     infinite loop.
+ Error Handling:   Unknown event opcodes are silently ignored.  In the debug
+ version if a BLE function fails the system goes into an
+ infinite loop.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-static  void  BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
+ Revision History:
+ */
+static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
 {
     /* variables */
-    uint8_t temp8;      /* 8-bit buffer to hold configuration values */
-    uint16_t temp16;    /* 16-bit buffer to hold configuration values */
+    bpAttReadByTypeHandlePair_t* handle_pair;
+    uint16_t speed;
 
-
-
-    /* process the message based on the opcode that generated it */
-    switch(pMsg->opcode)  {
-
-        case GAP_DEVICE_INIT_DONE_EVENT:
-                /* GAP is done with intitialization, check if successful */
-                if(((gapDeviceInitDoneEvent_t *) pMsg)->hdr.status != SUCCESS)
-                    break;
-
-                /* register callback to process Scanner events */
-                GapScan_registerCb(BarebotCentral_scanCb, NULL);
-
-                /* we only need advertising reports */
-                GapScan_setEventMask(GAP_EVT_ADV_REPORT);
-
-                /* set default scan PHY parameters*/
-                GapScan_setPhyParams(DEFAULT_SCAN_PHY, DEFAULT_SCAN_TYPE,
-                                           DEFAULT_SCAN_INTERVAL, DEFAULT_SCAN_WINDOW);
-
-                /* Set Advertising report fields to keep (address and address type) */
-                temp16 = ADV_RPT_FIELDS;
-                GapScan_setParam(SCAN_PARAM_RPT_FIELDS, &temp16);
-
-                /* Set Scanning Primary PHY */
-                temp8 = DEFAULT_SCAN_PHY;
-                GapScan_setParam(SCAN_PARAM_PRIM_PHYS, &temp8);
-
-                /* Set LL Duplicate Filter (enable duplicate packet filtering) */
-                temp8 = SCANNER_DUPLICATE_FILTER;
-                GapScan_setParam(SCAN_PARAM_FLT_DUP, &temp8);
-
-                /* Only 'Connectable' and 'Complete' packets are desired. */
-                temp16 = SCAN_FLT_PDU_CONNECTABLE_ONLY | SCAN_FLT_PDU_COMPLETE_ONLY;
-                GapScan_setParam(SCAN_PARAM_FLT_PDU_TYPE, &temp16);
-
-                /* Set initiating PHY parameters */
-                GapInit_setPhyParam(DEFAULT_INIT_PHY, INIT_PHYPARAM_CONN_INT_MIN,
-                                          INIT_PHYPARAM_MIN_CONN_INT);
-                GapInit_setPhyParam(DEFAULT_INIT_PHY, INIT_PHYPARAM_CONN_INT_MAX,
-                                          INIT_PHYPARAM_MAX_CONN_INT);
-
-                /* === at this point all scanning and initiating parameters are set up === */
-
-                /* start scanning */
-                GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
-
-                /* show message on Display */
-                Display(0, 0, "Scanning...", -1);
-
-            break;
-
-        case GAP_LINK_ESTABLISHED_EVENT:
-                /* link was established, make sure it was successful */
-                if (((gapEstLinkReqEvent_t *) pMsg)->hdr.status == SUCCESS)  {
-
-                    /* have a connection - remember it (only 1 allowed) */
-                    curr_conn_handle = ((gapEstLinkReqEvent_t *) pMsg)->connectionHandle;
-
-                    /* stop scanning */
-                    GapScan_disable();
-
-                    /* stopping scanning */
-                    Display(1, 0, "stop scan", -1);
-                }
-                break;
-
-        case GAP_LINK_TERMINATED_EVENT:
-                /* link was terminated, be sure it was this link */
-                if (curr_conn_handle == ((gapTerminateLinkEvent_t *)pMsg)->connectionHandle)  {
-
-                    /* indicate there is no connected handle */
-                    curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
-
-                    /* start scanning again */
-                    GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
-                }
-                break;
-
-        default:
-                /* unknown opcode/event - just ignore it */
-                break;
+    // need to refine this condition
+    if (pMsg->hdr.status != SUCCESS) {
+        // TODO
     }
 
-
-    /* done processing the GAP message, return */
+    switch (pMsg->method)
+    {
+    case ATT_ERROR_RSP:
+        //msg.errorRsp.errorCode;
+        System_sprintf(textBuf, "Error: %d", pMsg->msg.errorRsp.errCode);
+        Display(1, 0, textBuf, 16);
+        break;
+    case ATT_READ_RSP:
+        speed = BUILD_UINT16(pMsg->msg.readRsp.pValue[0], pMsg->msg.readRsp.pValue[1]);
+        System_sprintf(textBuf, "%x", speed);
+        Display(1, 9, textBuf, 8);
+        break;
+    case ATT_READ_BY_TYPE_RSP:
+        for (int i = 0; i < pMsg->msg.readByTypeRsp.numPairs; i++) {
+            handle_pair = (bpAttReadByTypeHandlePair_t *) &(pMsg->msg.readByTypeRsp.pDataList[i * pMsg->msg.readByTypeRsp.len]);
+            switch (handle_pair->uuid) {
+            case BAREBOTPROFILE_SPEED_UUID:
+                speedCharHandle = handle_pair->handle;
+                Display(0, 0, "Found chars", 16);
+                break;
+            }
+        }
+        break;
+    }
     return;
 }
 
-
-
 /*
-   BarebotCentral_processGattMessage(gattMsgEvent_t *)
+ BarebotCentral_handleKey(uint8_t row, uint8, col)
 
-   Description:
+ Description:
 
-   Operation:
+ Operation:
 
-   Arguments:        pMsg (gattMsgEvent_t *) - pointer to the GATT event message
-                                              to process.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   Unknown event opcodes are silently ignored.  In the debug
-                     version if a BLE function fails the system goes into an
-                     infinite loop.
+ Error Handling:
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History:
-*/
-
-static  void  BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
+ Revision History:
+ */
+void BarebotCentral_handleKey(uint8_t row, uint8_t col)
 {
-    /* variables */
-    uint8_t  systemID[DEVINFO_SYSTEM_ID_LEN];     /* system ID */
+    if (row == 3) {
+        /* menu */
+        if (col == 3) {
+            /* control screen */
+            BarebotCentral_doGattRead(speedCharHandle);
+            Display(1, 0, "Speed:", 8);
+        } else if (col == 2) {
+            /* thoughts screen */
+        }
+    }
+    /* get thoughts button */
+    if (row == 0 && col == 3)
+    {
+        attReadReq_t req;
+        req.handle = 0x003;
+        GATT_ReadCharValue(curr_conn_handle, &req, selfEntity);
+        return;
+    }
 
+    /* speed buttons */
+    if (col == 1)
+    {
+
+        return;
+    }
+}
+
+/* message queing */
+
+/*
+ KeyPressed(uint32_t keyEvt)
+
+ Description:
+
+ Operation:
+
+ Arguments:
+ Return Value:     None.
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History:
+ */
+void KeyPressed(uint32_t keyEvt)
+{
+    bpEvtData_t data;
+    data.word = keyEvt;
+    BarebotCentral_enqueueMsg(BC_EVT_KEY_PRESSED, data);
     return;
 }
 
-
-
 /*
-   BarebotCentral_scanCb(uint32_t event, void *pBuf, uintptr_t arg)
+ BarebotCentral_scanCb(uint32_t event, void *pBuf, uintptr_t arg)
 
-   Description:
+ Description:
 
-   Operation:
+ Operation:
 
-   Arguments:
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:
+ Return Value:     None.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   If memory can't be allocated the event is ignored.  If
-                     there is an error enqueuing the message the allocated
-                     memory is free and no event is enqueued.
+ Error Handling:   If memory can't be allocated the event is ignored.  If
+ there is an error enqueuing the message the allocated
+ memory is free and no event is enqueued.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History:
-*/
-
-static  void  BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
+ Revision History:
+ */
+static void BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
 {
     /* variables */
     uint8_t event;
 
-    if (evt & GAP_EVT_ADV_REPORT) {
-      event = BC_EVT_ADV_REPORT;
+    if (evt & GAP_EVT_ADV_REPORT)
+    {
+        event = BC_EVT_ADV_REPORT;
     }
-    else {
-      return;
+    else if (evt & GAP_EVT_SCAN_ENABLED)
+    {
+        event = BC_EVT_SCAN_ENABLED;
+    }
+    else if (evt & GAP_EVT_SCAN_DISABLED)
+    {
+        event = BC_EVT_SCAN_DISABLED;
+    }
+    else if (evt & GAP_EVT_INSUFFICIENT_MEMORY)
+    {
+        event = BC_EVT_INSUFFICIENT_MEM;
+    }
+    else
+    {
+        return;
     }
 
-    if(BarebotCentral_enqueueMsg(event, (bpEvtData_t)pMsg) != SUCCESS) {
-      ICall_free(pMsg);
+    if (BarebotCentral_enqueueMsg(event, (bpEvtData_t) pMsg) != SUCCESS)
+    {
+        ICall_free(pMsg);
     }
     return;
 }
 
-
+/* helper functions */
 /*
-   BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t)
+ BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t)
 
-   Description:      This function creates a message and puts it into the
-                     RTOS queue.
+ Description:      This function creates a message and puts it into the
+ RTOS queue.
 
-   Operation:        The function dynamically allocates memory for the message
-                     and then copies the passed event and data into this
-                     message.  The message is then enqueued using the RTOS
-                     function that also creates an event on enqueuing.
+ Operation:        The function dynamically allocates memory for the message
+ and then copies the passed event and data into this
+ message.  The message is then enqueued using the RTOS
+ function that also creates an event on enqueuing.
 
-   Arguments:        event (uint8_t)    - event ID for the message to enqueue.
-                     data (bpEvtData_t) - data for the message to enqueue.
-   Return Value:     (status_t) - SUCCESS if the message was successfully
-                        enqueued, FAILURE if there was an error engueuing the
-                        message, and bleMemAllocError if there was an error
-                        allocating memory for the message.
-   Exceptions:       None.
+ Arguments:        event (uint8_t)    - event ID for the message to enqueue.
+ data (bpEvtData_t) - data for the message to enqueue.
+ Return Value:     (status_t) - SUCCESS if the message was successfully
+ enqueued, FAILURE if there was an error engueuing the
+ message, and bleMemAllocError if there was an error
+ allocating memory for the message.
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   If there is an error allocating memory for the message,
-                     no message is enqueued and bleMemAllocError is returned.
-                     If there is an error enqueuing the message, FAILURE is
-                     returned.
+ Error Handling:   If there is an error allocating memory for the message,
+ no message is enqueued and bleMemAllocError is returned.
+ If there is an error enqueuing the message, FAILURE is
+ returned.
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
-
-static  status_t  BarebotCentral_enqueueMsg(uint8_t event, bpEvtData_t data)
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+static status_t BarebotCentral_enqueueMsg(uint8_t event, bpEvtData_t data)
 {
     /* variables */
-    bpEvt_t   *pMsg;            /* the dynamically allocated enqueued message */
+    bpEvt_t *pMsg; /* the dynamically allocated enqueued message */
 
-    status_t   success;         /* whether or not enqueuing was successful */
-
-
+    status_t success; /* whether or not enqueuing was successful */
 
     /* allocate memory for the message */
     pMsg = ICall_malloc(sizeof(bpEvt_t));
 
     /* check if memory got allocated */
-    if (pMsg != NULL)  {
+    if (pMsg != NULL)
+    {
 
         /* memory was allocated, create the event message */
         pMsg->event = event;
         pMsg->data = data;
 
         /* enqueue the message, watching for errors */
-        if (Util_enqueueMsg(appMsgQueueHandle, syncEvent, (uint8_t *)pMsg))
+        if (Util_enqueueMsg(appMsgQueueHandle, syncEvent, (uint8_t*) pMsg))
             /* successfully enqueued the message */
             success = SUCCESS;
         else
@@ -744,40 +866,41 @@ static  status_t  BarebotCentral_enqueueMsg(uint8_t event, bpEvtData_t data)
             /*    note - Util_enqueueMsg() freed the message on failure */
             success = FAILURE;
     }
-    else  {
+    else
+    {
 
         /* memory allocation error, let caller know */
         success = bleMemAllocError;
     }
 
-
     /* done enqueuing the message, return the error status */
-    return  success;
+    return success;
 }
 
-
 /*
-   BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t)
+ BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t)
 
-   Description:
+ Description:
 
-   Operation:
+ Operation:
 
-   Arguments:
-   Return Value:
-   Exceptions:       None.
+ Arguments:
+ Return Value:
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:
+ Error Handling:
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: https://e2e.ti.com/support/wireless-connectivity/bluetooth-group/bluetooth/f/bluetooth-forum/1258776/cc2642r-display-advertiser-name-in-simple_central/4773912?tisearch=e2e-sitesearch&keymatch=get%252520device%252520name%252520from%252520advertising%252520report#4773912
-*/
-static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen, char *deviceName, uint8_t maxNameLength)
+ Revision History: https://e2e.ti.com/support/wireless-connectivity/bluetooth-group/bluetooth/f/bluetooth-forum/1258776/cc2642r-display-advertiser-name-in-simple_central/4773912?tisearch=e2e-sitesearch&keymatch=get%252520device%252520name%252520from%252520advertising%252520report#4773912
+ */
+static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen,
+                                          char *deviceName,
+                                          uint8_t maxNameLength)
 {
     uint8_t adLen;
     uint8_t adType;
@@ -786,7 +909,7 @@ static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen, char
     // Erase the content of deviceName
     {
         int i;
-        for (i=0; i<maxNameLength ; i++)
+        for (i = 0; i < maxNameLength; i++)
         {
             deviceName[i] = '\0';
         }
@@ -800,72 +923,129 @@ static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen, char
         // While end of data not reached
         while (pData < pEnd)
         {
-          // Get length of next AD item
-          adLen = *pData++;
+            // Get length of next AD item
+            adLen = *pData++;
 
-          if (adLen > 0)
-          {
-            adType = *pData++;
-
-            // If AD type is for device name
-            if ((adType == GAP_ADTYPE_LOCAL_NAME_SHORT) ||
-                (adType == GAP_ADTYPE_LOCAL_NAME_COMPLETE ))
+            if (adLen > 0)
             {
-                // For the whole length of the device name found
-                int i;
-                for (i=0; i<= adLen-1; i++) // looping until (adLen-1) because adLen also accounts for the size of the adType (1 byte)
+                adType = *pData++;
+
+                // If AD type is for device name
+                if ((adType == GAP_ADTYPE_LOCAL_NAME_SHORT)
+                        || (adType == GAP_ADTYPE_LOCAL_NAME_COMPLETE))
                 {
-                    if(i < maxNameLength)
+                    // For the whole length of the device name found
+                    int i;
+                    for (i = 0; i <= adLen - 1; i++) // looping until (adLen-1) because adLen also accounts for the size of the adType (1 byte)
                     {
-                        deviceName[i] = (char)*pData++;
+                        if (i < maxNameLength)
+                        {
+                            deviceName[i] = (char) *pData++;
+                        }
                     }
+
+                    return TRUE;
                 }
 
-                return TRUE;
+                else
+                {
+                    // Go to next item
+                    pData += adLen;
+                }
             }
-
-            else
-            {
-              // Go to next item
-              pData += adLen;
-            }
-          }
         }
     }
 }
 
 /*
-   BarebotCentral_spin()
+ BarebotCentral_
 
-   Description:      This function loops infinitely in order to stall the
-                     central in case of an error.
+ Description:
 
-   Operation:        The function implements an infinite loop.
+ Operation:
 
-   Arguments:        None.
-   Return Value:     None.
-   Exceptions:       None.
+ Arguments:
+ Return Value:
+ Exceptions:       None.
 
-   Inputs:           None.
-   Outputs:          None.
+ Inputs:           None.
+ Outputs:          None.
 
-   Error Handling:   None.
+ Error Handling:
 
-   Algorithms:       None.
-   Data Structures:  None.
+ Algorithms:       None.
+ Data Structures:  None.
 
-   Revision History: 03/10/22  Glen George      initial revision
-*/
+ Revision History:
+ */
+bool BarebotCentral_doGattRead(uint16_t handle)
+{
+    attReadReq_t req;
+    req.handle = handle;
 
+    GATT_ReadCharValue(curr_conn_handle, &req, selfEntity);
+
+    return (true);
+}
+
+/*
+ BarebotCentral_
+
+ Description:
+
+ Operation:
+
+ Arguments:
+ Return Value:
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History:
+ */
+bool BarebotCentral_doGattWrite(uint16_t uuid)
+{
+// TODO
+
+    return (true);
+}
+
+/*
+ BarebotCentral_spin()
+
+ Description:      This function loops infinitely in order to stall the
+ central in case of an error.
+
+ Operation:        The function implements an infinite loop.
+
+ Arguments:        None.
+ Return Value:     None.
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:   None.
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History: 03/10/22  Glen George      initial revision
+ */
 static void BarebotCentral_spin(void)
 {
     /* variables */
-    volatile  uint8_t  j = 1;   /* volatile so optimization won't kill loop */
-
+    volatile uint8_t j = 1; /* volatile so optimization won't kill loop */
 
     /* an infinite loop */
-    while(j);
-
+    while (j)
+        ;
 
     /* never gets here */
     return;

@@ -33,6 +33,7 @@
 /* RTOS include files */
 #include <ti/sysbios/knl/Task.h>
 #include <ti/sysbios/knl/Event.h>
+#include  <icall.h>
 
 
 /* local include files */
@@ -51,7 +52,6 @@ Event_Handle  redLEDEvent;      /* the red LED event - posted when it is    */
                                 /* needs to access it                       */
 
 
-
 /* shared variables */
 
 static  Task_Struct  redLEDTask;        /* task for blinking the red LED */
@@ -64,7 +64,11 @@ static  uint8_t      redLEDTaskStack[LED_TASK_STACK_SIZE];
 #pragma DATA_ALIGN(greenLEDTaskStack, 8)
 static  uint8_t      greenLEDTaskStack[LED_TASK_STACK_SIZE];
 
+/* entity ID used to check for source and/or destination of messages */
+static  ICall_EntityID  selfEntity;
 
+/* event used to post local events and pend on system and local events */
+static  ICall_SyncHandle  syncEvent;
 
 
 /*
@@ -214,6 +218,11 @@ static  void  GreenLEDTaskRun(UArg a1, UArg a2)
 
 
     /* task initialization */
+    //ICall_Errno err = ICall_registerApp(&selfEntity, &syncEvent);
+    //if (err != ICALL_ERRNO_SUCCESS) {
+    //    while(true) {}
+    //}
+
 
     /* have not looped yet */
     loopCount = 0;
@@ -237,7 +246,7 @@ static  void  GreenLEDTaskRun(UArg a1, UArg a2)
         }
 
         /* change to #if 1 to see the effects of yielding instead of pre-empting */
-        #if 0
+        #if 1
             /* yield the CPU so other tasks can run */
                 Task_yield();
         #endif

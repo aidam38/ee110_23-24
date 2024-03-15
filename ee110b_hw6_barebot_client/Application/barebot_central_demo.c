@@ -46,6 +46,7 @@
 /* interface includes */
 #include "cc26x2r/cc26x2r_rtos_intf.h"
 #include "lcd/lcd_rtos_intf.h"
+#include "keypad/keypad_rtos_intf.h"
 #include "barebot_central_intf.h"
 
 
@@ -80,7 +81,6 @@ int  main()
     user0Cfg.appServiceInfo->timerTickPeriod = Clock_tickPeriod;
     user0Cfg.appServiceInfo->timerMaxMillisecond  = ICall_getMaxMSecs();
 
-
     /* Initialize ICall module */
     ICall_init();
 
@@ -89,9 +89,6 @@ int  main()
 
     /* create tasks */
     BarebotCentral_createTask();  /* create task for blinker BLE peripheral */
-
-    /* init hardware */
-    LCDInit();
 
     /* finally ready to start the RTOS and get everything running */
     BIOS_start();

@@ -11,19 +11,15 @@
 const ble          = scripting.addModule("/ti/ble5stack/ble");
 const CCFG         = scripting.addModule("/ti/devices/CCFG");
 const rfdesign     = scripting.addModule("/ti/devices/radioconfig/rfdesign");
-const Display      = scripting.addModule("/ti/display/Display");
-const Display1     = Display.addInstance();
 const AESCCM       = scripting.addModule("/ti/drivers/AESCCM");
 const AESCCM1      = AESCCM.addInstance();
 const AESCTRDRBG   = scripting.addModule("/ti/drivers/AESCTRDRBG");
 const AESCTRDRBG1  = AESCTRDRBG.addInstance();
 const AESECB       = scripting.addModule("/ti/drivers/AESECB");
 const AESECB1      = AESECB.addInstance();
-const ECDH         = scripting.addModule("/ti/drivers/ECDH");
+const ECDH         = scripting.addModule("/ti/drivers/ECDH", {}, false);
 const ECDH1        = ECDH.addInstance();
 const GPIO         = scripting.addModule("/ti/drivers/GPIO");
-const GPIO3        = GPIO.addInstance();
-const GPIO4        = GPIO.addInstance();
 const NVS          = scripting.addModule("/ti/drivers/NVS");
 const NVS1         = NVS.addInstance();
 const Power        = scripting.addModule("/ti/drivers/Power");
@@ -32,12 +28,14 @@ const TRNG         = scripting.addModule("/ti/drivers/TRNG");
 const TRNG1        = TRNG.addInstance();
 const Settings     = scripting.addModule("/ti/posix/tirtos/Settings");
 const BIOS         = scripting.addModule("/ti/sysbios/BIOS");
+const Hwi          = scripting.addModule("/ti/sysbios/family/arm/m3/Hwi");
 const GateMutexPri = scripting.addModule("/ti/sysbios/gates/GateMutexPri");
 const HeapCallback = scripting.addModule("/ti/sysbios/heaps/HeapCallback");
 const Event        = scripting.addModule("/ti/sysbios/knl/Event");
 const Idle         = scripting.addModule("/ti/sysbios/knl/Idle", {}, false);
 const Idle2        = Idle.addInstance();
 const Mailbox      = scripting.addModule("/ti/sysbios/knl/Mailbox");
+const Task         = scripting.addModule("/ti/sysbios/knl/Task");
 const Error        = scripting.addModule("/ti/sysbios/runtime/Error");
 const SysCallback  = scripting.addModule("/ti/sysbios/runtime/SysCallback");
 const Timestamp    = scripting.addModule("/ti/sysbios/runtime/Timestamp");
@@ -58,32 +56,20 @@ CCFG.dioBootloaderBackdoor    = 13;
 CCFG.levelBootloaderBackdoor  = "Active low";
 CCFG.ccfgTemplate.$name       = "ti_devices_CCFG_CCFGCC26XXTemplate0";
 
-Display1.$name                    = "CONFIG_Display_0";
-Display1.$hardware                = system.deviceData.board.components.XDS110UART;
-Display1.enableANSI               = true;
-Display1.uartBufferSize           = 128;
-Display1.uart.$name               = "CONFIG_DISPLAY_UART";
-Display1.uart.txPinInstance.$name = "CONFIG_GPIO_UART_TX";
-Display1.uart.rxPinInstance.$name = "CONFIG_GPIO_UART_RX";
-
 AESCCM1.$name = "Board_AESCCM0";
 
 AESCTRDRBG1.$name = "CONFIG_AESCTRDRBG_0";
 
 AESECB1.$name = "CONFIG_AESECB0";
 
-ECDH1.$name = "CONFIG_ECDH0";
-
-GPIO3.$hardware = system.deviceData.board.components["BTN-1"];
-GPIO3.$name     = "CONFIG_GPIO_BTN1";
-
-GPIO4.$hardware = system.deviceData.board.components["BTN-2"];
-GPIO4.$name     = "CONFIG_GPIO_BTN2";
+ECDH1.$name = "CONFIG_ECDH_0";
 
 NVS1.$name                    = "CONFIG_NVSINTERNAL";
 NVS1.internalFlash.$name      = "ti_drivers_nvs_NVSCC26XX0";
 NVS1.internalFlash.regionBase = 0x48000;
 NVS1.internalFlash.regionSize = 0x4000;
+
+Power.enablePolicy = false;
 
 TRNG1.$name = "CONFIG_TRNG_0";
 
@@ -92,7 +78,6 @@ BIOS.rtsGateType    = "BIOS_GateMutexPri";
 BIOS.heapSize       = 0x00000000;
 BIOS.heapType       = "HeapCallback";
 
-const Hwi           = scripting.addModule("/ti/sysbios/family/arm/m3/Hwi", {}, false);
 Hwi.enableException = false;
 
 HeapCallback.initFxn           = "osalHeapInitFxn";
@@ -116,10 +101,10 @@ Semaphore.supportsPriority = false;
 const Swi         = scripting.addModule("/ti/sysbios/knl/Swi", {}, false);
 Swi.numPriorities = 6;
 
-const Task             = scripting.addModule("/ti/sysbios/knl/Task", {}, false);
 Task.defaultStackSize  = 512;
 Task.idleTaskStackSize = 768;
 Task.numPriorities     = 6;
+Task.checkStackFlag    = false;
 
 Error.policy       = "Error_SPIN";
 Error.printDetails = false;
@@ -135,9 +120,4 @@ System.supportModule   = "SysCallback";
  * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
  * re-solve from scratch.
  */
-Display1.uart.uart.$suggestSolution       = "UART0";
-Display1.uart.uart.txPin.$suggestSolution = "boosterpack.4";
-Display1.uart.uart.rxPin.$suggestSolution = "boosterpack.3";
-GPIO3.gpioPin.$suggestSolution            = "boosterpack.13";
-GPIO4.gpioPin.$suggestSolution            = "boosterpack.12";
-Timer.rtc.$suggestSolution                = "RTC0";
+Timer.rtc.$suggestSolution = "RTC0";

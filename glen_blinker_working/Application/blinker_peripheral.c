@@ -57,8 +57,6 @@
 #include  "EHdemo.h"
 
 
-
-
 /* shared variables */
 
 /* task structure and task stack */
@@ -68,7 +66,7 @@ static  Task_Struct  bpTask;
 static  uint8_t  bpTaskStack[BP_TASK_STACK_SIZE];
 
 /* handle for current connection */
-static   uint16_t  curr_conn_handle;
+static   uint16_t  curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
 
 /* entity ID used to check for source and/or destination of messages */
 static  ICall_EntityID  selfEntity;
@@ -428,7 +426,8 @@ static  void  BlinkerPeripheral_processAppMsg(bpEvt_t *pMsg)
 {
     /* variables */
     bool  dealloc;      /* whether should deallocate message data */
-
+    //attHandleValueNoti_t *notif;
+    attHandleValueNoti_t notif;
 
 
     /* figure out what to do based on the message/event type */
@@ -443,7 +442,14 @@ static  void  BlinkerPeripheral_processAppMsg(bpEvt_t *pMsg)
                 /* there was an advertising event */
                 dealloc = BlinkerPeripheral_processAdvEvent(pMsg->data);
                 break;
-
+        case BP_GREEN_TOGGLE:
+                /* send notification */
+                //notif = ICall_malloc(sizeof(attHandleValueNoti_t));
+                notif.handle = 37;
+                notif.len = BLINKERPROFILE_GREENTOGGLE_LEN;
+                notif.pValue = &BlinkerProfileGreenToggle;
+                bStatus_t error = GATT_Notification(curr_conn_handle, &notif, false);
+                break;
         default:
                 /* unknown application event - do nothing, but deallocate message */
                 dealloc = TRUE;
@@ -851,16 +857,20 @@ static  bool  BlinkerPeripheral_processAdvEvent(bpEvtData_t eventData)
 
    Revision History: 03/10/22  Glen George      initial revision
 */
-
 void  BlinkerPeripheral_updateGreen(void)
 {
     /* variables */
     uint8_t  dummy = 0;         /* dummy parameter value */
 
+    if (curr_conn_handle == LINKDB_CONNHANDLE_INVALID) return;
 
 
     /* set the parameter value to cause a notification/indication */
-    BlinkerProfile_SetParameter(BLINKERPROFILE_GREENTOGGLE, sizeof(uint8_t), &dummy);
+    //BlinkerProfile_SetParameter(BLINKERPROFILE_GREENTOGGLE, sizeof(uint8_t), &dummy);
+
+    bpEvtData_t data;
+    data.byte = 0;
+    BlinkerPeripheral_enqueueMsg(BP_GREEN_TOGGLE, data);
 
 
     /* done requesting an update of the green LED, return */

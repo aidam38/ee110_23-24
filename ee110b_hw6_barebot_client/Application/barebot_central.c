@@ -49,8 +49,9 @@
 
 /* local include files */
 #include "barebot_central.h"
-#include "lcd/lcd_rtos_intf.h"
-#include "keypad/keypad_rtos_intf.h"
+#include "barebot_ui_intf.h"
+#include "barebot_server_constants.h"
+#include "barebot_synch.h"
 
 /* shared variables */
 
@@ -64,7 +65,7 @@ static uint8_t bpTaskStack[BC_TASK_STACK_SIZE];
 static uint16_t curr_conn_handle;
 
 /* entity ID used to check for source and/or destination of messages */
-static ICall_EntityID selfEntity;
+static ICall_EntityID centralEntity;
 
 /* event used to post local events and pend on system and local events */
 static ICall_SyncHandle syncEvent;
@@ -73,19 +74,28 @@ static ICall_SyncHandle syncEvent;
 static Queue_Struct appMsgQueue;
 static Queue_Handle appMsgQueueHandle;
 
-/* advertising handles */
-static uint8 advHandleLegacy; /* handle for legacy advertising */
-static uint8 advHandleLongRange; /* handle for BLE long range advertising */
+/* event used to signal that a read operation has completed */
+static Event_Struct readEvent;
+static Event_Handle readEventHandle;
 
-/* text buffer for one line of the display to use with sprintf */
-char textBuf[17]; /* text buffer for printing to Display */
+/* read response buffers */
+static uint16 readLen;
+static uint8 readValue[BC_MAX_READ_VALUE_LENGTH];
+
+/* error response buffer */
+static attErrorRsp_t errorRsp;
 
 /* GATT handles */
-uint16_t barebotProfileServiceStartHandle;
-uint16_t barebotProfileServiceEndHandle;
-uint16_t speedCharHandle;
-uint16_t turnCharHandle;
-uint16_t thoughtsCharHandle;
+static uint16_t barebotProfileServiceStartHandle;
+static uint16_t barebotProfileServiceEndHandle;
+static uint16_t speedCharHandle;
+static uint16_t turnCharHandle;
+static uint16_t speedUpdateCharHandle;
+static uint16_t turnUpdateCharHandle;
+static uint16_t thoughtsCharHandle;
+
+/* state of the central */
+static uint8 centralState;
 
 /* functions */
 
@@ -165,15 +175,13 @@ static void BarebotCentral_init(void)
 
     /* register the current thread as an ICall dispatcher application */
     /* so that the application can send and receive messages */
-    ICall_registerApp(&selfEntity, &syncEvent);
-
-    /* initialize hardware */
-    LCDInit();
-    ClearDisplay();
-    KeypadInit_RTOS();
+    ICall_registerApp(&centralEntity, &syncEvent);
 
     /* create an RTOS queue for message from profile to be sent to app */
     appMsgQueueHandle = Util_constructQueue(&appMsgQueue);
+
+    /* initialize read event struct */
+    readEventHandle = Event_construct(&readEvent, NULL);
 
     /* set the Device Name characteristic in the GAP GATT Service */
     GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
@@ -186,24 +194,24 @@ static void BarebotCentral_init(void)
     GATT_InitClient();
 
     /* register to receive incoming ATT Indications/Notifications */
-    GATT_RegisterForInd(selfEntity);
+    GATT_RegisterForInd(centralEntity);
 
     /* initialize GATT attributes */
     GGS_AddService(GAP_SERVICE); /* GAP GATT Service */
     GATTServApp_AddService(GATT_ALL_SERVICES); /* GATT Service */
 
     /* register with GAP for HCI/Host messages - needed to receive HCI events */
-    GAP_RegisterForMsgs(selfEntity);
+    GAP_RegisterForMsgs(centralEntity);
 
     /* register for GATT local events and ATT Responses pending for transmission */
-    GATT_RegisterForMsgs(selfEntity);
+    GATT_RegisterForMsgs(centralEntity);
 
     /* set default values for Data Length Extension (enabled by default) */
     HCI_LE_WriteSuggestedDefaultDataLenCmd(BC_SUGGESTED_PDU_SIZE,
                                            BC_SUGGESTED_TX_TIME);
 
     /* initialize GAP layer for Central role and register to receive GAP events */
-    GAP_DeviceInit(GAP_PROFILE_CENTRAL, selfEntity, DEFAULT_ADDRESS_MODE,
+    GAP_DeviceInit(GAP_PROFILE_CENTRAL, centralEntity, DEFAULT_ADDRESS_MODE,
                    &pRandomAddress);
 
     /* done initializing the barebot central task, return */
@@ -248,11 +256,15 @@ static void BarebotCentral_taskFxn(UArg a0, UArg a1)
 
     uint8_t safeToDealloc = TRUE; /* whether or not to deallocate message */
 
+    /* wait for UI to initialize */
+    Event_pend(uiInitDoneHandle, Event_Id_NONE, INIT_ALL_EVENTS,
+    ICALL_TIMEOUT_FOREVER);
+
+    /* set state to initializing */
+    BarebotCentral_setState(BC_STATE_INITIALIZING);
+
     /* initialize the task */
     BarebotCentral_init();
-
-    /* dislay initialization message */
-    Display(0, 0, "Initialized", -1);
 
     /* main task loop just loops forever */
     for (;;)
@@ -273,14 +285,40 @@ static void BarebotCentral_taskFxn(UArg a0, UArg a1)
             {
 
                 /* check if it is a BLE message for this task */
-                if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == selfEntity))
+                if ((src == ICALL_SERVICE_CLASS_BLE) && (dest == centralEntity))
                 {
 
                     /* check for BLE stack events first */
                     if (((ICall_Stack_Event*) pMsg)->signature != 0xffff)
+                    {
                         /* have an inter-task message, process it */
-                        safeToDealloc = BarebotCentral_processStackMsg(
-                                (ICall_Hdr*) pMsg);
+                        switch (((ICall_Hdr*) pMsg)->event)
+                        {
+                        case GAP_MSG_EVENT:
+                            /* process GAP message */
+                            BarebotCentral_processGapMessage(
+                                    (gapEventHdr_t*) pMsg);
+                            break;
+
+                        case GATT_MSG_EVENT:
+                            /* process GATT message - nothing to process */
+                            BarebotCentral_processGattMessage(
+                                    (gattMsgEvent_t*) pMsg);
+                            break;
+
+                        case HCI_GAP_EVENT_EVENT:
+                            /* if got an error, spin, otherwise ignore the message */
+                            if (((ICall_Hdr*) pMsg)->status
+                                    == HCI_BLE_HARDWARE_ERROR_EVENT_CODE)
+                                BarebotCentral_spin();
+                            break;
+
+                        default:
+                            /* unknown event type - do nothing */
+                            break;
+                        }
+                        safeToDealloc = TRUE;
+                    }
                 }
 
                 /* if there is a message and it can be deallocated, do so */
@@ -318,69 +356,6 @@ static void BarebotCentral_taskFxn(UArg a0, UArg a1)
 }
 
 /* message processing */
-
-/*
- BarebotCentral_processStackMsg(ICall_Hdr *)
-
- Description:      This function processes messages from the BLE stack.
-
- Operation:        The message is processed based on the type of message.
- GAP and GATT messages have their own processing functions.
- HCI messages are ignored unless it is an error, in which
- case an infinite loop is entered.  All messages can be
- deallocated after this function processes them so TRUE is
- always returned.
-
- Arguments:        pMsg (ICall_Hdr *) - pointer to the message to process.
- Return Value:     (uint8_t) - TRUE if the passed message should be
- deallocated on return an FALSE if not (always TRUE).
- Exceptions:       None.
-
- Inputs:           None.
- Outputs:          None.
-
- Error Handling:   HCI errors cause the function to enter an infinite loop
- for debugging purposes.  Unknown message types are
- silently ignored.
-
- Algorithms:       None.
- Data Structures:  None.
-
- Revision History: 03/10/22  Glen George      initial revision
- */
-static uint8_t BarebotCentral_processStackMsg(ICall_Hdr *pMsg)
-{
-    /* variables */
-    /* none */
-
-    /* message processing is based on the type of message */
-    switch (pMsg->event)
-    {
-
-    case GAP_MSG_EVENT:
-        /* process GAP message */
-        BarebotCentral_processGapMessage((gapEventHdr_t*) pMsg);
-        break;
-
-    case GATT_MSG_EVENT:
-        /* process GATT message - nothing to process */
-        BarebotCentral_processGattMessage((gattMsgEvent_t*) pMsg);
-        break;
-
-    case HCI_GAP_EVENT_EVENT:
-        /* if got an error, spin, otherwise ignore the message */
-        if (pMsg->status == HCI_BLE_HARDWARE_ERROR_EVENT_CODE)
-            BarebotCentral_spin();
-        break;
-
-    default:
-        /* unknown event type - do nothing */
-        break;
-    }
-
-    /* done processing the BLE stack message, return */
-    return TRUE;
-}
 
 /*
  BarebotCentral_processGapMessage(gapEventHdr_t *)
@@ -464,11 +439,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
 
         /* === at this point all scanning and initiating parameters are set up === */
 
-        /* start scanning */
-        GapScan_enable(BC_SCAN_PERIOD, DEFAULT_SCAN_DURATION, 0);
-
-        /* show message on Display */
-        Display(0, 0, "Scanning...", -1);
+        BarebotCentral_startScanning();
 
         break;
 
@@ -483,16 +454,22 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
             /* stop scanning */
             GapScan_disable();
 
-            /* display message that we've successfully connected */
-            Display(0, 0, "Connected", 16);
-
+            /* discover barebot profile service */
             //GATT_DiscPrimaryServiceByUUID(curr_conn_handle,
             //                              &barebotProfileServUUID, 2,
             //                              selfEntity);
             //Display(0, 0, "Disc service", 16);
+            /* service discovery doesn't work well, hardcode start and end handles */
+            barebotProfileServiceStartHandle = 0x020;
+            barebotProfileServiceEndHandle = 0xFFFF;
 
-            GATT_DiscAllChars(curr_conn_handle, 0x020, 0xFFFF, selfEntity);
-            Display(0, 0, "Disc chars", 16);
+            /* discover all characteristics */
+            GATT_DiscAllChars(curr_conn_handle,
+                              barebotProfileServiceStartHandle,
+                              barebotProfileServiceEndHandle, centralEntity);
+
+            /* set state to discovering characteristics */
+            BarebotCentral_setState(BC_STATE_DISC_CHARS);
 
             break;
         }
@@ -508,10 +485,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
             curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
 
             /* start scanning again */
-            GapScan_enable(BC_SCAN_PERIOD, DEFAULT_SCAN_DURATION, 0);
-
-            /* display message */
-            Display(0, 0, "Terminated", 16);
+            BarebotCentral_startScanning();
         }
         break;
 
@@ -554,35 +528,29 @@ static void BarebotCentral_processAppMsg(bpEvt_t *pMsg)
 {
     /* variables */
     bool dealloc; /* whether should deallocate message data */
-    static GapScan_Evt_AdvRpt_t *pAdvRpt; /* event advertising report data */
+    GapScan_Evt_AdvRpt_t *pAdvRpt; /* event advertising report data */
+    char deviceName[DEVICE_NAME_MAX_LENGTH];
 
     /* figure out what to do based on the message/event type */
     switch (pMsg->event)
     {
-    case BC_EVT_KEY_PRESSED:
-        //                       row                   col
-        BarebotCentral_handleKey(pMsg->data.word >> 8,
-                                 pMsg->data.word & 0b11111111);
-        dealloc = FALSE;
-        break;
     case BC_EVT_ADV_REPORT:
         /* get report data */
         pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->data.pData);
 
         /* get name */
-        osal_memset(textBuf, 0, 16);
         BarebotCentral_findDeviceName((uint8_t*) pAdvRpt->pData,
-                                      pAdvRpt->dataLen, (char*) textBuf, 16);
+                                      pAdvRpt->dataLen, (char*) deviceName, 16);
 
         /* check if name matches the server board */
-        if (osal_memcmp(textBuf, BAREBOT_SERVER_LOCAL_NAME, 2))
+        if (osal_memcmp(deviceName, BAREBOT_SERVER_LOCAL_NAME, 2))
         {
-            /* display message that we're connecting */
-            Display(0, 0, "Connecting...", 16);
-
             /* connect to it */
             GapInit_connect(pAdvRpt->addrType, pAdvRpt->addr, DEFAULT_INIT_PHY,
                             0);
+
+            /* set state to connecting */
+            BarebotCentral_setState(BC_STATE_CONNECTING);
         }
 
         /* Free report payload data */
@@ -592,16 +560,16 @@ static void BarebotCentral_processAppMsg(bpEvt_t *pMsg)
         }
         break;
     case BC_EVT_SCAN_DUR_ENDED:
-        Display(0, 0, "Idle", 16);
+        BarebotCentral_setState(BC_STATE_IDLE);
         break;
     case BC_EVT_SCAN_PRD_ENDED:
-        Display(0, 0, "Scanning (ret)", 16);
+        BarebotCentral_setState(BC_STATE_SCANNING);
         break;
-    case BC_EVT_SVC_DISCOVERED:
-        GATT_DiscAllChars(curr_conn_handle, barebotProfileServiceStartHandle,
-                          barebotProfileServiceEndHandle, selfEntity);
-        Display(0, 0, "Disc chars", 16);
-        break;
+        /* case BC_EVT_SVC_DISCOVERED:
+         GATT_DiscAllChars(curr_conn_handle, barebotProfileServiceStartHandle,
+         barebotProfileServiceEndHandle, centralEntity);
+         Display(0, 0, "Disc chars", 16);
+         break; *//* unused */
     default:
         /* unknown application event - do nothing, but deallocate message */
         dealloc = TRUE;
@@ -644,7 +612,6 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
 {
     /* variables */
     bpAttReadByTypeHandlePair_t *handle_pair;
-    uint8_t speed;
 
     // need to refine this condition
     if (pMsg->hdr.status != SUCCESS)
@@ -655,32 +622,34 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
     switch (pMsg->method)
     {
     case ATT_ERROR_RSP:
-        //msg.errorRsp.errorCode;
-        System_sprintf(textBuf, "Error: %d", pMsg->msg.errorRsp.errCode);
-        Display(1, 0, textBuf, 16);
+        errorRsp = pMsg->msg.errorRsp;
+        BarebotCentral_setState(BC_STATE_ERROR);
         break;
     case ATT_READ_RSP:
-        speed = pMsg->msg.readRsp.pValue[0];
-        System_sprintf(textBuf, "%x", speed);
-        Display(1, 9, textBuf, 8);
+        readLen = pMsg->msg.readRsp.len;
+        osal_memcpy(readValue, pMsg->msg.readRsp.pValue, readLen);
+        Event_post(readEventHandle, BC_ALL_EVENTS);
         break;
-    case ATT_FIND_BY_TYPE_VALUE_RSP:
-        if (pMsg->msg.findByTypeValueRsp.numInfo == 0)
+    case ATT_HANDLE_VALUE_NOTI:
+        if (pMsg->msg.handleValueNoti.handle == speedCharHandle)
         {
-            /* handle error */
-            break;
-        }
-        barebotProfileServiceStartHandle =
-                ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->startHandle;
-        barebotProfileServiceEndHandle =
-                ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->endHandle;
+            BarebotUI_speedChanged(
+                    (int16) BUILD_UINT16(pMsg->msg.handleValueNoti.pValue[0],
+                                         pMsg->msg.handleValueNoti.pValue[1]));
 
-        BarebotCentral_enqueueMsg(BC_EVT_SVC_DISCOVERED,
-                                  (bpEvtData_t) (void*) 0);
+        }
+        else if (pMsg->msg.handleValueNoti.handle == turnCharHandle)
+        {
+            BarebotUI_turnChanged(
+                    (int16) BUILD_UINT16(pMsg->msg.handleValueNoti.pValue[0],
+                                         pMsg->msg.handleValueNoti.pValue[1]));
+
+        }
         break;
     case ATT_READ_BY_TYPE_RSP:
         /* if we've already discovered all characteristics, ignore these responses */
         if (speedCharHandle != 0 && turnCharHandle != 0
+                && speedUpdateCharHandle != 0 && turnUpdateCharHandle != 0
                 && thoughtsCharHandle != 0)
         {
             return;
@@ -700,6 +669,12 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
             case BAREBOTPROFILE_TURN_UUID:
                 turnCharHandle = handle_pair->handle;
                 break;
+            case BAREBOTPROFILE_SPEEDUPDATE_UUID:
+                speedUpdateCharHandle = handle_pair->handle;
+                break;
+            case BAREBOTPROFILE_TURNUPDATE_UUID:
+                turnUpdateCharHandle = handle_pair->handle;
+                break;
             case BAREBOTPROFILE_THOUGHTS_UUID:
                 thoughtsCharHandle = handle_pair->handle;
                 break;
@@ -708,99 +683,32 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
 
         /* if all handles discovered, display ready */
         if (speedCharHandle != 0 && turnCharHandle != 0
+                && speedUpdateCharHandle != 0 && turnUpdateCharHandle != 0
                 && thoughtsCharHandle != 0)
         {
-            Display(0, 0, "Ready", 16);
+            BarebotCentral_setState(BC_STATE_READY);
         }
+        break;
+        /* case ATT_FIND_BY_TYPE_VALUE_RSP:
+         if (pMsg->msg.findByTypeValueRsp.numInfo == 0)
+         {
+         break;
+         }
+         barebotProfileServiceStartHandle =
+         ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->startHandle;
+         barebotProfileServiceEndHandle =
+         ((bpAttFindByTypeValueInfo_t*) &(pMsg->msg.findByTypeValueRsp.pHandlesInfo[0]))->endHandle;
+
+         BarebotCentral_enqueueMsg(BC_EVT_SVC_DISCOVERED,
+         (bpEvtData_t) (void*) 0);
+         break; *//* unused */
+    default:
         break;
     }
     return;
 }
 
-/*
- BarebotCentral_handleKey(uint8_t row, uint8, col)
-
- Description:
-
- Operation:
-
- Arguments:
- Return Value:     None.
- Exceptions:       None.
-
- Inputs:           None.
- Outputs:          None.
-
- Error Handling:
-
- Algorithms:       None.
- Data Structures:  None.
-
- Revision History:
- */
-void BarebotCentral_handleKey(uint8_t row, uint8_t col)
-{
-    if (row == 3)
-    {
-        /* menu */
-        if (col == 3)
-        {
-            /* control screen */
-            BarebotCentral_doGattRead(speedCharHandle);
-            Display(1, 0, "Speed:", 8);
-        }
-        else if (col == 2)
-        {
-            /* thoughts screen */
-        }
-    }
-    /* get thoughts button */
-    if (row == 0 && col == 3)
-    {
-        attReadReq_t req;
-        req.handle = 0x003;
-        GATT_ReadCharValue(curr_conn_handle, &req, selfEntity);
-        return;
-    }
-
-    /* speed buttons */
-    if (col == 1)
-    {
-
-        return;
-    }
-}
-
 /* message queing */
-
-/*
- KeyPressed(uint32_t keyEvt)
-
- Description:
-
- Operation:
-
- Arguments:
- Return Value:     None.
- Exceptions:       None.
-
- Inputs:           None.
- Outputs:          None.
-
- Error Handling:
-
- Algorithms:       None.
- Data Structures:  None.
-
- Revision History:
- */
-void KeyPressed(uint32_t keyEvt)
-{
-    bpEvtData_t data;
-    data.word = keyEvt;
-    BarebotCentral_enqueueMsg(BC_EVT_KEY_PRESSED, data);
-    return;
-}
 
 /*
  BarebotCentral_scanCb(uint32_t event, void *pBuf, uintptr_t arg)
@@ -830,6 +738,8 @@ static void BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
     /* variables */
     uint8_t event;
 
+    /* this function is called from the BLE stack task, so
+     * we should forward these events to the central task */
     if (evt & GAP_EVT_ADV_REPORT)
     {
         event = BC_EVT_ADV_REPORT;
@@ -859,6 +769,16 @@ static void BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
 }
 
 /* helper functions */
+
+static void BarebotCentral_startScanning()
+{
+    /* start scanning */
+    GapScan_enable(BC_SCAN_PERIOD, DEFAULT_SCAN_DURATION, 0);
+
+    /* set state to scanning */
+    BarebotCentral_setState(BC_STATE_SCANNING);
+}
+
 /*
  BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t)
 
@@ -1010,7 +930,7 @@ static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen,
 }
 
 /*
- BarebotCentral_
+ BarebotCentral_read(uint8)
 
  Description:
 
@@ -1030,18 +950,119 @@ static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen,
 
  Revision History:
  */
-bool BarebotCentral_doGattRead(uint16_t handle)
+bcReadRsp_t BarebotCentral_read(uint8_t charID)
 {
-    attReadReq_t req;
-    req.handle = handle;
+    /* variables */
+    attReadReq_t req; /* read request struct */
+    uint32_t events; /* read event */
 
-    GATT_ReadCharValue(curr_conn_handle, &req, selfEntity);
+    /* get associated char handle */
+    switch (charID)
+    {
+    case BAREBOTPROFILE_SPEED:
+        req.handle = speedCharHandle;
+        break;
+    case BAREBOTPROFILE_TURN:
+        req.handle = turnCharHandle;
+        break;
+    case BAREBOTPROFILE_THOUGHTS:
+        req.handle = thoughtsCharHandle;
+        break;
+    default:
+        // handle invalid charID
+        break;
+    }
+
+    /* start a read operation */
+    GATT_ReadCharValue(curr_conn_handle, &req, centralEntity);
+
+    /* wait until read operation is done */
+    events = Event_pend(readEventHandle, Event_Id_NONE, BC_ALL_EVENTS,
+    ICALL_TIMEOUT_FOREVER);
+
+    /* received event */
+    if (events & UTIL_QUEUE_EVENT_ID)
+    {
+        /* allocate a new struct for the response */
+        bcReadRsp_t rsp;
+        rsp.len = readLen;
+        rsp.pValue = ICall_malloc(readLen * sizeof(uint8));
+
+        /* copy the data into it */
+        memcpy(rsp.pValue, readValue, readLen);
+
+        /* return struct */
+        return rsp;
+    }
+}
+
+/*
+ BarebotCentral_write(uint8, uint8 *)
+
+ Description:
+
+ Operation:
+
+ Arguments:
+ Return Value:
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History:
+ */
+bool BarebotCentral_write(uint8 charID, uint8 *newValue)
+{
+    /* variables */
+    attWriteReq_t req; /* write request struct */
+
+    /* get handle and length */
+    switch (charID)
+    {
+    case BAREBOTPROFILE_SPEED:
+        req.handle = speedCharHandle;
+        req.len = BAREBOTPROFILE_SPEED_LEN;
+        break;
+    case BAREBOTPROFILE_TURN:
+        req.handle = turnCharHandle;
+        req.len = BAREBOTPROFILE_TURN_LEN;
+        break;
+    case BAREBOTPROFILE_SPEEDUPDATE:
+        req.handle = speedUpdateCharHandle;
+        req.len = BAREBOTPROFILE_SPEEDUPDATE_LEN;
+        break;
+    case BAREBOTPROFILE_TURNUPDATE:
+        req.handle = turnUpdateCharHandle;
+        req.len = BAREBOTPROFILE_TURNUPDATE_LEN;
+        break;
+    case BAREBOTPROFILE_THOUGHTS:
+        req.handle = thoughtsCharHandle;
+        req.len = BAREBOTPROFILE_THOUGHTS_LEN;
+        break;
+    }
+
+    /* allocate data with GATT specific function */
+    req.pValue = GATT_bm_alloc(curr_conn_handle, ATT_WRITE_REQ, 1, NULL);
+    memcpy(req.pValue, newValue, req.len);
+
+    /* no signature or command (not really sure what they do) */
+    req.sig = 0;
+    req.cmd = 0;
+
+    /* send write request */
+    BC_VERIFY(GATT_WriteCharValue(curr_conn_handle, &req, centralEntity));
 
     return (true);
 }
 
 /*
- BarebotCentral_
+ BarebotCentral_setState(uint8)
 
  Description:
 
@@ -1061,11 +1082,38 @@ bool BarebotCentral_doGattRead(uint16_t handle)
 
  Revision History:
  */
-bool BarebotCentral_doGattWrite(uint16_t uuid)
-{
-// TODO
 
-    return (true);
+static void BarebotCentral_setState(uint8 newState)
+{
+    centralState = newState;
+    BarebotUI_centralStateChanged(centralState);
+}
+
+/*
+ BarebotCentral_getState(void)
+
+ Description:
+
+ Operation:
+
+ Arguments:
+ Return Value:
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History:
+ */
+
+uint8 BarebotCentral_getState()
+{
+    return centralState;
 }
 
 /*

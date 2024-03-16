@@ -32,9 +32,8 @@
 
 /* RTOS include files */
 #include  <ti/sysbios/BIOS.h>
-#include  <ti/sysbios/hal/Hwi.h>
 #include  <icall.h>
-#include  <ti/sysbios/knl/Clock.h>
+#include  <ti/sysbios/knl/Event.h>
 
 /* header files required to enable instruction fetch cache */
 #include  <inc/hw_memmap.h>
@@ -48,6 +47,8 @@
 #include "lcd/lcd_rtos_intf.h"
 #include "keypad/keypad_rtos_intf.h"
 #include "barebot_central_intf.h"
+#include "barebot_ui_intf.h"
+#include "barebot_synch.h."
 
 
 
@@ -62,7 +63,6 @@ icall_userCfg_t  user0Cfg = BLE_USER_CFG;
 
 int  main(){
     /* variables */
-
 
     /* initialize the system */
     PeriphPowerInit();             /* turn on power to everything */
@@ -87,7 +87,16 @@ int  main(){
     ICall_createRemoteTasks();
 
     /* create tasks */
-    BarebotCentral_createTask();  /* create task for blinker BLE peripheral */
+    BarebotCentral_createTask();  /* create task for barebot Central*/
+    BarebotUI_createTask();       /* create task for barebot UI */
+
+    /* crate initialization synchronization structs */
+    uiInitDoneHandle = Event_construct(&uiInitDone, NULL);
+
+    /* initialize hardware */
+    LCDInit();
+    ClearDisplay();
+    KeypadInit_RTOS();
 
     /* finally ready to start the RTOS and get everything running */
     BIOS_start();

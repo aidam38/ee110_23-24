@@ -120,10 +120,10 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-c_test.out \
+c_test.out 
 
 EXE_OUTPUTS__QUOTED += \
-"c_test.out" \
+"c_test.out" 
 
 
 # All Target

@@ -16,6 +16,6 @@
        3/6/24  Adam Krivka      initial revision
 */
 
-void LCDInit();
-void Display(UArg r, UArg c, char* str, UArg len);
-void ClearDisplay();
+void    LCDInit();
+int     Display(UArg r, UArg c, char* str, UArg len);
+void    ClearDisplay();

@@ -130,10 +130,10 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-ee110a_hw2.out \
+ee110a_hw2.out 
 
 EXE_OUTPUTS__QUOTED += \
-"ee110a_hw2.out" \
+"ee110a_hw2.out" 
 
 
 # All Target

@@ -19,8 +19,8 @@
 
 
 
-#ifndef  __BAREBOT_CENTRAL_INTF_H__
-    #define  __BAREBOT_CENTRAL_INTF_H__
+#ifndef  __BAREBOT_UI_INTF_H__
+    #define  __BAREBOT_UI_INTF_H__
 
 
 
@@ -34,39 +34,26 @@
 
 
 /* constants */
+    /* none */
 
-/* states */
-#define BC_STATE_IDLE           0
-#define BC_STATE_INITIALIZING   1
-#define BC_STATE_SCANNING       2
-#define BC_STATE_CONNECTING     3
-#define BC_STATE_DISC_CHARS     4
-#define BC_STATE_ERROR          5
-#define BC_STATE_READY          10
+
 
 
 
 /* structures, unions, and typedefs */
-
-/* barebot central read operation response */
-typedef struct
-{
-  uint16 len;    /* length of value */
-  uint8 *pValue; /* len bytes of read data */
-} bcReadRsp_t;
+    /* none */
 
 
 
 
 /* function declarations */
 
-/* create the barebot central task */
-void  BarebotCentral_createTask(void);
+/* create the blinker central task */
+void  BarebotUI_createTask(void);
 
-/* get current state of central */
-uint8 BarebotCentral_getState(void);
-
-/* read a characteristic */
-bcReadRsp_t BarebotCentral_read(uint8_t charID);
+/* alert the UI taht the central state changed */
+void  BarebotUI_centralStateChanged(uint8 newState);
+void  BarebotUI_speedChanged(int16 newSpeed);
+void  BarebotUI_turnChanged(int16 newTurn);
 
 #endif

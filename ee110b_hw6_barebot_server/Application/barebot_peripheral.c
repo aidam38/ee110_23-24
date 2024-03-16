@@ -45,7 +45,6 @@
 #include  <icall_ble_api.h>
 #include  <devinfoservice.h>
 #include  "ti_ble_config.h"
-#include  "ti_ble_gatt_service.h"
 
 /* C library include files */
 #include  <string.h>
@@ -53,6 +52,7 @@
 /* local include files */
 #include <barebot_peripheral.h>
 #include "button/button_rtos_intf.h"
+#include  "barebot_gatt_profile.h"
 
 /* shared variables */
 
@@ -63,7 +63,7 @@ static Task_Struct bpTask;
 static uint8_t bpTaskStack[BS_TASK_STACK_SIZE];
 
 /* handle for current connection */
-static uint16_t curr_conn_handle;
+static uint16_t conn_handles[BS_MAX_BLE_CONNS];
 
 /* entity ID used to check for source and/or destination of messages */
 static ICall_EntityID selfEntity;
@@ -170,6 +170,12 @@ static void BarebotPeripheral_init(void)
 
     /* create an RTOS queue for message from profile to be sent to app */
     appMsgQueueHandle = Util_constructQueue(&appMsgQueue);
+
+    /* initialize connection handle array */
+    for (int i = 0; i < BS_MAX_BLE_CONNS; i++)
+    {
+        conn_handles[i] = BS_INVALID_CONN;
+    }
 
     /* set the Device Name characteristic in the GAP GATT Service */
     GGS_SetParameter(GGS_DEVICE_NAME_ATT, GAP_DEVICE_NAME_LEN, attDeviceName);
@@ -416,7 +422,6 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
         BarebotPeripheral_handleButton(pMsg->data.byte);
         dealloc = FALSE;
         break;
-
     case BS_CHAR_CHANGE_EVT:
         /* a characteristic value changed, handle it */
         dealloc = BarebotPeripheral_processCharValueChangeEvt(pMsg->data);
@@ -476,7 +481,7 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
 static void BarebotPeripheral_handleButton(uint8_t buttonId)
 {
     /* variables */
-    uint8_t error;
+    uint16_t zero = 0;
 
     if (!(buttonId == 1 || buttonId == 2))
     {
@@ -486,18 +491,20 @@ static void BarebotPeripheral_handleButton(uint8_t buttonId)
     switch (buttonId)
     {
     case 1:
-        /* create a new error message */
-        error = ERROR_1;
+        /* reset speed */
+        BarebotProfile_SetParameter(BAREBOTPROFILE_SPEED,
+        BAREBOTPROFILE_SPEED_LEN,
+                                    &zero);
         break;
     case 2:
-        /* clear error message, should already be clear, do nothing*/
-        error = ERROR_2;
+        /* reset turn */
+        BarebotProfile_SetParameter(BAREBOTPROFILE_TURN,
+        BAREBOTPROFILE_TURN_LEN,
+                                    &zero);
+
         break;
     }
 
-    /* set the characteristic, should trigger a notification */
-    BarebotProfile_SetParameter(BAREBOTPROFILE_ERROR, BAREBOTPROFILE_ERROR_LEN,
-                                &error);
     return;
 }
 
@@ -505,6 +512,7 @@ static void BarebotPeripheral_processGapMessage(gapEventHdr_t *pMsg)
 {
     /* variables */
     uint8_t systemID[DEVINFO_SYSTEM_ID_LEN]; /* system ID */
+    bpEvtData_t data;
 
     /* process the message based on the opcode that generated it */
     switch (pMsg->opcode)
@@ -564,33 +572,59 @@ static void BarebotPeripheral_processGapMessage(gapEventHdr_t *pMsg)
         break;
 
     case GAP_LINK_ESTABLISHED_EVENT:
-        /* link was established, make sure it was successful */
-        if (((gapEstLinkReqEvent_t*) pMsg)->hdr.status == SUCCESS)
+        /* check if we can have another connection */
+        if (BarebotPeripheral_getNumConns() == BS_MAX_BLE_CONNS)
         {
-
-            /* have a connection - remember it (only 1 allowed) */
-            curr_conn_handle = ((gapEstLinkReqEvent_t*) pMsg)->connectionHandle;
-
             /* stop advertising since only one connection is allowed */
             GapAdv_disable(advHandleLongRange);
             GapAdv_disable(advHandleLegacy);
+            break;
+        }
+        /* link was established, make sure it was successful */
+        if (((gapEstLinkReqEvent_t*) pMsg)->hdr.status == SUCCESS)
+        {
+            /* find an empty slot */
+            for (int i = 0; i < BS_MAX_BLE_CONNS; i++)
+            {
+                if (conn_handles[i] == BS_INVALID_CONN)
+                {
+                    /* found, save connection */
+                    conn_handles[i] =
+                            ((gapEstLinkReqEvent_t*) pMsg)->connectionHandle;
+
+                    /* enable notifications for speed and turn */
+                    GATTServApp_WriteCharCfg(conn_handles[i],
+                                             BarebotProfileSpeedConfig,
+                                             GATT_CLIENT_CFG_NOTIFY);
+
+                    GATTServApp_WriteCharCfg(conn_handles[i],
+                                             BarebotProfileTurnConfig,
+                                             GATT_CLIENT_CFG_NOTIFY);
+
+                }
+            }
+
         }
         break;
 
     case GAP_LINK_TERMINATED_EVENT:
-        /* link was terminated, be sure it was this link */
-        if (curr_conn_handle
-                == ((gapTerminateLinkEvent_t*) pMsg)->connectionHandle)
+        /* link was terminated */
+
+        /* find this connection */
+        for (int i = 0; i < BS_MAX_BLE_CONNS; i++)
         {
-
-            /* indicate there is no connected handle */
-            curr_conn_handle = LINKDB_CONNHANDLE_INVALID;
-
-            /* start advertising again since there is no longer a connection */
-            GapAdv_enable(advHandleLegacy, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
-            GapAdv_enable(advHandleLongRange, GAP_ADV_ENABLE_OPTIONS_USE_MAX,
-                          0);
+            if (conn_handles[i]
+                    == ((gapEstLinkReqEvent_t*) pMsg)->connectionHandle)
+            {
+                /* found, make it invalid */
+                conn_handles[i] = BS_INVALID_CONN;
+            }
         }
+
+        /* start advertising again since there is no longer a connection */
+        GapAdv_enable(advHandleLegacy, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
+        GapAdv_enable(advHandleLongRange, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
+
         break;
 
     default:
@@ -685,6 +719,18 @@ static bool BarebotPeripheral_processCharValueChangeEvt(bpEvtData_t msg_data)
     /* figure out which characteristic changed (byte of the message data has the ID) */
     switch (msg_data.byte)
     {
+    case BAREBOTPROFILE_SPEED:
+        /* change robot speed */
+        // not implemented
+        /* send notification */
+        BarebotProfile_NotifyParameter(BAREBOTPROFILE_SPEED);
+        break;
+    case BAREBOTPROFILE_TURN:
+        /* change robot turn */
+        // not implemented
+        /* send notification */
+        BarebotProfile_NotifyParameter(BAREBOTPROFILE_TURN);
+        break;
     default:
         /* unknown parameter ID, shouldn't get here, do nothing */
         break;
@@ -875,6 +921,47 @@ static status_t BarebotPeripheral_enqueueMsg(uint8_t event, bpEvtData_t data)
 
     /* done enqueuing the message, return the error status */
     return success;
+}
+
+/*
+ BarebotPeripheral_getNumConns()
+
+ Description:      This function loops infinitely in order to stall the
+ peripheral in case of an error.
+
+ Operation:        The function implements an infinite loop.
+
+ Arguments:        None.
+ Return Value:     None.
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:   None.
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+
+static uint8_t BarebotPeripheral_getNumConns()
+{
+    /* variables */
+    uint8_t num_conns = 0;
+
+    /* loop over all slots and count valid connections */
+    for (int i = 0; i < BS_MAX_BLE_CONNS; i++)
+    {
+        if (conn_handles[i] != BS_INVALID_CONN)
+        {
+            num_conns += 1;
+        }
+    }
+
+    /* return the number */
+    return num_conns;
 }
 
 /*

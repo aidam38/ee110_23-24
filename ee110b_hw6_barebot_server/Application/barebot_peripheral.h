@@ -57,6 +57,9 @@
 #define  BS_SUGGESTED_PDU_SIZE      251
 #define  BS_SUGGESTED_TX_TIME       2120
 
+/* connections */
+#define  BS_INVALID_CONN            0xFFFF
+#define  BS_MAX_BLE_CONNS           3
 
 /* errors */
 #define ERROR_1     1
@@ -121,6 +124,7 @@ static void      BarebotPeripheral_charValueChangeCB(uint8_t);
 
 /* local funtions - utility */
 static status_t  BarebotPeripheral_enqueueMsg(uint8_t, bpEvtData_t);
+static uint8_t BarebotPeripheral_getNumConns(void);
 static void      BarebotPeripheral_spin(void);
 
 

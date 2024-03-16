@@ -1,19 +1,18 @@
 /****************************************************************************/
 /*                                                                          */
-/*                           blinker_gatt_profile.h                         */
-/*                          GATT Callback Functions                         */
-/*                               Bluetooth Demo                             */
+/*                           barebot_gatt_profile.h                         */
+/*                          Barebot full GATT Profile                       */
 /*                                Include File                              */
 /*                                                                          */
 /****************************************************************************/
 
 /*
    This file contains the constants, structures, and function prototypes for
-   the Bluetooth blinker GATT profile defined in blinker_gatt_profile.c.
+   the Bluetooth barebot GATT profile defined in barebot_gatt_profile.c.
 
 
    Revision History:
-       3/10/22  Glen George      initial revision
+       3/15/24  Adam Krivka      initial revision
 */
 
 

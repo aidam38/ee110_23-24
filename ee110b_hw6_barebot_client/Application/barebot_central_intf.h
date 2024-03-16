@@ -1,7 +1,7 @@
 /****************************************************************************/
 /*                                                                          */
-/*                         blinker_central_intf.h                        */
-/*                        Blinker Central Interface                      */
+/*                         barebot_central_intf.h                           */
+/*                        barebot Central Interface                         */
 /*                               Bluetooth Demo                             */
 /*                                Include File                              */
 /*                                                                          */
@@ -9,8 +9,8 @@
 
 /*
    This file contains the constants, structures, and function prototypes for
-   interfacing with the Bluetooth blinker central defined in
-   blinker_central.c.
+   interfacing with the Bluetooth barebot central defined in
+   barebot_central.c.
 
 
    Revision History:
@@ -68,5 +68,8 @@ uint8 BarebotCentral_getState(void);
 
 /* read a characteristic */
 bcReadRsp_t BarebotCentral_read(uint8_t charID);
+
+/* write a characteristic */
+bool BarebotCentral_write(uint8 charID, uint8 *newValue);
 
 #endif

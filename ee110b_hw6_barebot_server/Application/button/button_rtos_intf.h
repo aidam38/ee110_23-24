@@ -1,13 +1,13 @@
 /****************************************************************************/
 /*                                                                          */
-/*                             keypad_rtos_intf.h                           */
-/*                           Keypad RTOS interface                          */
+/*                             button_rtos_intf.h                           */
+/*                           Button RTOS interface                          */
 /*                                                                          */
 /****************************************************************************/
 
-/* 4x4 Keypad RTOS interface function declarations (only those necessary to
-    set up and use the keypad code). Functions declared are:
-        KeypadInit_RTOS() - initialize the keypad using RTOS hardware and 
+/* 4x4 Button RTOS interface function declarations (only those necessary to
+    set up and use the button code). Functions declared are:
+        ButtonInit_RTOS() - initialize the button using RTOS hardware and 
                             software interrupts
 
    Revision History:

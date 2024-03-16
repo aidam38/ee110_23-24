@@ -1,20 +1,37 @@
+/****************************************************************************/
+/*                                                                          */
+/*                              lcd_util.c                                  */
+/*                            LCD Utility functions                         */
+/*                                                                          */
+/****************************************************************************/
+
+/* This file contains utility functions for the LCD. Functions included are:
+        Display_printf - print a formatted string to the LCD
+
+   Revision History:
+       3/6/24  Adam Krivka      initial revision
+*/
+
 /* includes */
 #include  <xdc/runtime/System.h>
 
+/* local includes */
 #include "lcd_util.h"
 #include "lcd_rtos_intf.h"
 
-/* shared variables */
+/* shared/global variables */
+    /* none */
 
-char textBuf[TEXT_BUF_SIZE];
+
 
 /* functions */
 
 int Display_printf(UArg r, UArg c, UArg len, char *fmt, ...) {
     /* variables */
-    va_list arg__va;
+    char textBuf[TEXT_BUF_SIZE]; /* text buffer */
+    va_list arg__va;                /* variable argument list */
 
-    /* print to textBuf */
+    /* print to textBuf (must use variadac args version here)*/
     (void)va_start(arg__va, fmt);
     System_sprintf_va(textBuf, fmt, arg__va);
     va_end(arg__va);

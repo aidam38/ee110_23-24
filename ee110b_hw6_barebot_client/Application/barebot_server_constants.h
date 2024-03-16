@@ -1,10 +1,28 @@
+/****************************************************************************/
+/*                                                                          */
+/*                      barebot_server_constants.h                          */
+/*                  Barebot Server Identifying Constants                    */
+/*                                Include File                              */
+/*                                                                          */
+/****************************************************************************/
+
+/*
+   This file provides constants that help the Central and Server identify
+   and communicate with each other.  
+
+
+   Revision History:
+      3/15/24 Adam Krivka       initial revision
+*/
 
 #ifndef  __BAREBOT_SERVER_CONSTANTS_H__
     #define   __BAREBOT_SERVER_CONSTANTS_H__
 
 
+/* server local short name */
 #define BAREBOT_SERVER_LOCAL_NAME "BP"
 
+/* (below is copy-pasted from server GATT profile) */
 // Profile Parameters
 // Service UUID
 #define BAREBOTPROFILE_SERV_UUID 0xFFF0

@@ -1,20 +1,19 @@
 /****************************************************************************/
 /*                                                                          */
-/*                         blinker_central_intf.h                        */
-/*                        Blinker Central Interface                      */
-/*                               Bluetooth Demo                             */
+/*                             barebot_ui_intf.h                            */
+/*                            barebot ui Interface                          */
 /*                                Include File                              */
 /*                                                                          */
 /****************************************************************************/
 
 /*
    This file contains the constants, structures, and function prototypes for
-   interfacing with the Bluetooth blinker central defined in
-   blinker_central.c.
+   interfacing with the Bluetooth barebot ui defined in
+   barebot_ui.c. 
 
 
    Revision History:
-      3/10/22  Glen George       initial revision
+      3/15/24 Adam Krivka       initial revision
 */
 
 
@@ -48,11 +47,11 @@
 
 /* function declarations */
 
-/* create the blinker central task */
+/* create the barebot ui task */
 void  BarebotUI_createTask(void);
 
-/* alert the UI taht the central state changed */
-void  BarebotUI_centralStateChanged(uint8 newState);
+/* alert the UI taht the ui state changed */
+void  BarebotUI_uiStateChanged(uint8 newState);
 void  BarebotUI_speedChanged(int16 newSpeed);
 void  BarebotUI_turnChanged(int16 newTurn);
 

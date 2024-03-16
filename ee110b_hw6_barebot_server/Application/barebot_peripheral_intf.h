@@ -1,16 +1,15 @@
 /****************************************************************************/
 /*                                                                          */
-/*                         blinker_peripheral_intf.h                        */
+/*                         barebot_peripheral_intf.h                        */
 /*                        Barebot Peripheral Interface                      */
-/*                               Bluetooth Demo                             */
 /*                                Include File                              */
 /*                                                                          */
 /****************************************************************************/
 
 /*
    This file contains the constants, structures, and function prototypes for
-   interfacing with the Bluetooth blinker peripheral defined in
-   blinker_peripheral.c.
+   interfacing with the Bluetooth barebot peripheral defined in
+   barebot_peripheral.c.
 
 
    Revision History:
@@ -48,7 +47,7 @@
 
 /* function declarations */
 
-/* create the blinker peripheral task */
+/* create the barebot peripheral task */
 void  BarebotPeripheral_createTask(void);
 
 #endif

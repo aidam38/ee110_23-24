@@ -1,22 +1,29 @@
 /****************************************************************************/
 /*                                                                          */
-/*                            barebot_gatt_profile                          */
-/*                          GATT Callback Functions                         */
-/*                             Event Handler Demo                           */
+/*                            barebot_gatt_profile.c                        */
+/*                          Barebot full GATT Profile                       */
 /*                                                                          */
 /****************************************************************************/
 
 /*
- This file contains the profile callback functions for blinking the LEDs
- for the BLE-based event handler demo.  The functions read or update the
- profile data and then send an appropriate event to the peripheral code
- if the data has changed.
- barebot_ReadAttrCB  - callback function for reading an attribute
- barebot_WriteAttrCB - callback fucntion for writing an attribute
+ This file is based off the generated ti_ble_gatt_profile.c file from the
+ the SysConfig tool. It holds the GATT attribute structure and provides
+ and interface for it. It also provides the callback functions for reading
+ and writing the attributes from the TI BLE stack.
+
+ The global functions included are:
+    BarebotProfile_AddService - initializes services in profile
+    BarebotProfile_RegisterAppCBs - registers read/write callback functions
+    BarebotProfile_SetParameter - sets a characteristic value
+    BarebotProfile_GetParameter - gets a characteristic value
+    BarebotProfile_NotifyParameter - notifies a characteristic value
+    BarebotProfile_ReadAttrCB - callback for reading an attribute
+    BarebotProfile_WriteAttrCB - callback for writing an attribute
+
 
 
  Revision History:
- 3/10/22  Glen George      initial revision
+       3/15/24  Adam Krivka      initial revision
  */
 
 /*********************************************************************
@@ -218,12 +225,12 @@ static gattAttribute_t BarebotProfileAttrTbl[] = { {
 /*********************************************************************
  * LOCAL FUNCTIONS
  *********************************************************************/
-static bStatus_t gatt_BarebotProfile_ReadAttrCB(uint16_t connHandle,
+static bStatus_t BarebotProfile_ReadAttrCB(uint16_t connHandle,
                                                 gattAttribute_t *pAttr,
                                                 uint8_t *pValue, uint16_t *pLen,
                                                 uint16_t offset,
                                                 uint16_t maxLen, uint8_t method);
-static bStatus_t gatt_BarebotProfile_WriteAttrCB(uint16_t connHandle,
+static bStatus_t BarebotProfile_WriteAttrCB(uint16_t connHandle,
                                                  gattAttribute_t *pAttr,
                                                  uint8_t *pValue, uint16_t len,
                                                  uint16_t offset,
@@ -233,8 +240,8 @@ static bStatus_t gatt_BarebotProfile_WriteAttrCB(uint16_t connHandle,
  * PROFILE CALLBACKS
  *********************************************************************/
 // BarebotProfile Service Callbacks
-CONST gattServiceCBs_t BarebotProfileCBs = { gatt_BarebotProfile_ReadAttrCB, // Read callback function pointer
-        gatt_BarebotProfile_WriteAttrCB, // Write callback function pointer
+CONST gattServiceCBs_t BarebotProfileCBs = { BarebotProfile_ReadAttrCB, // Read callback function pointer
+        BarebotProfile_WriteAttrCB, // Write callback function pointer
         NULL  // Authorization callback function pointer
         };
 
@@ -272,19 +279,17 @@ CONST gattServiceCBs_t BarebotProfileCBs = { gatt_BarebotProfile_ReadAttrCB, // 
  Inputs:           None.
  Outputs:          None.
 
- Error Handling:   If a blob operation is requested the error code
- ATT__ERR_ATTR_NOT_LONG is returned.  If a 128-bit UUID is
- used, ATT_ERR_INVALID_HANDLE is returned.  If the passed
- attribute does not exist ATT_ERR_ATTR_NOT_FOUND is
- returned.
+ Error Handling:   If a 128-bit UUID is used, ATT_ERR_INVALID_HANDLE is returned.  
+ If the passed attribute does not exist ATT_ERR_ATTR_NOT_FOUND is returned.
 
  Algorithms:       None.
  Data Structures:  None.
 
- Revision History: 03/07/22  Glen George      initial revision
+ Revision History:        3/15/24  Adam Krivka      initial revision
+
  */
 
-bStatus_t gatt_BarebotProfile_ReadAttrCB(uint16_t connHandle,
+bStatus_t BarebotProfile_ReadAttrCB(uint16_t connHandle,
                                          gattAttribute_t *pAttr,
                                          uint8_t *pValue, uint16_t *pLen,
                                          uint16_t offset, uint16_t maxLen,
@@ -381,18 +386,15 @@ bStatus_t gatt_BarebotProfile_ReadAttrCB(uint16_t connHandle,
  Inputs:           None.
  Outputs:          None.
 
- Error Handling:   If a blob operation is requested the error code
- ATT__ERR_ATTR_NOT_LONG is returned.  If a 128-bit UUID is
- used, ATT_ERR_INVALID_HANDLE is returned.  If the passed
- attribute does not exist ATT_ERR_ATTR_NOT_FOUND is
- returned.
+ Error Handling:   If a 128-bit UUID is used, ATT_ERR_INVALID_HANDLE is returned. 
+ If the passed attribute does not exist ATT_ERR_ATTR_NOT_FOUND is returned.
 
  Algorithms:       None.
  Data Structures:  None.
 
  Revision History: 03/09/22  Glen George      initial revision
  */
-bStatus_t gatt_BarebotProfile_WriteAttrCB(uint16_t connHandle,
+bStatus_t BarebotProfile_WriteAttrCB(uint16_t connHandle,
                                           gattAttribute_t *pAttr,
                                           uint8_t *pValue, uint16_t len,
                                           uint16_t offset, uint8_t method)
@@ -415,10 +417,9 @@ bStatus_t gatt_BarebotProfile_WriteAttrCB(uint16_t connHandle,
         /* 16-bit UUID, form the UUID */
         uuid = BUILD_UINT16(pAttr->type.uuid[0], pAttr->type.uuid[1]);
 
-        /* do the write operation based on UUID */
+        /* handle operation based on UUID */
         switch (uuid)
         {
-
         case BAREBOTPROFILE_SPEED_UUID:
             memcpy(pAttr->pValue, pValue, len);
             changeID = BAREBOTPROFILE_SPEED;
@@ -592,7 +593,7 @@ bStatus_t BarebotProfile_SetParameter(uint8 param, uint8 len, void *value)
                                    BarebotProfileAttrTbl,
                                    GATT_NUM_ATTRS(BarebotProfileAttrTbl),
                                    INVALID_TASK_ID,
-                                   gatt_BarebotProfile_ReadAttrCB);
+                                   BarebotProfile_ReadAttrCB);
         break;
 
     case BAREBOTPROFILE_TURN:
@@ -603,7 +604,7 @@ bStatus_t BarebotProfile_SetParameter(uint8 param, uint8 len, void *value)
                                    BarebotProfileAttrTbl,
                                    GATT_NUM_ATTRS(BarebotProfileAttrTbl),
                                    INVALID_TASK_ID,
-                                   gatt_BarebotProfile_ReadAttrCB);
+                                   BarebotProfile_ReadAttrCB);
         break;
 
     case BAREBOTPROFILE_SPEEDUPDATE:
@@ -636,13 +637,13 @@ bStatus_t BarebotProfile_SetParameter(uint8 param, uint8 len, void *value)
 }
 
 /******************************************************************
- * GetParameter - Get a service parameter.
+ * NotifyParameter - Sends a notification for a characteristic.
  *
  * param - Profile parameter ID
- * value - pointer to data to write.  This is dependent on
- *         the parameter ID and WILL be cast to the appropriate
- *         data type (example: data type of uint16 will be cast to
- *         uint16 pointer).
+ *
+ * Revision History:
+ *     3/15/24  Adam Krivka      initial revision
+ *
  ******************************************************************/
 
 bStatus_t BarebotProfile_NotifyParameter(uint8 param)
@@ -658,7 +659,7 @@ case BAREBOTPROFILE_SPEED:
                                BarebotProfileAttrTbl,
                                GATT_NUM_ATTRS(BarebotProfileAttrTbl),
                                INVALID_TASK_ID,
-                               gatt_BarebotProfile_ReadAttrCB);
+                               BarebotProfile_ReadAttrCB);
     break;
 
 case BAREBOTPROFILE_TURN:
@@ -668,7 +669,7 @@ case BAREBOTPROFILE_TURN:
                                BarebotProfileAttrTbl,
                                GATT_NUM_ATTRS(BarebotProfileAttrTbl),
                                INVALID_TASK_ID,
-                               gatt_BarebotProfile_ReadAttrCB);
+                               BarebotProfile_ReadAttrCB);
     break;
 
 default:

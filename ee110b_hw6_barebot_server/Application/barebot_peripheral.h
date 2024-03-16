@@ -124,7 +124,7 @@ static void      BarebotPeripheral_charValueChangeCB(uint8_t);
 
 /* local funtions - utility */
 static status_t  BarebotPeripheral_enqueueMsg(uint8_t, bpEvtData_t);
-static uint8_t BarebotPeripheral_getNumConns(void);
+static uint8_t   BarebotPeripheral_getNumConns(void);
 static void      BarebotPeripheral_spin(void);
 
 

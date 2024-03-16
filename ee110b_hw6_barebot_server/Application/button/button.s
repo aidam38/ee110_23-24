@@ -1,19 +1,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                                   keypad.s                                 ;
+;                                   button.s                                 ;
 ;                                4x4 Button Drive                            ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; This file contains the code for the keypad driver. It is responsible for
-; scanning the keypad and debouncing the keys. It is also responsible for
+; This file contains the code for the button driver. It is responsible for
+; scanning the button and debouncing the keys. It is also responsible for
 ; generating events when keys are pressed and released.
 ;
 ; The functions implemented in this file are:
-;   ButtonInit - initializes the keypad driver
-;   ButtonRegisterHwi - registers direct hardware interrupt for the keypad
+;   ButtonInit - initializes the button driver
+;   ButtonRegisterHwi - registers direct hardware interrupt for the button
 ;                       (for use in assembly-only code)
-;   ButtonScanAndDebounce - scans the keypad and debounces the keys
+;   ButtonScanAndDebounce - scans the button and debounces the keys
 ;
 ; The interface, expected to be implemented in a separate file for flexibility,
 ; is as follows:
@@ -21,7 +21,7 @@
 ; 
 ; Revision History:
 ;     11/7/23  Adam Krivka      initial revision
-;     3/4/24    Adam Krivka     expanded ButtonInit and created KeypadRegisterHwi
+;     3/4/24    Adam Krivka     expanded ButtonInit and created ButtonRegisterHwi
 ;     3/6/24    Adam Krivka     added comments and fixed formatting
 
 
@@ -47,7 +47,7 @@
 ;                    less than 8 bits)
 DebounceCounter: .byte 0
 
-; PrevState - the previous state of one row of the keypad (one-hot encoding)
+; PrevState - the previous state of one row of the button (one-hot encoding)
 PrevState: .byte 0
 
 
@@ -56,9 +56,9 @@ PrevState: .byte 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .text
 
-; KeypadInit
+; ButtonInit
 ;
-; Description:          Initializes the keypad driver by setting the current row to 0,
+; Description:          Initializes the button driver by setting the current row to 0,
 ;                       the debounce counter to DEBOUNCE_TIME, and the previous state
 ;                       to 1111b (all keys up).
 ;
@@ -97,7 +97,7 @@ ButtonInit:
     MOV     R1, #BOTH_BUTTONS_UP
     STRB    R1, [R0]
 
-; configure GPIO pins for keypad
+; configure GPIO pins for button
     MOV32   R1, IOC_BASE_ADDR   ; prepare IOC base address
     STREG   BUTTON_CFG, R1, IOCFG_REG_SIZE * BUTTON_0_PIN
     STREG   BUTTON_CFG, R1, IOCFG_REG_SIZE * BUTTON_1_PIN
@@ -109,7 +109,7 @@ ButtonInit:
 
 ; ButtonScanAndDebounce
 ;
-; Description:      Scans the keypad and debounces the keys. If a key is pressed,
+; Description:      Scans the button and debounces the keys. If a key is pressed,
 ;                   for DEBOUNCE_TIME, the KeyPressed function is call with
 ;                         [ROW][COLUMN]
 ;                   where
@@ -159,7 +159,7 @@ ButtonDebounce:
     LDRB    R8, [R5]
 
 Read:
-    ; read the current state of the keypad
+    ; read the current state of the button
     MOV32   R1, GPIO_BASE_ADDR
     LDR     R0, [R1, #GPIO_DIN_OFFSET]
     LSR     R0, #BUTTON_0_PIN       ; shift to the right to get the column bits

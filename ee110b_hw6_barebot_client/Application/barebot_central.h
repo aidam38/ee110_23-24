@@ -2,7 +2,6 @@
 /*                                                                          */
 /*                            barebot_central.h                             */
 /*                             Barebot Central                              */
-/*                               Bluetooth Demo                             */
 /*                                Include File                              */
 /*                                                                          */
 /****************************************************************************/
@@ -99,30 +98,33 @@ typedef  struct  {
              void      *pBuf;           /* event data */
          }  bpGapAdvEventData_t;
 
-
-/* read by type response handle pair */
+/* reverse-engineered ATT response structs*/
+/* need to pack structs to match memory layout exactly */
 #pragma pack(1)
 
+/* read by type response handle pair */
 typedef struct {
             uint8_t     unsure[3];            /* i'm not sure what this data stands for
                                                     i think one of the is the first byte of the value */
-            uint16_t    handle;
-            uint16_t    uuid;
+            uint16_t    handle;             /* handle of the attribute */
+            uint16_t    uuid;               /* UUID of the attribute */
 
 } bpAttReadByTypeHandlePair_t;
 
+/* read by group type response pair */
 typedef struct {
             uint8_t     unsure[3];            /* i'm not sure what this data stands for
                                                     i think one of the is the first byte of the value */
-            uint16_t    startHandle;
-            uint16_t    endHandle;
-            uint16_t    uuid;
+            uint16_t    startHandle;            /* start handle of the service */
+            uint16_t    endHandle;              /* end handle of the service */
+            uint16_t    uuid;                   /* UUID of the service */
 
 } bpAttReadByGrpTypePair_t;
 
+/* find by type value response info */
 typedef struct {
-            uint16_t    startHandle;
-            uint16_t    endHandle;
+            uint16_t    startHandle;            /* start handle of the attribute */
+            uint16_t    endHandle;              /* end handle of the attribute */
 
 } bpAttFindByTypeValueInfo_t;
 
@@ -144,12 +146,10 @@ static void      BarebotCentral_processAppMsg(bpEvt_t *);
 static void      BarebotCentral_scanCb(uint32_t, void *, uintptr_t);
 
 /* local funtions - utility */
-static bool BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t);
-static void BarebotCentral_startScanning(void);
-static void BarebotCentral_setState(uint8);
+static bool      BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t);
+static void      BarebotCentral_startScanning(void);
+static void      BarebotCentral_setState(uint8);
 static status_t  BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t);
 static void      BarebotCentral_spin(void);
-
-
 
 #endif

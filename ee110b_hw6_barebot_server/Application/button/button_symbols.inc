@@ -1,12 +1,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                                                            ;
-;                            keypad_symbols.inc                              ;
-;                       Symbols for the keypad driver                        ;
+;                            button_symbols.inc                              ;
+;                       Symbols for the button driver                        ;
 ;                                 Include File                               ;
 ;                                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; This file contains the symbols for the keypad driver.
+; This file contains the symbols for the button driver.
 ; 
 ; Revision History:
 ;       11/7/23  Adam Krivka      initial revision

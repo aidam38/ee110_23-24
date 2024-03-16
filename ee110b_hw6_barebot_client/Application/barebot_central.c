@@ -8,11 +8,12 @@
 
 /*
  This file contains the tasks and support code for implementing the barebot
- central device for the Bluetooth demo.  The global functions included
+ central device for the Barebot demo.  The global functions included
  are:
  BarebotCentral_createTask  - create the barebot central task
- BarebotCentral_updateRed   - want to update the red LED
- BarebotCentral_updateGreen - want to update the green LED
+ BarebotCentral_getState    - get the current state of the central
+ BarebotCentral_read        - read a characteristic
+ BarebotCentral_write       - write a characteristic
 
  The local functions included are:
  BarebotCentral_enqueueMsg        - enqueue a message for the task
@@ -22,6 +23,8 @@
  BarebotCentral_processStackMsg   - process BLE stack messages
  BarebotCentral_spin              - infinite loop (for debugging)
  BarebotCentral_taskFxn           - run the barebot central task
+ BarebotCentral_setState          - set the state of the central
+ BarebotCentral_startScanning     - start scanning for devices
 
 
  Revision History:
@@ -437,7 +440,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
         GapInit_setPhyParam(DEFAULT_INIT_PHY, INIT_PHYPARAM_CONN_INT_MAX,
                             INIT_PHYPARAM_MAX_CONN_INT);
 
-        /* === at this point all scanning and initiating parameters are set up === */
+        /* ===at this point all scanning and initiating parameters are set up == */
 
         BarebotCentral_startScanning();
 
@@ -459,7 +462,7 @@ static void BarebotCentral_processGapMessage(gapEventHdr_t *pMsg)
             //                              &barebotProfileServUUID, 2,
             //                              selfEntity);
             //Display(0, 0, "Disc service", 16);
-            /* service discovery doesn't work well, hardcode start and end handles */
+            /* service discovery doesn't work well, hardcode start and end handles for now */
             barebotProfileServiceStartHandle = 0x020;
             barebotProfileServiceEndHandle = 0xFFFF;
 
@@ -613,7 +616,7 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
     /* variables */
     bpAttReadByTypeHandlePair_t *handle_pair;
 
-    // need to refine this condition
+    /* check status*/
     if (pMsg->hdr.status != SUCCESS)
     {
         // TODO
@@ -622,17 +625,23 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
     switch (pMsg->method)
     {
     case ATT_ERROR_RSP:
+        /* error received */
         errorRsp = pMsg->msg.errorRsp;
         BarebotCentral_setState(BC_STATE_ERROR);
         break;
     case ATT_READ_RSP:
+        /* read response received */
+        /* copy its contents to shared variable */
         readLen = pMsg->msg.readRsp.len;
         osal_memcpy(readValue, pMsg->msg.readRsp.pValue, readLen);
+        /* unblock function that initiated read operation */
         Event_post(readEventHandle, BC_ALL_EVENTS);
         break;
     case ATT_HANDLE_VALUE_NOTI:
+        /* notification received */
         if (pMsg->msg.handleValueNoti.handle == speedCharHandle)
         {
+            /* update speed value in UI */
             BarebotUI_speedChanged(
                     (int16) BUILD_UINT16(pMsg->msg.handleValueNoti.pValue[0],
                                          pMsg->msg.handleValueNoti.pValue[1]));
@@ -640,6 +649,7 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
         }
         else if (pMsg->msg.handleValueNoti.handle == turnCharHandle)
         {
+            /* update turn value in UI */
             BarebotUI_turnChanged(
                     (int16) BUILD_UINT16(pMsg->msg.handleValueNoti.pValue[0],
                                          pMsg->msg.handleValueNoti.pValue[1]));
@@ -689,6 +699,7 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
             BarebotCentral_setState(BC_STATE_READY);
         }
         break;
+        /* unused */
         /* case ATT_FIND_BY_TYPE_VALUE_RSP:
          if (pMsg->msg.findByTypeValueRsp.numInfo == 0)
          {
@@ -701,7 +712,7 @@ static void BarebotCentral_processGattMessage(gattMsgEvent_t *pMsg)
 
          BarebotCentral_enqueueMsg(BC_EVT_SVC_DISCOVERED,
          (bpEvtData_t) (void*) 0);
-         break; *//* unused */
+         break; */
     default:
         break;
     }
@@ -770,6 +781,27 @@ static void BarebotCentral_scanCb(uint32_t evt, void *pMsg, uintptr_t arg)
 
 /* helper functions */
 
+
+/*
+ BarebotCentral_enqueueMsg(uint8_t, bpEvtData_t)
+
+ Description:      Starts scanning for devices.
+
+ Operation:        
+
+ Arguments:        None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:   None
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History:  /15/24  Adam Krivka      initial revision
+
+ */
 static void BarebotCentral_startScanning()
 {
     /* start scanning */
@@ -852,23 +884,30 @@ static status_t BarebotCentral_enqueueMsg(uint8_t event, bpEvtData_t data)
 /*
  BarebotCentral_findDeviceName(uint8_t *, uint16_t, char *, uint8_t)
 
- Description:
+ Description:       This function finds the device name in the advertisement
+                    data.
 
- Operation:
+ Operation:         The function parses the advertisement data looking for
+                    the device name.  If it finds the device name it copies
+                    it into the passed buffer.
 
- Arguments:
- Return Value:
- Exceptions:       None.
+ Arguments:         pData (uint8_t *) - pointer to the advertisement data.
+                    dataLen (uint16_t) - length of the advertisement data.
+                    deviceName (char *) - buffer to hold the device name.
+                    maxNameLength (uint8_t) - maximum length of the device name.
+ Return Value:      (bool) - TRUE if the device name was found, FALSE if it
+                    was not found.
+ Exceptions:        None.
 
- Inputs:           None.
- Outputs:          None.
+ Inputs:            None.
+ Outputs:           None.
 
- Error Handling:
+ Error Handling:    None.
 
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
- Revision History: https://e2e.ti.com/support/wireless-connectivity/bluetooth-group/bluetooth/f/bluetooth-forum/1258776/cc2642r-display-advertiser-name-in-simple_central/4773912?tisearch=e2e-sitesearch&keymatch=get%252520device%252520name%252520from%252520advertising%252520report#4773912
+ Source: https://e2e.ti.com/support/wireless-connectivity/bluetooth-group/bluetooth/f/bluetooth-forum/1258776/cc2642r-display-advertiser-name-in-simple_central/4773912?tisearch=e2e-sitesearch&keymatch=get%252520device%252520name%252520from%252520advertising%252520report#4773912
  */
 static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen,
                                           char *deviceName,
@@ -932,23 +971,25 @@ static bool BarebotCentral_findDeviceName(uint8_t *pData, uint16_t dataLen,
 /*
  BarebotCentral_read(uint8)
 
- Description:
+ Description:       This function reads a characteristic from the server.
 
- Operation:
+ Operation:         The function sends a read request to the server and waits
+                    for the response.
 
- Arguments:
- Return Value:
- Exceptions:       None.
+ Arguments:         charID (uint8) - ID of the characteristic to read.
+ Return Value:      (bcReadRsp_t) - response to the read request.
+ Exceptions:        None.
 
- Inputs:           None.
- Outputs:          None.
+ Inputs:            None.
+ Outputs:           None.
 
- Error Handling:
+ Error Handling:    None.
 
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
- Revision History:
+ Revision History:  3/15/24  Adam Krivka      initial revision
+
  */
 bcReadRsp_t BarebotCentral_read(uint8_t charID)
 {
@@ -999,23 +1040,24 @@ bcReadRsp_t BarebotCentral_read(uint8_t charID)
 /*
  BarebotCentral_write(uint8, uint8 *)
 
- Description:
+ Description:       This function writes a characteristic to the server.
 
- Operation:
+ Operation:         The function sends a write request to the server.
 
- Arguments:
- Return Value:
- Exceptions:       None.
+ Arguments:         charID (uint8) - ID of the characteristic to write.
+                    newValue (uint8 *) - new value to write to the characteristic.
+ Return Value:      (bool) - TRUE if the write was successful, FALSE if it was not.
+ Exceptions:        None.
 
- Inputs:           None.
- Outputs:          None.
+ Inputs:            None.
+ Outputs:           None.
 
- Error Handling:
+ Error Handling:    None.
 
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
- Revision History:
+ Revision History:  3/15/24  Adam Krivka      initial revision
  */
 bool BarebotCentral_write(uint8 charID, uint8 *newValue)
 {
@@ -1064,25 +1106,22 @@ bool BarebotCentral_write(uint8 charID, uint8 *newValue)
 /*
  BarebotCentral_setState(uint8)
 
- Description:
+ Description:       This function sets the state of the central.
 
- Operation:
+ Arguments:         newState (uint8) - new state of the central.
+ Return Value:      None.
+ Exceptions:        None.
 
- Arguments:
- Return Value:
- Exceptions:       None.
+ Inputs:            None.
+ Outputs:           None.
 
- Inputs:           None.
- Outputs:          None.
+ Error Handling:    None.
 
- Error Handling:
+ Algorithms:        None.
+ Data Structures:   None.
 
- Algorithms:       None.
- Data Structures:  None.
-
- Revision History:
+ Revision History:  3/15/24  Adam Krivka      initial revision
  */
-
 static void BarebotCentral_setState(uint8 newState)
 {
     centralState = newState;
@@ -1092,25 +1131,24 @@ static void BarebotCentral_setState(uint8 newState)
 /*
  BarebotCentral_getState(void)
 
- Description:
+ Description:       This function gets the state of the central.
 
- Operation:
+ Operation:         The function returns the current state of the central.
 
- Arguments:
- Return Value:
- Exceptions:       None.
+ Arguments:         None.
+ Return Value:      (uint8) - current state of the central.
+ Exceptions:        None.
 
- Inputs:           None.
- Outputs:          None.
+ Inputs:            None.
+ Outputs:           None.
 
- Error Handling:
+ Error Handling:    None.
 
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
- Revision History:
+ Revision History:  3/15/24  Adam Krivka      initial revision
  */
-
 uint8 BarebotCentral_getState()
 {
     return centralState;

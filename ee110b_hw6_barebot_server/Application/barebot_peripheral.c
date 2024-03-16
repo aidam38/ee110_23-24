@@ -11,8 +11,6 @@
  peripheral device for the Bluetooth demo.  The global functions included
  are:
  BarebotPeripheral_createTask  - create the barebot peripheral task
- BarebotPeripheral_updateRed   - want to update the red LED
- BarebotPeripheral_updateGreen - want to update the green LED
 
  The local functions included are:
  BarebotPeripheral_advCallback       - GAP advertising callback
@@ -52,7 +50,7 @@
 /* local include files */
 #include <barebot_peripheral.h>
 #include "button/button_rtos_intf.h"
-#include  "barebot_gatt_profile.h"
+#include "barebot_gatt_profile.h"
 
 /* shared variables */
 
@@ -419,6 +417,7 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
     switch (pMsg->event)
     {
     case BS_BUTTON_PRESSED:
+        /* a button was pressed, handle it */
         BarebotPeripheral_handleButton(pMsg->data.byte);
         dealloc = FALSE;
         break;
@@ -443,6 +442,59 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
         ICall_free(pMsg->data.pData);
 
     /* done processing the message/event, return */
+    return;
+}
+
+/*
+ BarebotPeripheral_handleButton(uint8_t buttonId)
+
+ Description:      This function processes a button press event.
+
+ Arguments:        buttonId (uint8_t) - the ID of the button that was pressed.
+ to process.
+ Return Value:     None.
+ Exceptions:       None.
+
+ Inputs:           None.
+ Outputs:          None.
+
+ Error Handling:   None.
+
+ Algorithms:       None.
+ Data Structures:  None.
+
+ Revision History: 03/10/22  Glen George      initial revision
+ */
+
+static void BarebotPeripheral_handleButton(uint8_t buttonId)
+{
+    /* variables */
+    uint16_t zero = 0;
+
+    /* if invalid buttonID, return */
+    if (!(buttonId == 1 || buttonId == 2))
+    {
+        return;
+    }
+
+    /* process the button press */
+    switch (buttonId)
+    {
+    case 1:
+        /* reset speed */
+        BarebotProfile_SetParameter(BAREBOTPROFILE_SPEED,
+        BAREBOTPROFILE_SPEED_LEN,
+                                    &zero);
+        break;
+    case 2:
+        /* reset turn */
+        BarebotProfile_SetParameter(BAREBOTPROFILE_TURN,
+        BAREBOTPROFILE_TURN_LEN,
+                                    &zero);
+
+        break;
+    }
+
     return;
 }
 
@@ -477,36 +529,6 @@ static void BarebotPeripheral_processAppMsg(bpEvt_t *pMsg)
 
  Revision History: 03/10/22  Glen George      initial revision
  */
-
-static void BarebotPeripheral_handleButton(uint8_t buttonId)
-{
-    /* variables */
-    uint16_t zero = 0;
-
-    if (!(buttonId == 1 || buttonId == 2))
-    {
-        return;
-    }
-
-    switch (buttonId)
-    {
-    case 1:
-        /* reset speed */
-        BarebotProfile_SetParameter(BAREBOTPROFILE_SPEED,
-        BAREBOTPROFILE_SPEED_LEN,
-                                    &zero);
-        break;
-    case 2:
-        /* reset turn */
-        BarebotProfile_SetParameter(BAREBOTPROFILE_TURN,
-        BAREBOTPROFILE_TURN_LEN,
-                                    &zero);
-
-        break;
-    }
-
-    return;
-}
 
 static void BarebotPeripheral_processGapMessage(gapEventHdr_t *pMsg)
 {
@@ -709,7 +731,8 @@ static void BarebotPeripheral_charValueChangeCB(uint8_t paramID)
  Algorithms:       None.
  Data Structures:  None.
 
- Revision History: 03/10/22  Glen George      initial revision
+ Revision History:  03/10/22  Glen George       initial revision
+                    3/15/24  Adam Krivka        added speed and turn notifications
  */
 
 static bool BarebotPeripheral_processCharValueChangeEvt(bpEvtData_t msg_data)
@@ -741,7 +764,14 @@ static bool BarebotPeripheral_processCharValueChangeEvt(bpEvtData_t msg_data)
     return FALSE;
 }
 
-/* ButtonPressed */
+/* ButtonPressed 
+ *
+ * Description:     This function is called by the button task when a button
+ *                  is debouced.  It enqueues a message to the barebot peripheral
+ *                  task to handle the button press.
+ * 
+ *  Revision History:  3/15/24  Adam Krivka        initial revision
+*/
 void ButtonPressed(uint8_t buttonId)
 {
     bpEvtData_t data;
@@ -926,8 +956,7 @@ static status_t BarebotPeripheral_enqueueMsg(uint8_t event, bpEvtData_t data)
 /*
  BarebotPeripheral_getNumConns()
 
- Description:      This function loops infinitely in order to stall the
- peripheral in case of an error.
+ Description:      Get number of valid connections
 
  Operation:        The function implements an infinite loop.
 
@@ -954,6 +983,7 @@ static uint8_t BarebotPeripheral_getNumConns()
     /* loop over all slots and count valid connections */
     for (int i = 0; i < BS_MAX_BLE_CONNS; i++)
     {
+        /* if handle isn't invalid, it is valid */
         if (conn_handles[i] != BS_INVALID_CONN)
         {
             num_conns += 1;

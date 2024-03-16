@@ -1,21 +1,20 @@
 /****************************************************************************/
 /*                                                                          */
-/*                            barebot_central.h                             */
-/*                             Barebot UI                              */
-/*                               Bluetooth Demo                             */
+/*                                barebot_ui.h                              */
+/*                                 Barebot UI                               */
 /*                                Include File                              */
 /*                                                                          */
 /****************************************************************************/
 
 /*
    This file contains the constants, structures, and function prototypes for
-   the Bluetooth barebot central defined in barebot_central.c.  These
-   definitions are for the barebot central code and should not be needed
+   the Bluetooth barebot ui defined in barebot_ui.c.  These
+   definitions are for the barebot ui code and should not be needed
    by other code in the project.
 
 
    Revision History:
-      3/10/22  Glen George       initial revision
+        3/15/24 Adam Krivka       initial revision  
 */
 
 
@@ -90,7 +89,7 @@ typedef  struct  {
 
 /* function declarations */
 
-/* local functions - the central task */
+/* local functions - the ui task */
 static void      BarebotUI_init(void);
 static void      BarebotUI_taskFxn(UArg, UArg);
 

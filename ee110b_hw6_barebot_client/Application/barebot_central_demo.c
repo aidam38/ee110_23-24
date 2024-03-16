@@ -1,24 +1,17 @@
 /****************************************************************************/
 /*                                                                          */
-/*                                   EHdemo                                 */
+/*                           barebot_central_demo.c                         */
 /*                             Event Handler Demo                           */
 /*                                                                          */
 /****************************************************************************/
 
 /*
-   Description:      This program is a demonstration program to show an
-                     example of using the RTOS with timer interrupts. It
-                     blinks the red and green LEDs.  The red LED is blinked
-                     at the rate of MS_PER_BLINK (milliseconds per blink)
-                     using a timer interrupt.  The green LED is blinked at
-                     the rate of LOOPS_PER_BLINK in the main loop.
+   Description:      See top-level description.
 
-   Input:            None.
-   Output:           The LEDs are blinked at the rate of MS_PER_BLINK for the
-                     red LED and LOOPS_PER_BLINK for the green LED.  The red
-                     LED starts off on and the green LED starts off off.
+   Input:            Keypad presses and Bluetooth events.
+   Output:           LCD.
 
-   User Interface:   None, LEDs are just blinked.
+   User Interface:   Keypad, LCD.
    Error Handling:   None.
 
    Algorithms:       None.
@@ -27,6 +20,7 @@
    Revision History:
        2/18/22  Glen George      initial revision
        3/10/22  Glen George      updated to include BLE stack
+    3/15/24  Adam Krivka      change to barebot demo
 */
 
 

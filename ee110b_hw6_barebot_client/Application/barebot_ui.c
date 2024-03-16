@@ -1,17 +1,34 @@
 /****************************************************************************/
 /*                                                                          */
-/*                             barebot_ui                           */
-/*                             Barebot UI                           */
+/*                                barebot_ui                                */
+/*                          Barebot User Interface                          */
 /*                               Bluetooth Demo                             */
 /*                                                                          */
 /****************************************************************************/
 
-/*
+/* 
+    This file implements the user interface for the Barebot demo. It sets up
+    a separate UI task which communicates with the UI task via callbacks 
+    (so it doesn't have to worry about the Bluetooth details) and gets alerts
+    from it also via callbacks. 
 
+   The public functions are:
+        BarebotUI_createTask  - create the barebot ui task
+        BarebotUI_uiStateChanged - alert the UI taht the ui state changed
+        BarebotUI_speedChanged - alert the UI that the speed changed
+        BarebotUI_turnChanged - alert the UI that the turn changed
+
+    The local functions are:
+        BarebotUI_init - initialize the barebot ui task
+        BarebotUI_taskFxn - the main function for the barebot ui task
+        BarebotUI_processUIMsg - process a UI message
+        BarebotUI_handleKey - handle a key press
+        BarebotUI_enqueueMsg - enqueue a message
+        BarebotUI_spin - spin if the function is not successful
 
 
  Revision History:
-
+    3/15/24  Adam Krivka       initial revision
  */
 
 /* RTOS include files */
@@ -35,7 +52,7 @@
 
 /* local include files */
 #include "barebot_ui.h"
-#include "barebot_central_intf.h"
+#include "barebot_UI_intf.h"
 #include "barebot_server_constants.h"
 #include "barebot_synch.h"
 #include "lcd/lcd_rtos_intf.h"
@@ -69,12 +86,12 @@ static uint8_t screenState;
  BarebotUI_createTask()
 
  Description:      This function creates the task for running the barebot
- central.
+ UI.
 
  Operation:        The function creates the parameter structure and then
- fills in the appropriate values for the barebot central
+ fills in the appropriate values for the barebot UI
  task.  It then creates the task using the shared task
- structure variable bpTask.
+ structure variable buiTask.
 
  Arguments:        None.
  Return Value:     None.
@@ -111,7 +128,7 @@ void BarebotUI_createTask(void)
 /*
  BarebotUI_init()
 
- Description:      This function initializes the barebot central task.  It
+ Description:      This function initializes the barebot UI task.  It
  is expected to be called when the task starts.
 
  Operation:        The function registers the task with ICall and creates a
@@ -156,12 +173,10 @@ static void BarebotUI_init(void)
 /*
  BarebotUI_taskFxn(UArg, UArg)
 
- Description:      This function runs the task that implements the Bluetooth
- barebot central device.
+ Description:      This function runs the task that implements the Barebot UI.
 
  Operation:        The function loops forever processing messages and events
- from the application and Bluetooth stack.  The messages
- and events are processed using helper functions.
+                   from the UI queue. 
 
  Arguments:        a1 (UArg) - first argument (unused).
  a2 (UArg) - second argument (unused).
@@ -176,7 +191,8 @@ static void BarebotUI_init(void)
  Algorithms:       None.
  Data Structures:  None.
 
- Revision History: 03/10/22  Glen George      initial revision
+ Revision History:
+    03/15/24  Adam Krivka      initial revision
  */
 static void BarebotUI_taskFxn(UArg a0, UArg a1)
 {
@@ -229,18 +245,13 @@ static void BarebotUI_taskFxn(UArg a0, UArg a1)
 /* message processing */
 
 /*
- BarebotUI_processUIMsg(bpEvt_t *)
+ BarebotUI_processUIMsg(buiEvt_t *)
 
- Description:      This function processes the task messages received by this
- task (in other words, messages sent by the task itself).
- These messages are generally due to callback functions
- being called by the BLE stack.
+ Description:      This function processes a message/event from the UI.
+ Operation:        The function processes the message/event based on the
+                   event type.
 
- Operation:        The function processes the messages based on the type of
- event that generated the message.  Unknown event types are
- ignored.
-
- Arguments:        pMsg (bpEvt_t *) - pointer to the task message to process.
+ Arguments:        pMsg (buiEvt_t *) - the message/event to process.
  Return Value:     None.
  Exceptions:       None.
 
@@ -252,7 +263,8 @@ static void BarebotUI_taskFxn(UArg a0, UArg a1)
  Algorithms:       None.
  Data Structures:  None.
 
- Revision History: 03/10/22  Glen George      initial revision
+ Revision History: 
+    03/15/24  Adam Krivka      initial revision
  */
 static void BarebotUI_processUIMsg(buiEvt_t *pMsg)
 {
@@ -263,23 +275,29 @@ static void BarebotUI_processUIMsg(buiEvt_t *pMsg)
     switch (pMsg->event)
     {
     case BUI_EVT_KEY_PRESSED:
-        //                       row                   col
+        /* handle the key press */
+        /*                       row                   col */
         BarebotUI_handleKey(pMsg->data.word >> 8, pMsg->data.word & 0b11111111);
         break;
     case BUI_EVT_SPEED_CHANGED:
+        /* speed value changed, update it */
         if (screenState == BUI_STATE_CONTROL)
         {
             Display_printf(1, 8, 4, "%d", (int16_t) pMsg->data.hword);
         }
         break;
     case BUI_EVT_TURN_CHANGED:
+        /* turn value changed, update it */
         if (screenState == BUI_STATE_CONTROL)
         {
             Display_printf(2, 8, 4, "%d", (int16_t) pMsg->data.hword);
         }
         break;
     case BUI_EVT_CENTRAL_STATE_CHANGED:
+        /* clear display */
         ClearDisplay();
+
+        /* display state */
         switch (pMsg->data.byte)
         {
         case BC_STATE_IDLE:
@@ -319,23 +337,27 @@ static void BarebotUI_processUIMsg(buiEvt_t *pMsg)
 /*
  BarebotUI_handleKey(uint8_t row, uint8, col)
 
- Description:
+ Description:       This function is called when a key is pressed.
 
- Operation:
+ Operation:         The function handles the key press based on the current
+                    screen state.  The function also handles the menu
+                    buttons.
 
- Arguments:
- Return Value:     None.
- Exceptions:       None.
+ Arguments:         row (uint8_t) - the row of the key pressed.
+                    col (uint8_t) - the column of the key pressed.
+ Return Value:      None.
+ Exceptions:        None.
 
- Inputs:           None.
- Outputs:          None.
+ Inputs:            None.
+ Outputs:           None.
 
- Error Handling:
+ Error Handling:    None.
 
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
  Revision History:
+    03/15/24  Adam Krivka      initial revision
  */
 void BarebotUI_handleKey(uint8_t row, uint8_t col)
 {
@@ -359,8 +381,8 @@ void BarebotUI_handleKey(uint8_t row, uint8_t col)
             Display(0, 0, "CONTROL", 16);
 
             /* read current speed and turn values */
-            bcReadRsp_t speedRsp = BarebotCentral_read(BAREBOTPROFILE_SPEED);
-            bcReadRsp_t turnRsp = BarebotCentral_read(BAREBOTPROFILE_TURN);
+            bcReadRsp_t speedRsp = BarebotUI_read(BAREBOTPROFILE_SPEED);
+            bcReadRsp_t turnRsp = BarebotUI_read(BAREBOTPROFILE_TURN);
 
             /* display them */
             Display_printf(1, 0, 12, "Speed:  %d", speedRsp.pValue[0]);
@@ -382,7 +404,7 @@ void BarebotUI_handleKey(uint8_t row, uint8_t col)
             Display(0, 0, "THOUGHTS", 16);
 
             /* read current thoughts */
-            bcReadRsp_t thoughtsRsp = BarebotCentral_read(
+            bcReadRsp_t thoughtsRsp = BarebotUI_read(
             BAREBOTPROFILE_THOUGHTS);
 
             /* display thoughts */
@@ -395,29 +417,30 @@ void BarebotUI_handleKey(uint8_t row, uint8_t col)
         }
     }
 
-    /* speed buttons */
+    /* handle keys for each screens */
     switch (screenState)
     {
     case BUI_STATE_CONTROL:
+        /* handle arrow keys */
         if (row == 0 && col == 2) /* left */
         {
             update = -1;
-            BarebotCentral_write(BAREBOTPROFILE_TURNUPDATE, &update);
+            BarebotUI_write(BAREBOTPROFILE_TURNUPDATE, &update);
         }
         else if (row == 0 && col == 1) /* down */
         {
             update = -1;
-            BarebotCentral_write(BAREBOTPROFILE_SPEEDUPDATE, &update);
+            BarebotUI_write(BAREBOTPROFILE_SPEEDUPDATE, &update);
         }
         else if (row == 0 && col == 0) /* right */
         {
             update = +1;
-            BarebotCentral_write(BAREBOTPROFILE_TURNUPDATE, &update);
+            BarebotUI_write(BAREBOTPROFILE_TURNUPDATE, &update);
         }
         else if (row == 1 && col == 1) /* up */
         {
             update = +1;
-            BarebotCentral_write(BAREBOTPROFILE_SPEEDUPDATE, &update);
+            BarebotUI_write(BAREBOTPROFILE_SPEEDUPDATE, &update);
         }
         break;
     case BUI_STATE_THOUGHTS:
@@ -431,23 +454,24 @@ void BarebotUI_handleKey(uint8_t row, uint8_t col)
 /*
  KeyPressed(uint32_t keyEvt)
 
- Description:
+ Description:       This function is called when a key is pressed.
+ Operation:         The function creates a message and puts it into the
+                    UI queue.
 
- Operation:
+ Arguments:         keyEvt (uint32_t) - the key event.
+ Return Value:      None.
+ Exceptions:        None.
 
- Arguments:
- Return Value:     None.
- Exceptions:       None.
+ Inputs:            None.
+ Outputs:           None.
 
- Inputs:           None.
- Outputs:          None.
+ Error Handling:    None.
 
- Error Handling:
-
- Algorithms:       None.
- Data Structures:  None.
+ Algorithms:        None.
+ Data Structures:   None.
 
  Revision History:
+    03/15/24  Adam Krivka      initial revision
  */
 void KeyPressed(uint32_t keyEvt)
 {
@@ -457,13 +481,59 @@ void KeyPressed(uint32_t keyEvt)
     return;
 }
 
-void BarebotUI_centralStateChanged(uint8 newCentralState)
+/* BarebotUI_centralStateChanged(uint8)
+ *
+ * Description:      This function is called when the central state changes.
+ * 
+ * Operation:        The function creates a message and puts it into the
+ *                   UI queue.
+ * 
+ * Arguments:        newUIState (uint8) - the new state of the UI.
+ * Return Value:     None.
+ * 
+ * Exceptions:       None.
+ * 
+ * Inputs:           None.
+ * Outputs:          None.
+ * 
+ * Error Handling:   None.
+ * 
+ * Algorithms:       None.
+ * Data Structures:  None.
+ * 
+ * Revision History: 
+ *      03/15/24  Adam Krivka      initial revision
+ */
+void BarebotUI_centralStateChanged(uint8 newUIState)
 {
     buiEvtData_t data;
-    data.byte = newCentralState;
+    data.byte = newUIState;
     BarebotUI_enqueueMsg(BUI_EVT_CENTRAL_STATE_CHANGED, data);
 }
 
+/* BarebotUI_speedChanged(int16)
+ *
+ * Description:      This function is called when the speed changes.
+ * 
+ * Operation:        The function creates a message and puts it into the
+ *                   UI queue.
+ * 
+ * Arguments:        newSpeed (int16) - the new speed.
+ * Return Value:     None.
+ * 
+ * Exceptions:       None.
+ * 
+ * Inputs:           None.
+ * Outputs:          None.
+ * 
+ * Error Handling:   None.
+ * 
+ * Algorithms:       None.
+ * Data Structures:  None.
+ * 
+ * Revision History: 
+ *      03/15/24  Adam Krivka      initial revision
+ */
 void BarebotUI_speedChanged(int16 newSpeed)
 {
     buiEvtData_t data;
@@ -471,6 +541,29 @@ void BarebotUI_speedChanged(int16 newSpeed)
     BarebotUI_enqueueMsg(BUI_EVT_SPEED_CHANGED, data);
 }
 
+/* BarebotUI_turnChanged(int16)
+ *
+ * Description:      This function is called when the turn changes.
+ * 
+ * Operation:        The function creates a message and puts it into the
+ *                   UI queue.
+ * 
+ * Arguments:        newTurn (int16) - the new turn.
+ * Return Value:     None.
+ * 
+ * Exceptions:       None.
+ * 
+ * Inputs:           None.
+ * Outputs:          None.
+ * 
+ * Error Handling:   None.
+ * 
+ * Algorithms:       None.
+ * Data Structures:  None.
+ * 
+ * Revision History: 
+ *      03/15/24  Adam Krivka      initial revision
+ */
 void BarebotUI_turnChanged(int16 newTurn)
 {
     buiEvtData_t data;
@@ -479,8 +572,10 @@ void BarebotUI_turnChanged(int16 newTurn)
 }
 
 /* helper functions */
+
+
 /*
- BarebotUI_enqueueMsg(uint8_t, bpEvtData_t)
+ BarebotUI_enqueueMsg(uint8_t, buiEvtData_t)
 
  Description:      This function creates a message and puts it into the
  RTOS queue.
@@ -491,7 +586,7 @@ void BarebotUI_turnChanged(int16 newTurn)
  function that also creates an event on enqueuing.
 
  Arguments:        event (uint8_t)    - event ID for the message to enqueue.
- data (bpEvtData_t) - data for the message to enqueue.
+ data (buiEvtData_t) - data for the message to enqueue.
  Return Value:     (status_t) - SUCCESS if the message was successfully
  enqueued, FAILURE if there was an error engueuing the
  message, and bleMemAllocError if there was an error
@@ -553,7 +648,7 @@ static status_t BarebotUI_enqueueMsg(uint8_t event, buiEvtData_t data)
  BarebotUI_spin()
 
  Description:      This function loops infinitely in order to stall the
- central in case of an error.
+ UI in case of an error.
 
  Operation:        The function implements an infinite loop.
 

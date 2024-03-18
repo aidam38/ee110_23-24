@@ -1,3 +1,47 @@
+EE 110 HW6 Code Submission
+Barebot Demo
+
+Here's the gist of how this demo is supposed to work:
+	
+	The client is the keypad+LCD board. It basically acts as 
+	a controller (sort of like a phone). The server is a bare 
+	CC2652 board. It's supposed to simulate being the robot 
+	(although no peripherals are actually connected). The 
+	characteristics are:
+		SPEED - speed of the robot
+		TURN - how much left/right the robot is turning
+		SPEEDUPDATE - write only characteristic for incrementing or 
+						decrementing SPEED
+		TURNUPDATE - same thing for TURN
+		THOUGHTS - the robot has thoughts!
+	
+	The controller sends read and write requests to the robot, who
+	sends notifications back with its most up-to-date values. Pressing
+	the on-board buttons on the robot resets SPEED and TURN and notifies
+	the client of it.
+	
+	The client does characteristic discovery, but not service discovery
+	(the service start handle is hardcoded). The server automatically 
+	enables notifications for the SPEED and TURN characteristics so the
+	client doesn't need to specifically enable (this is usually the case).
+	
+	The server should theoretically be able to hold multiple connections,
+	but I don't it works well as of now.
+	
+	The controller periodically retries scanning and shows the state 
+	of the connection on the LCD.
+
+This assignment was extremely hard. I definitely went out a bit extra
+because I wanted to get as close as possible to what I want to do with
+my robot for Ditch Day (WALL-E) but there were many many nasty gotchas
+along the road. (It's 10:34pm Friday as I'm writing this, I've been working
+since 7:00am when the ride played, so 15 hours...).
+
+See you next term. :-)
+
+---------------------------------------------------------------------
+(below is my original code outline and description out of interest)
+
 EE 110 HW6 Code Outline
 
 Overview:
@@ -223,15 +267,3 @@ Client Code (keypad+LCD board):
 	enable hardware interrupts
 	BIOS_start()
 	
-Plan
-	1. Get central code to read and display SPEED
-		a. get central code to compile
-		b. write scanning code
-		c. do a gatt read on connection and display result
-		
-		
-finishing up:
-1. switch to using clock
-2. give notifications another try
-3. ditch thoughts
-4. GATT writing instead
